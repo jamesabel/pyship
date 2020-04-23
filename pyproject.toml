@@ -1,0 +1,24 @@
+[build-system]
+requires = ["flit_core >=2,<3"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "pyship"
+author = "James Abel"
+author-email = "j@abel.co"
+home-page = "https://github.com/jamesabel/pyship"
+classifiers = ["License :: OSI Approved :: MIT License"]
+requires = [
+    "attrs",
+    "balsa",
+    "pyinstaller",
+    "sundry",
+    "typeguard",
+    "requests",
+    "semver",
+    "toml",
+    "ismain"
+]
+
+[tool.pyship]
+app = "pyship"

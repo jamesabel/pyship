@@ -1,0 +1,34 @@
+
+- Create a virtual environment for your project like usual.
+  - Make pyship one of the requirements.
+- Create your a Python package (AKA a module) that can be invoked as an application with the python -m switch.
+- Package up your package.  For example, using flit or setup.py. This will end up in a distribution directory, often called dist.
+- Run pyship.  It will create the following directory structure:
+
+  <app_dir>                                                 # default of "app"
+    <platform>                                              # e.g. win64
+      <app_name>                                            # your app name
+        <app_name> launcher executable                      # e.g. myapp.exe so the OS sees an .exe for this app
+        <app_name>_<version>                                # the launcher calls into this directory (may be more than one)
+          Scripts                                           # e.g. python.exe
+          Lib                                               # your app and everything it needs gets installed here
+        (other artifacts, such as icons, metadata, etc.)    # other things the launcher or OS needs
+
+  For example, an app called myapp in Windows 64 would be:
+
+  app
+    win64
+      myapp
+        myapp.exe
+        myapp_0.0.1
+          Scripts
+            python.exe
+            pythonw.exe
+          Lib
+            site-packages
+
+  - steps
+    - create the launcher executable and support files and put it in <app_dir>/<platform>/<app_name>
+    - build the python execution environment in <app_dir>/<platform>/<app_name>/<app_name>_<version>
+    - using the application's execution requirements (from pyproject.toml), install requirements in <app_dir>/<platform>/<app_name>/<app_name>_<version>
+      (specifically the Lib/site-packages subdirectory)

@@ -1,0 +1,8 @@
+#
+# pyship
+#
+PyQt5
+#
+typeguard
+pyinstaller
+pytest

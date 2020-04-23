@@ -1,0 +1,10 @@
+__application_name__ = "example_cli"
+__version__ = "0.0.1"
+__author__ = "James Abel"
+__description__ = "example CLI app"
+__url__ = "https://github.com/jamesabel/pyship"
+__download_url__ = "https://github.com/jamesabel/pyship/archive/master.zip"
+__author_email__ = "j@abel.co"
+__license__ = "MIT"
+__copyright__ = "Copyright 2020 James Abel"
+__is_gui__ = False

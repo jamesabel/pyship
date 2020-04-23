@@ -1,0 +1,29 @@
+ismain
+sundry
+balsa
+requests
+attrs
+typeguard
+sentry-sdk
+toml
+#
+# pypi
+flit
+keyring
+#
+# utility
+wheel
+wheel-inspect
+black
+#
+# docs
+sphinx
+#
+# installers/launchers
+pyinstaller
+semver
+pywin32
+#
+# testing
+pytest
+pytest-cov
