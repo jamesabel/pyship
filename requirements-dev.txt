@@ -11,7 +11,7 @@ toml
 flit
 keyring
 #
-# utility
+# development
 wheel
 wheel-inspect
 black

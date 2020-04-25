@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import appdirs
 import json
+from importlib import import_module
 
 from typeguard import typechecked
 from attr import attrs, attrib
@@ -134,68 +135,79 @@ class PyShip:
 
     def create_pyshipy(self):
 
-        # use project's Python (in this venv) to determine target Python version
-        python_ver_str = platform.python_version()
-        python_ver_tuple = platform.python_version_tuple()
+        app_ver = None
+        try:
+            app_module = import_module(self.target_app_name)
+            try:
+                app_ver = app_module.__version__
+            except AttributeError:
+                log.error(f"your module {self.target_app_name} does not have a __version__ attribute.  Please add one.")
+        except ModuleNotFoundError:
+            log.error(f"your module {self.target_app_name} not found in your python environment.  Perhaps it is not installed.  Check if {self.target_app_name} is in sys.path.")
+            log.info(f"{sys.path=}")
 
-        base_patch_str = re.search(r"([0-9]+)", python_ver_tuple[2]).group(1)
-        # version but with numbers only and not the extra release info (e.g. b, rc, etc.)
-        ver_base_str = f"{python_ver_tuple[0]}.{python_ver_tuple[1]}.{base_patch_str}"
+        if app_ver is not None:
+            # use project's Python (in this venv) to determine target Python version
+            python_ver_str = platform.python_version()
+            python_ver_tuple = platform.python_version_tuple()
 
-        zip_file = Path(f"python-{python_ver_str}-embed-amd64.zip")
+            # get the embedded python interpreter
+            base_patch_str = re.search(r"([0-9]+)", python_ver_tuple[2]).group(1)
+            # version but with numbers only and not the extra release info (e.g. b, rc, etc.)
+            ver_base_str = f"{python_ver_tuple[0]}.{python_ver_tuple[1]}.{base_patch_str}"
+            zip_file = Path(f"python-{python_ver_str}-embed-amd64.zip")
+            zip_url = f"https://www.python.org/ftp/python/{ver_base_str}/{zip_file}"
+            get_file(zip_url, self.cache_dir, zip_file)
+            pyshipy_dir = f"{self.target_app_name}_{app_ver}"
+            python_dir = Path(self.dist_path, pyshipy_dir).absolute()
+            extract(self.cache_dir, zip_file, python_dir)
 
-        zip_url = f"https://www.python.org/ftp/python/{ver_base_str}/{zip_file}"
-        get_file(zip_url, self.cache_dir, zip_file)
-        pyshipy_dir = f"{self.target_app_name}_{'TBD.TBD.TBD'}"
-        python_dir = Path(self.dist_path, pyshipy_dir).absolute()
-        extract(self.cache_dir, zip_file, python_dir)
+            # Programmatically edit ._pth file, e.g. python38._pth
+            # see https://github.com/pypa/pip/issues/4207
+            glob_path = os.path.abspath(os.path.join(python_dir, "python*._pth"))
+            pth_glob = glob.glob(glob_path)
+            if pth_glob is None or len(pth_glob) != 1:
+                log.critical("could not find '._pth' file at %s" % glob_path)
+            else:
+                pth_path = pth_glob[0]
+                log.info("uncommenting import site in %s" % pth_path)
+                pth_contents = open(pth_path).read()
+                pth_save_path = pth_path.replace("._pth", "_orig._pth")
+                shutil.move(pth_path, pth_save_path)
+                pth_contents = pth_contents.replace("#import site", "import site")  # uncomment import site
+                pth_contents = "..\n" + pth_contents  # add where pyship_app.py will be (one dir 'up' from python.exe)
+                open(pth_path, "w").write(pth_contents)
 
-        # Programmatically edit ._pth file, e.g. python38._pth
-        # see https://github.com/pypa/pip/issues/4207
-        glob_path = os.path.abspath(os.path.join(python_dir, "python*._pth"))
-        pth_glob = glob.glob(glob_path)
-        if pth_glob is None or len(pth_glob) != 1:
-            log.critical("could not find '._pth' file at %s" % glob_path)
-        else:
-            pth_path = pth_glob[0]
-            log.info("uncommenting import site in %s" % pth_path)
-            pth_contents = open(pth_path).read()
-            pth_save_path = pth_path.replace("._pth", "_orig._pth")
-            shutil.move(pth_path, pth_save_path)
-            pth_contents = pth_contents.replace("#import site", "import site")  # uncomment import site
-            pth_contents = "..\n" + pth_contents  # add where main.py will be (one dir 'up' from python.exe)
-            open(pth_path, "w").write(pth_contents)
+            # install pip
+            # this is how get-pip was originally obtained
+            # get_pip_file = "get-pip.py"
+            # get_file("https://bootstrap.pypa.io/get-pip.py", cache_folder, get_pip_file)
+            get_pip_file = "get-pip.py"
+            get_pip_path = os.path.join(os.path.dirname(pyship.__file__), get_pip_file)
+            log.info(f"{get_pip_path}")
+            cmd = ["python.exe", os.path.abspath(get_pip_path), "--no-warn-script-location"]
+            log.info(f"{cmd} (cwd={python_dir})")
+            subprocess.run(cmd, cwd=python_dir, shell=True)
 
-        # install pip
-        # this is how get-pip was originally obtained
-        # get_pip_file = "get-pip.py"
-        # get_file("https://bootstrap.pypa.io/get-pip.py", cache_folder, get_pip_file)
-        get_pip_file = "get-pip.py"
-        get_pip_path = os.path.join(os.path.dirname(pyship.__file__), get_pip_file)
-        log.info(f"{get_pip_path}")
-        cmd = ["python.exe", os.path.abspath(get_pip_path), "--no-warn-script-location"]
-        log.info(f"{cmd} (cwd={python_dir})")
-        subprocess.run(cmd, cwd=python_dir, shell=True)
+            # upgrade pip
+            cmd = ["python.exe", "-m", "pip", "install", "--no-deps", "--upgrade", "pip"]
+            subprocess.run(cmd, cwd=python_dir, shell=True)
 
-        # upgrade pip
-        cmd = ["python.exe", "-m", "pip", "install", "--no-deps", "--upgrade", "pip"]
-        subprocess.run(cmd, cwd=python_dir, shell=True)
+            if False:
+                # TODO: load this app via flit
 
-        if False:
-            # TODO: load this app via flit
-
-            # install pubapp itself into the target pubapp venv
-            cmd = [pubapp_pip_path, "install", "-U", "pubapp"]
-            if pubapp_dist_dir is not None:
-                cmd.extend(["-f", pubapp_dist_dir])  # get pubapp for this dir instead of PyPI
-            log.info(f"{cmd}")
-            subprocess.run(cmd)
-
-            # install this local app and other requirements in the embedded python dir
-            modules_to_install = [target_app_info.name, "wheel_inspect"]
-            for module in modules_to_install:
-                cmd = [pubapp_pip_path, "install", "-U", module, "-f", "dist"]
+                # install pubapp itself into the target pubapp venv
+                cmd = [pubapp_pip_path, "install", "-U", "pubapp"]
+                if pubapp_dist_dir is not None:
+                    cmd.extend(["-f", pubapp_dist_dir])  # get pubapp for this dir instead of PyPI
                 log.info(f"{cmd}")
                 subprocess.run(cmd)
 
-            run_nsis(target_app_info)
+                # install this local app and other requirements in the embedded python dir
+                modules_to_install = [target_app_info.name, "wheel_inspect"]
+                for module in modules_to_install:
+                    cmd = [pubapp_pip_path, "install", "-U", module, "-f", "dist"]
+                    log.info(f"{cmd}")
+                    subprocess.run(cmd)
+
+                run_nsis(target_app_info)

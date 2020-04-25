@@ -17,6 +17,8 @@ log = get_logger(launcher_application_name)
 
 def setup_logging(target_app_name: str):
     balsa = Balsa(launcher_application_name, __author__, gui=True)
+    if len(sys.argv) > 1 and (sys.argv[1].lower().startswith("-v") or sys.argv[1].lower().startswith("--v")):
+        balsa.verbose = True
 
     # use Sentry's exception service
     sentry_dsn = os.environ.get(f"SENTRY_DSN_{target_app_name.upper()}")
@@ -33,11 +35,7 @@ def launch() -> int:
     :return: 0 if no error, non-zero on error (like Windows apps)
     """
 
-    if len(sys.argv) > 1:
-        target_app_name = sys.argv[1]
-    else:
-        # pyship renames the launcher.exe to <target_application_name>.exe
-        target_app_name = os.path.basename(sys.argv[0]).replace(".exe", "")
+    target_app_name = os.path.basename(sys.argv[0]).replace(".exe", "")
 
     setup_logging(target_app_name)
 
@@ -80,8 +78,11 @@ def launch() -> int:
     else:
         log.error(f"could not find any expected application version in {cwd}")
 
+    ok_return_code = 0
+    error_return_code = 1
+
     if latest_version is None:
-        return_code = 1  # error
+        return_code = error_return_code
     else:
         # see:
         # http://www.trytoprogram.com/batch-file-return-code/
@@ -90,12 +91,12 @@ def launch() -> int:
 
             # locate the python interpreter executable
             python_exe_path = None
-            python_exe_parent_dir = os.path.join(f"{target_app_name}_{latest_version}", "python")
+            python_exe_parent_dir = os.path.join(f"{target_app_name}_{latest_version}")
             # the installer would have left exactly one of these python executables
             for python_exe_candidate in ["python.exe", "pythonw.exe"]:
                 python_exe_candidate_path = os.path.join(python_exe_parent_dir, python_exe_candidate)
                 if os.path.exists(python_exe_candidate_path):
-                    python_exe_path = python_exe_candidate
+                    python_exe_path = python_exe_candidate_path
 
             if python_exe_path is None:
                 log.error(f"python exe not found at {python_exe_parent_dir}")
@@ -104,8 +105,17 @@ def launch() -> int:
                 # run the target app using the python interpreter we just found
                 cmd = [python_exe_path, "-m", target_app_name]
                 log.info(f"{cmd}")
-                target_process = subprocess.run(cmd)
-                return_code = target_process.returncode  # if app returns "restart_value" then it wants to be restarted
+                try:
+                    target_process = subprocess.run(cmd, capture_output=True)
+                    if target_process.returncode != ok_return_code:
+                        for out in [target_process.stdout, target_process.stderr]:
+                            if out is not None and len(out.strip()) > 0:
+                                log.error(out.strip())
+
+                    return_code = target_process.returncode  # if app returns "restart_value" then it wants to be restarted
+                except FileNotFoundError as e:
+                    log.error(f"{e} {cmd}")
+                    return_code = error_return_code
 
     return return_code
 
