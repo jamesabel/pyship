@@ -106,11 +106,13 @@ def launch() -> int:
                 cmd = [python_exe_path, "-m", target_app_name]
                 log.info(f"{cmd}")
                 try:
-                    target_process = subprocess.run(cmd, capture_output=True)
-                    if target_process.returncode != ok_return_code:
+                    target_process = subprocess.run(cmd, capture_output=True, text=True)
+                    if target_process.returncode != ok_return_code and target_process.returncode != restart_value:
                         for out in [target_process.stdout, target_process.stderr]:
-                            if out is not None and len(out.strip()) > 0:
-                                log.error(out.strip())
+                            if out is not None:
+                                stripped_out = out.strip()
+                                if len(stripped_out) > 0:
+                                    log.error(out.strip())
 
                     return_code = target_process.returncode  # if app returns "restart_value" then it wants to be restarted
                 except FileNotFoundError as e:
