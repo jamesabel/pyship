@@ -7,14 +7,18 @@ from pyship import PyShip, __application_name__, __version__
 
 def pyship_main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('-V', '--version', dest="version", action='store_true', help='display version')
     parser.add_argument('-v', f"--{verbose_arg_string}", dest=verbose_arg_string, action='store_true', help='verbose')
     parser.add_argument('-l', f"--{log_dir_arg_string}", dest=log_dir_arg_string, help="log directory")
     parser.add_argument("-d", f"--{delete_existing_arg_string}", dest=delete_existing_arg_string, action='store_true', help="delete existing log")
     args = parser.parse_args()
 
-    balsa = Balsa(__application_name__, __version__)
-    balsa.gui = True
-    balsa.init_logger_from_args(args)
+    if args.version:
+        print(__version__)
+    else:
+        balsa = Balsa(__application_name__, __version__)
+        balsa.gui = True
+        balsa.init_logger_from_args(args)
 
-    pyship = PyShip()
-    pyship.ship()
+        pyship = PyShip()
+        pyship.ship()
