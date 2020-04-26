@@ -72,7 +72,7 @@ def create_launcher(target_app_info: TargetAppInfo, dist_path: Path):
     launcher_exe_filename = f"{target_app_info.name}.exe"
     launcher_exe_path = Path(dist_path, launcher_exe_filename)
     dist_path.mkdir(parents=True, exist_ok=True)
-    icon_path = os.path.join(target_app_info.name, f"{target_app_info.name}.ico")
+    icon_path = Path(target_app_info.name, f"{target_app_info.name}.ico").absolute()
 
     python_interpreter_path = sys.executable
     if python_interpreter_path is None or len(python_interpreter_path) < 1:
@@ -81,15 +81,13 @@ def create_launcher(target_app_info: TargetAppInfo, dist_path: Path):
         pyinstaller_exe_path = Path(Path(sys.executable).parent, "pyinstaller.exe")  # pyinstaller executable is in the same directory as the python interpreter
         if not pyinstaller_exe_path.exists():
             raise FileNotFoundError(str(pyinstaller_exe_path))
-        command_line = [str(pyinstaller_exe_path), "--clean", "-F", "-i", os.path.abspath(icon_path), "-n", target_app_info.name, "--distpath", str(dist_path.absolute())]
+        command_line = [str(pyinstaller_exe_path), "--clean", "-F", "-i", str(icon_path), "-n", target_app_info.name, "--distpath", str(dist_path.absolute())]
         if target_app_info.is_gui:
             command_line.append("--noconsole")
         command_line.append(launcher_source_path)
 
         # avoid re-building launcher if its functionality wouldn't change
-        launcher_metadata = calculate_launcher_metadata(launcher_module_dir, Path(icon_path))
-        launcher_metadata["command_line"] = command_line
-        launcher_metadata["cwd"] = pyship_path
+        launcher_metadata = calculate_launcher_metadata(icon_path)
         if not launcher_exe_path.exists() or launcher_metadata != load_launcher_metadata(dist_path, launcher_metadata_filename):
             try:
                 os.unlink(launcher_exe_path)

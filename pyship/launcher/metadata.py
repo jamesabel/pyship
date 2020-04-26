@@ -1,17 +1,16 @@
 import json
 from pathlib import Path
 
-from typeguard import typechecked
+from pyship import __version__ as pyship_version
 from pyship.launcher import get_file_sha256
+
+from typeguard import typechecked
 
 
 @typechecked(always=True)
-def calculate_launcher_metadata(pyship_dir: Path, icon_file_path: Path) -> dict:
-    launcher_metadata = {}
-    file_paths = [p for p in Path(pyship_dir).glob("launch*.py")]
-    file_paths.append(icon_file_path)
-    for p in file_paths:
-        launcher_metadata[f"{p.name}_sha256"] = get_file_sha256(p)
+def calculate_launcher_metadata(icon_path: Path) -> dict:
+    launcher_metadata = {"pyship_version": pyship_version,
+                         "icon_hash": get_file_sha256(icon_path)}
     return launcher_metadata
 
 
@@ -34,5 +33,4 @@ def load_launcher_metadata(launcher_dir: Path, launcher_filename: str) -> (dict,
 def store_launcher_metadata(launcher_dir: Path, launcher_filename: str, metadata: dict):
     launcher_dir.mkdir(exist_ok=True)
     with get_launcher_metadata_file_path(launcher_dir, launcher_filename).open('w') as f:
-        launcher_metadata = json.dump(metadata, f, indent=4)
-    return launcher_metadata
+        json.dump(metadata, f, indent=4)
