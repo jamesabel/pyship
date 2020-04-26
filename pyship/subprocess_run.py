@@ -16,7 +16,7 @@ def subprocess_run(cmd: list, cwd: Path = None) -> int:
         cwd = str(cwd)  # subprocess requires a string
 
     try:
-        pyship_print(f"{cmd}")
+        log.info(cmd)
         target_process = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
         if target_process.returncode != ok_return_code and target_process.returncode != restart_return_code:
             for out in [target_process.stdout, target_process.stderr]:
