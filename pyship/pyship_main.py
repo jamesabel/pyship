@@ -13,6 +13,7 @@ def pyship_main():
     args = parser.parse_args()
 
     balsa = Balsa(__application_name__, __version__)
+    balsa.gui = True
     balsa.init_logger_from_args(args)
 
     pyship = PyShip()
