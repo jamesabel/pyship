@@ -5,8 +5,7 @@ from balsa import Balsa, verbose_arg_string, log_dir_arg_string, delete_existing
 from pyship import PyShip, __application_name__, __version__
 
 
-# pyship the app
-def pyship_app():
+def pyship_main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', f"--{verbose_arg_string}", dest=verbose_arg_string, action='store_true', help='verbose')
     parser.add_argument('-l', f"--{log_dir_arg_string}", dest=log_dir_arg_string, help="log directory")
@@ -18,4 +17,3 @@ def pyship_app():
 
     pyship = PyShip()
     pyship.ship()
-

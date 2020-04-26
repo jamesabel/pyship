@@ -6,7 +6,7 @@ import time
 
 from balsa import get_logger
 
-from pubapp import __application_name__, get_pubapp_sub_dir, get_folder_size, pubapp_dist_root, TargetAppInfo
+from pyship import __application_name__
 
 
 log = get_logger(__application_name__)

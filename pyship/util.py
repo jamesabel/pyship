@@ -36,7 +36,7 @@ def rm_mk_tree(dir_path: Path) -> bool:
             time.sleep(1)
         count += 1
     if dir_path.exists():
-        raise Exception("error: could not remove {} - exiting".format(dir_path))
+        raise Exception(str(f"error: could not remove {dir_path} - exiting"))
 
     log.info("making %s (%s)", dir_path, dir_path.absolute())
     os.makedirs(str(dir_path), exist_ok=True)
