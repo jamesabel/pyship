@@ -29,7 +29,7 @@ class TargetAppInfo:
                     self.name = pyship_section.get("app")
                     self.is_gui = pyship_section.get("is_gui", self.is_gui)
         else:
-            log.error(f"{str(self.pyproject_toml_file_path)} does not exist")
+            log.error(f"{str(self.pyproject_toml_file_path)} does not exist at {self.pyproject_toml_file_path.absolute().parent}")
 
     def is_complete(self):
         return self.name is not None
