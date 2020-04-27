@@ -11,12 +11,11 @@ from importlib import import_module
 
 from typeguard import typechecked
 from attr import attrs, attrib
-from balsa import get_logger
 
-from pyship import __application_name__ as pyship_application_name
+from pyship import __application_name__ as pyship_application_name, pyship_print
 from pyship import __author__ as pyship_author
 import pyship
-from pyship import get_file, extract, log_process_output, pyship_print, TargetAppInfo, subprocess_run
+from pyship import get_file, extract, log_process_output, TargetAppInfo, subprocess_run, python_interpreter_exes, get_logger
 from pyship.launcher import calculate_launcher_metadata, load_launcher_metadata, store_launcher_metadata
 from pyship.launcher import application_name as launcher_application_name
 
@@ -38,14 +37,20 @@ class PyShip:
         self.dist_path = Path(self.pyship_dist_root, target_os).absolute()
 
     def ship(self):
+        pyship_print(f"{pyship_application_name} starting")
         if self.target_app_info.is_complete():
             target_dist_dir = Path("dist").absolute()
             create_launcher(self.target_app_info, self.dist_path)
             pyshipy_dir = create_pyshipy(self.target_app_info, self.dist_path, self.cache_dir)
             install_target_module(self.target_app_info.name, pyshipy_dir, target_dist_dir)
+
+            # remove the python interpreter we don't want
+            os.unlink(Path(pyshipy_dir, python_interpreter_exes[not self.target_app_info.is_gui]))
+
             # run_nsis(self.target_app_info)
         else:
             log.error("insufficient app info to create application")
+        pyship_print(f"{pyship_application_name} done")
 
 
 @typechecked(always=True)
@@ -87,13 +92,13 @@ def create_launcher(target_app_info: TargetAppInfo, dist_path: Path):
         command_line.append(launcher_source_path)
 
         # avoid re-building launcher if its functionality wouldn't change
-        launcher_metadata = calculate_launcher_metadata(icon_path)
+        launcher_metadata = calculate_launcher_metadata(target_app_info.name, icon_path, target_app_info.is_gui)
         if not launcher_exe_path.exists() or launcher_metadata != load_launcher_metadata(dist_path, launcher_metadata_filename):
             try:
                 os.unlink(launcher_exe_path)
             except FileNotFoundError:
                 pass
-            pyship_print(f"launcher {launcher_exe_path} building")
+            pyship_print(f"building launcher ({launcher_exe_path})")
             pyship_print(f"{command_line}")
             launcher_run = subprocess.run(command_line, cwd=pyship_path, capture_output=True)
             store_launcher_metadata(dist_path, launcher_metadata_filename, launcher_metadata)
@@ -105,7 +110,7 @@ def create_launcher(target_app_info: TargetAppInfo, dist_path: Path):
 
             if launcher_exe_path.exists():
                 built_it = True
-                pyship_print(f"{launcher_exe_path} built")
+                pyship_print(f"launcher build ({launcher_exe_path})")
             else:
                 # launcher wasn't built - there was an error - so display the pyinstaller output to the user
                 for output_type, log_lines in log_lines.items():
@@ -155,7 +160,7 @@ def create_pyshipy(target_app_info: TargetAppInfo, dist_path: Path, cache_dir: P
         get_file(zip_url, cache_dir, zip_file)
         pyshipy_dir_name = f"{target_app_info.name}_{app_ver}"
         pyshipy_dir = Path(dist_path, pyshipy_dir_name).absolute()
-        pyship_print(f"creating {pyshipy_dir_name} ({pyshipy_dir})")
+        pyship_print(f"creating application {pyshipy_dir_name} ({pyshipy_dir})")
         extract(cache_dir, zip_file, pyshipy_dir)
 
         # Programmatically edit ._pth file, e.g. python38._pth

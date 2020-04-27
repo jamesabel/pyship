@@ -1,7 +1,6 @@
 from typeguard import typechecked
 from typing import Callable
 
-from sundry import local_time_string
 from balsa import Balsa
 from balsa import get_logger as balsa_get_logger
 
@@ -40,6 +39,3 @@ def log_process_output(output_type: str, process_output: bytes, log_function: Ca
     return lines
 
 
-def pyship_print(s: str):
-    log.info(s)
-    print(f"{local_time_string()} : {s}")

@@ -3,11 +3,13 @@ import sys
 from pathlib import Path
 from semver import parse_version_info
 import re
+import json
+from pprint import pprint
 
-from balsa import Balsa, get_logger
+
 from ismain import is_main
 
-from pyship import __application_name__, __author__, restart_return_code, error_return_code, can_not_find_file_return_code, subprocess_run
+from pyship import __application_name__, __author__, restart_return_code, error_return_code, can_not_find_file_return_code, subprocess_run, python_interpreter_exes, PyshipLog, get_logger
 
 # Just for the launcher, not the user's app that pyship is launching
 launcher_application_name = f"{__application_name__}_launcher"
@@ -15,10 +17,15 @@ launcher_application_name = f"{__application_name__}_launcher"
 log = get_logger(launcher_application_name)
 
 
-def setup_logging(target_app_name: str):
-    balsa = Balsa(launcher_application_name, __author__, gui=True)
-    if len(sys.argv) > 1 and (sys.argv[1].lower() == "-v" or sys.argv[1].lower() == "--verbose"):
-        balsa.verbose = True
+def setup_logging(target_app_name: str, is_gui: bool) -> bool:
+
+    if not is_gui:
+        print("sys.argv:")
+        pprint(sys.argv)  # todo: remove this one everything is working OK
+
+    verbose = len(sys.argv) > 1 and (sys.argv[1].lower() == "-v" or sys.argv[1].lower() == "--verbose")
+
+    balsa = PyshipLog(launcher_application_name, __author__, gui=is_gui, verbose=verbose)
 
     # use Sentry's exception service
     sentry_dsn = os.environ.get(f"SENTRY_DSN_{target_app_name.upper()}")
@@ -27,6 +34,8 @@ def setup_logging(target_app_name: str):
         balsa.use_sentry = True
 
     balsa.init_logger()
+
+    return verbose
 
 
 def launch() -> int:
@@ -44,13 +53,13 @@ def launch() -> int:
     pyshipy_regex = re.compile(pyshipy_regex_string, flags=re.IGNORECASE)  # simple format that accepts common semver (but not all semver)
 
     current_path = Path()
-    for p in current_path.glob("*"):
-        if p.is_dir():
-            matches = re.match(pyshipy_regex, p.name)
-            if matches is not None:
-                target_app_name = matches.group(1)
+    for metadata_file_path in current_path.glob("*_metadata.json"):
+        with metadata_file_path.open() as f:
+            metadata = json.load(f)
+            target_app_name = metadata.get("name")
+            is_gui = metadata.get("is_gui")
 
-    setup_logging(target_app_name)
+    verbose = setup_logging(target_app_name, is_gui)
 
     if target_app_name is None:
         log.error(f'could not derive target app name in {current_path.absolute()} (case insensitive regex = "{pyshipy_regex_string}")')
@@ -70,7 +79,7 @@ def launch() -> int:
         # get latest version of the app to be launched
         cwd = Path().resolve()
         glob_string = f"{target_app_name}_*"
-        glob_list = cwd.glob(glob_string)
+        glob_list = [p for p in cwd.glob(glob_string)]
         log.info(f"{glob_list}")
         latest_version = None
         versions = []
@@ -101,13 +110,17 @@ def launch() -> int:
 
                 # locate the python interpreter executable
                 python_exe_path = None
+                is_gui = None
                 python_exe_parent_dir = os.path.join(f"{target_app_name}_{latest_version}")
                 # the installer would have left exactly one of these python executables
-                for python_exe_candidate in ["python.exe", "pythonw.exe"]:
-                    if python_exe_path is None:
-                        python_exe_candidate_path = os.path.join(python_exe_parent_dir, python_exe_candidate)
-                        if os.path.exists(python_exe_candidate_path):
-                            python_exe_path = python_exe_candidate_path
+                for is_gui_candidate, python_exe_candidate in python_interpreter_exes.items():
+                    python_exe_candidate_path = os.path.join(python_exe_parent_dir, python_exe_candidate)
+                    if os.path.exists(python_exe_candidate_path):
+                        python_exe_path = python_exe_candidate_path
+                        is_gui = is_gui_candidate
+
+                if is_gui is False:
+                    print(f"found {python_exe_path}")
 
                 # run the target app using the python interpreter we just found
                 if python_exe_path is None:
@@ -119,7 +132,10 @@ def launch() -> int:
                         cmd.extend(sys.argv[1:])  # pass along any arguments to the target application
                     log.info(f"{cmd}")
                     try:
-                        return_code = subprocess_run(cmd)  # if app returns "restart_value" then it wants to be restarted
+                        if is_gui is False:
+                            print("subprocess:")
+                            print(cmd)
+                        return_code = subprocess_run(cmd, is_gui=is_gui)  # if app returns "restart_value" then it wants to be restarted
                     except FileNotFoundError as e:
                         log.error(f"{e} {cmd}")
                         return_code = error_return_code

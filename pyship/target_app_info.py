@@ -2,9 +2,8 @@ from attr import attrs, attrib
 from pathlib import Path
 
 import toml
-from balsa import get_logger
 
-from pyship import __application_name__ as pyship_application_name
+from pyship import __application_name__ as pyship_application_name, get_logger
 
 log = get_logger(pyship_application_name)
 

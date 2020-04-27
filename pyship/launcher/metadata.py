@@ -8,9 +8,11 @@ from typeguard import typechecked
 
 
 @typechecked(always=True)
-def calculate_launcher_metadata(icon_path: Path) -> dict:
-    launcher_metadata = {"pyship_version": pyship_version,
-                         "icon_hash": get_file_sha256(icon_path)}
+def calculate_launcher_metadata(target_app_name: str, icon_path: Path, is_gui: bool) -> dict:
+    launcher_metadata = {"name": target_app_name,
+                         "pyship_version": pyship_version,
+                         "icon_sha256": get_file_sha256(icon_path),
+                         "is_gui": is_gui}
     return launcher_metadata
 
 

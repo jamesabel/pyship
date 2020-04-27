@@ -1,8 +1,8 @@
 import argparse
 
-from balsa import Balsa, verbose_arg_string, log_dir_arg_string, delete_existing_arg_string
+from balsa import verbose_arg_string, log_dir_arg_string, delete_existing_arg_string
 
-from pyship import PyShip, __application_name__, __version__
+from pyship import PyShip, __application_name__, __version__, PyshipLog
 
 
 def pyship_main():
@@ -16,9 +16,8 @@ def pyship_main():
     if args.version:
         print(__version__)
     else:
-        balsa = Balsa(__application_name__, __version__)
-        balsa.gui = True
-        balsa.init_logger_from_args(args)
+        pyship_log = PyshipLog(__application_name__, __version__)
+        pyship_log.init_logger_from_args(args)
 
         pyship = PyShip()
         pyship.ship()
