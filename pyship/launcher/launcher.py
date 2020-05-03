@@ -55,7 +55,7 @@ def launch() -> int:
     pyshipy_regex_string = "([_a-z0-9]*)_([.0-9]+)"
     pyshipy_regex = re.compile(pyshipy_regex_string, flags=re.IGNORECASE)  # simple format that accepts common semver (but not all semver)
 
-    pyship_parent = Path("..").absolute()
+    pyship_parent = Path("..").resolve().absolute()
 
     # these should be set below, but in case there's no metadata file set them to something to allow the logging to be set up
     is_gui = False
