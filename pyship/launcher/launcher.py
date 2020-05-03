@@ -1,12 +1,12 @@
 import os
 import sys
 from pathlib import Path
-from semver import parse_version_info
-import re
+from semver import VersionInfo
 import json
 from pprint import pprint
 from logging import getLogger
 import appdirs
+import re
 
 
 from ismain import is_main
@@ -17,7 +17,7 @@ from pyship import PyshipLog, get_logger
 # Just for the launcher, not the user's app that pyship is launching
 launcher_application_name = f"{__application_name__}_launcher"
 
-log = getLogger(launcher_application_name)
+log = get_logger(launcher_application_name)
 
 
 def setup_logging(target_app_name: str, is_gui: bool) -> bool:
@@ -55,7 +55,7 @@ def launch() -> int:
     pyshipy_regex_string = "([_a-z0-9]*)_([.0-9]+)"
     pyshipy_regex = re.compile(pyshipy_regex_string, flags=re.IGNORECASE)  # simple format that accepts common semver (but not all semver)
 
-    pyship_parent = Path("..")
+    pyship_parent = Path("..").absolute()
 
     # these should be set below, but in case there's no metadata file set them to something to allow the logging to be set up
     is_gui = False
@@ -90,34 +90,36 @@ def launch() -> int:
         glob_string = f"{target_app_name}_*"
 
         # get app versions in the parent directory of the launcher
-        parent_glob_list = [p for p in Path("..").glob(glob_string)]
+        parent_glob_list = [p for p in pyship_parent.glob(glob_string)]
         log.info(f"{parent_glob_list=}")
 
-        user_data_glob_list = [p for p in Path(appdirs.user_data_dir(target_app_name, target_app_author)).glob(glob_string)]
+        user_data_dir = Path(appdirs.user_data_dir(target_app_name, target_app_author))
+        user_data_glob_list = [p for p in user_data_dir.glob(glob_string)]
         log.info(f"{user_data_glob_list=}")
 
+        total_glob_list = parent_glob_list + user_data_glob_list
+
         latest_version = None
-        versions = []
-        for candidate_dir in parent_glob_list + user_data_glob_list:
+        versions = {}
+        for candidate_dir in total_glob_list:
             if candidate_dir.is_dir():
                 matches = re.match(pyshipy_regex, candidate_dir.name)
                 if matches is not None:
                     version = matches.group(2)
                     try:
-                        semver = parse_version_info(version)
+                        semver = VersionInfo.parse(version)
                     except ValueError:
                         semver = None
                     if semver is not None:
-                        versions.append(semver)
+                        versions[semver] = candidate_dir
                     else:
                         log.error(f"could not get version out of {candidate_dir}")
 
         if len(versions) > 0:
-            versions.sort()
-            latest_version = str(versions[-1])
-            log.info(f"latest_version={latest_version}")
+            latest_version = sorted(versions.keys())[-1]
+            log.info(f"{latest_version=}")
         else:
-            log.error(f"could not find any expected application version in {cwd}")
+            log.error(f'could not find any expected application version in {total_glob_list} (looked in "{pyship_parent}" and "{user_data_dir}")')
 
         if latest_version is not None:
 
@@ -126,7 +128,7 @@ def launch() -> int:
                 # locate the python interpreter executable
                 python_exe_path = None
                 is_gui = None
-                python_exe_parent_dir = os.path.join(f"{target_app_name}_{latest_version}")
+                python_exe_parent_dir = Path(pyship_parent, f"{target_app_name}_{latest_version}").absolute()
                 # the installer would have left exactly one of these python executables
                 for is_gui_candidate, python_exe_candidate in python_interpreter_exes.items():
                     python_exe_candidate_path = os.path.join(python_exe_parent_dir, python_exe_candidate)
