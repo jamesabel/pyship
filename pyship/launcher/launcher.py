@@ -6,6 +6,7 @@ import re
 import json
 from pprint import pprint
 from logging import getLogger
+import appdirs
 
 
 from ismain import is_main
@@ -56,11 +57,13 @@ def launch() -> int:
 
     current_path = Path()
     is_gui = False
-    target_app_name = __application_name__
+    target_app_name = None
+    target_app_author = None
     for metadata_file_path in current_path.glob("*_metadata.json"):
         with metadata_file_path.open() as f:
             metadata = json.load(f)
-            target_app_name = metadata.get("name")
+            target_app_name = metadata.get("app")
+            target_app_author = metadata.get("author")
             is_gui = metadata.get("is_gui")
 
     verbose = setup_logging(target_app_name, is_gui)
@@ -81,13 +84,18 @@ def launch() -> int:
         # program_dir = os.path.join(appdirs.user_data_dir(target_app_name, launcher_author))
 
         # get latest version of the app to be launched
-        cwd = Path().resolve()
         glob_string = f"{target_app_name}_*"
-        glob_list = [p for p in cwd.glob(glob_string)]
-        log.info(f"{glob_list}")
+
+        # get app versions in the parent directory of the launcher
+        parent_glob_list = [p for p in Path("..").glob(glob_string)]
+        log.info(f"{parent_glob_list}")
+
+        user_data_glob_list = [p for p in Path(appdirs.user_data_dir(target_app_name, target_app_author)).glob(glob_string)]
+        log.info(f"{user_data_glob_list}")
+
         latest_version = None
         versions = []
-        for candidate_dir in glob_list:
+        for candidate_dir in parent_glob_list + user_data_glob_list:
             if candidate_dir.is_dir():
                 matches = re.match(pyshipy_regex, candidate_dir.name)
                 if matches is not None:
