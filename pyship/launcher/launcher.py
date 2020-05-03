@@ -50,16 +50,19 @@ def launch() -> int:
     return_code = None
 
     # derive the target app name based on the pyshipy dir(s) that exist
-    target_app_name = None
+
 
     pyshipy_regex_string = "([_a-z0-9]*)_([.0-9]+)"
     pyshipy_regex = re.compile(pyshipy_regex_string, flags=re.IGNORECASE)  # simple format that accepts common semver (but not all semver)
 
-    current_path = Path()
+    pyship_parent = Path("..")
+
+    # these should be set below, but in case there's no metadata file set them to something to allow the logging to be set up
     is_gui = False
-    target_app_name = None
-    target_app_author = None
-    for metadata_file_path in current_path.glob("*_metadata.json"):
+    target_app_name = __application_name__
+    target_app_author = __author__
+
+    for metadata_file_path in pyship_parent.glob("*_metadata.json"):
         with metadata_file_path.open() as f:
             metadata = json.load(f)
             target_app_name = metadata.get("app")
@@ -69,7 +72,7 @@ def launch() -> int:
     verbose = setup_logging(target_app_name, is_gui)
 
     if target_app_name is None:
-        log.error(f'could not derive target app name in {current_path.absolute()} (case insensitive regex = "{pyshipy_regex_string}")')
+        log.error(f'could not derive target app name in {pyship_parent.absolute()}")')
     else:
 
         log.info(f"{target_app_name}")
@@ -88,10 +91,10 @@ def launch() -> int:
 
         # get app versions in the parent directory of the launcher
         parent_glob_list = [p for p in Path("..").glob(glob_string)]
-        log.info(f"{parent_glob_list}")
+        log.info(f"{parent_glob_list=}")
 
         user_data_glob_list = [p for p in Path(appdirs.user_data_dir(target_app_name, target_app_author)).glob(glob_string)]
-        log.info(f"{user_data_glob_list}")
+        log.info(f"{user_data_glob_list=}")
 
         latest_version = None
         versions = []
