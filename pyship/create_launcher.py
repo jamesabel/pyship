@@ -47,7 +47,11 @@ def create_launcher(target_app_info: TargetAppInfo, dist_path: Path):
         log.error(f"python interpreter path not found")
     else:
 
-        dist_path.mkdir(parents=True, exist_ok=True)
+        try:
+            shutil.rmtree(dist_path)
+        except FileNotFoundError:
+            pass
+        dist_path.mkdir(parents=True)
 
         pyinstaller_exe_path = Path(Path(sys.executable).parent, "pyinstaller.exe")  # pyinstaller executable is in the same directory as the python interpreter
         if not pyinstaller_exe_path.exists():

@@ -14,8 +14,8 @@ def calculate_launcher_metadata(target_app_name: str, target_app_author: str, la
                          "pyship_version": pyship_version,
                          "icon_sha256": get_file_sha256(icon_path),
                          "is_gui": is_gui}
-    for p in launcher_source_dir.glob(".py"):
-        launcher_metadata[f"{p}_sha256"] = get_file_sha256(p)
+    for p in launcher_source_dir.glob("*.py"):
+        launcher_metadata[f"{p.name}_sha256"] = get_file_sha256(p)
     return launcher_metadata
 
 
