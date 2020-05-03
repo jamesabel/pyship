@@ -133,4 +133,4 @@ dmypy.json
 .idea/
 app/
 _*/
-temp.*
+scripts/all.bat

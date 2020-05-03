@@ -8,15 +8,18 @@ from typeguard import typechecked
 
 
 @typechecked(always=True)
-def calculate_launcher_metadata(target_app_name: str, launcher_source_path: Path, icon_path: Path, is_gui: bool) -> dict:
-    launcher_metadata = {"name": target_app_name,
+def calculate_launcher_metadata(target_app_name: str, target_app_author: str, launcher_source_dir: Path, icon_path: Path, is_gui: bool) -> dict:
+    launcher_metadata = {"app": target_app_name,
+                         "author": target_app_author,
                          "pyship_version": pyship_version,
                          "icon_sha256": get_file_sha256(icon_path),
-                         "launcher_sha256": get_file_sha256(launcher_source_path),
                          "is_gui": is_gui}
+    for p in launcher_source_dir.glob(".py"):
+        launcher_metadata[f"{p}_sha256"] = get_file_sha256(p)
     return launcher_metadata
 
 
+@typechecked(always=True)
 def get_launcher_metadata_file_path(launcher_dir: Path, launcher_filename: str) -> Path:
     return Path(launcher_dir, launcher_filename)
 

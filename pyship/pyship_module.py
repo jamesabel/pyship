@@ -33,7 +33,7 @@ class PyShip:
 
         self.target_app_info = TargetAppInfo()
         target_os = f"{self.platform_string}{self.platform_bits}"
-        self.dist_path = Path(self.pyship_dist_root, target_os).absolute()
+        self.dist_path = Path(self.pyship_dist_root, target_os, self.target_app_info.name).absolute()
 
     def ship(self):
         pyship_print(f"{pyship_application_name} starting")
@@ -48,7 +48,7 @@ class PyShip:
 
             # run_nsis(self.target_app_info)
         else:
-            log.error("insufficient app info to create application")
+            log.error(f"insufficient app info in {self.target_app_info.pyproject_toml_file_path} to create application")
         pyship_print(f"{pyship_application_name} done")
 
 

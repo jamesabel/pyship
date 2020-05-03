@@ -65,16 +65,14 @@ def create_launcher(target_app_info: TargetAppInfo, dist_path: Path):
         command_line.append(launcher_source_file_name)
 
         # avoid re-building launcher if its functionality wouldn't change
-        launcher_metadata = calculate_launcher_metadata(target_app_info.name, Path(launcher_source_path), icon_path, target_app_info.is_gui)
+        launcher_metadata = calculate_launcher_metadata(target_app_info.name, target_app_info.author, Path(launcher_module_dir), icon_path, target_app_info.is_gui)
         if not launcher_exe_path.exists() or launcher_metadata != load_launcher_metadata(dist_path, launcher_metadata_filename):
-            try:
-                os.unlink(launcher_exe_path)
-            except FileNotFoundError:
-                pass
+
             pyship_print(f"building launcher ({launcher_exe_path})", )
             pyship_print(f"{command_line}")
             launcher_run = subprocess.run(command_line, cwd=launcher_module_dir, capture_output=True)
-            store_launcher_metadata(dist_path, launcher_metadata_filename, launcher_metadata)
+            # metadata is in the app parent dir
+            store_launcher_metadata(dist_path.parent, launcher_metadata_filename, launcher_metadata)
 
             # log/print pyinstaller output
             log_lines = {}

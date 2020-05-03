@@ -4,7 +4,7 @@ build-backend = "flit_core.buildapi"
 
 [tool.flit.metadata]
 module = "pyship"
-author = "James Abel"
+author = "abel"
 author-email = "j@abel.co"
 home-page = "https://github.com/jamesabel/pyship"
 classifiers = ["License :: OSI Approved :: MIT License"]
@@ -23,4 +23,5 @@ requires = [
 [tool.pyship]
 # allow pyship to build itself as an app, e.g. as a test case
 app = "pyship"
+author = "abel"
 is_gui = false  # pyship itself is CLI
