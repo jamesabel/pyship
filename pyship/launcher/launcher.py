@@ -5,16 +5,18 @@ from semver import parse_version_info
 import re
 import json
 from pprint import pprint
+from logging import getLogger
 
 
 from ismain import is_main
 
-from pyship import __application_name__, __author__, restart_return_code, error_return_code, can_not_find_file_return_code, subprocess_run, python_interpreter_exes, PyshipLog, get_logger
+from pyship import __application_name__, __author__, restart_return_code, error_return_code, can_not_find_file_return_code, subprocess_run, python_interpreter_exes
+from pyship import PyshipLog, get_logger
 
 # Just for the launcher, not the user's app that pyship is launching
 launcher_application_name = f"{__application_name__}_launcher"
 
-log = get_logger(launcher_application_name)
+log = getLogger(launcher_application_name)
 
 
 def setup_logging(target_app_name: str, is_gui: bool) -> bool:
@@ -53,6 +55,8 @@ def launch() -> int:
     pyshipy_regex = re.compile(pyshipy_regex_string, flags=re.IGNORECASE)  # simple format that accepts common semver (but not all semver)
 
     current_path = Path()
+    is_gui = False
+    target_app_name = __application_name__
     for metadata_file_path in current_path.glob("*_metadata.json"):
         with metadata_file_path.open() as f:
             metadata = json.load(f)

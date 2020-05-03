@@ -12,7 +12,7 @@ window.withdraw()  # no main window
 
 
 @typechecked(always=True)
-def pyship_print(s: str, is_gui: bool):
+def pyship_print(s: str, is_gui: bool = False):
     log.info(s)
     if is_gui:
         global window
