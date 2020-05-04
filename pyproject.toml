@@ -22,6 +22,5 @@ requires = [
 
 [tool.pyship]
 # allow pyship to build itself as an app, e.g. as a test case
-app = "pyship"
-author = "abel"
 is_gui = false  # pyship itself is CLI
+description = "ships a python program to end users"

@@ -8,6 +8,8 @@ import shutil
 import subprocess
 import appdirs
 from importlib import import_module
+from functools import lru_cache
+from semver import VersionInfo
 
 from typeguard import typechecked
 from attr import attrs, attrib
@@ -15,7 +17,7 @@ from attr import attrs, attrib
 from pyship import __application_name__ as pyship_application_name, pyship_print
 from pyship import __author__ as pyship_author
 import pyship
-from pyship import get_file, extract, TargetAppInfo, subprocess_run, python_interpreter_exes, get_logger, add_tkinter
+from pyship import get_file, extract, TargetAppInfo, subprocess_run, python_interpreter_exes, get_logger, add_tkinter, run_nsis
 from pyship.create_launcher import create_launcher
 
 log = get_logger(pyship_application_name)
@@ -27,29 +29,47 @@ class PyShip:
     platform_string = attrib(default="win")  # win, darwin, linux, ...
     platform_bits = attrib(default=64)
     pyship_dist_root = attrib(default="app")  # seems like as good a name as any
+    target_dist_dir = attrib(default=Path("dist"))
     cache_dir = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))
 
     def __attrs_post_init__(self):
 
         self.target_app_info = TargetAppInfo()
-        target_os = f"{self.platform_string}{self.platform_bits}"
-        self.dist_path = Path(self.pyship_dist_root, target_os, self.target_app_info.name).absolute()
+        if self.target_app_info.is_complete():
+            target_os = f"{self.platform_string}{self.platform_bits}"
+            self.dist_path = Path(self.pyship_dist_root, target_os, self.target_app_info.name).absolute()
 
     def ship(self):
         pyship_print(f"{pyship_application_name} starting")
         if self.target_app_info.is_complete():
-            target_dist_dir = Path("dist").absolute()
             create_launcher(self.target_app_info, self.dist_path)
             pyshipy_dir = create_pyshipy(self.target_app_info, self.dist_path, self.cache_dir)
-            install_target_module(self.target_app_info.name, pyshipy_dir, target_dist_dir)
+            install_target_module(self.target_app_info.name, pyshipy_dir, self.target_dist_dir.absolute())
 
             # remove the python interpreter we don't want
             os.unlink(Path(pyshipy_dir, python_interpreter_exes[not self.target_app_info.is_gui]))
 
-            # run_nsis(self.target_app_info)
+            run_nsis(self.target_app_info, get_module_version(self.target_app_info.name))
+
+            pyship_print(f"{pyship_application_name} done")
         else:
             log.error(f"insufficient app info in {self.target_app_info.pyproject_toml_file_path} to create application")
-        pyship_print(f"{pyship_application_name} done")
+
+
+@typechecked(always=True)
+@lru_cache()
+def get_module_version(module_name: str) -> (VersionInfo, None):
+    app_ver = None
+    try:
+        app_module = import_module(module_name)
+        try:
+            app_ver = VersionInfo.parse(app_module.__version__)
+        except AttributeError:
+            log.error(f"your module {module_name} does not have a __version__ attribute.  Please add one.")
+    except ModuleNotFoundError:
+        log.info(f"{sys.path=}")
+        log.error(f"your module {module_name} not found in your python environment.  Perhaps it is not installed.  Check if {module_name} is in sys.path.")
+    return app_ver
 
 
 @typechecked(always=True)
@@ -62,17 +82,8 @@ def create_pyshipy(target_app_info: TargetAppInfo, dist_path: Path, cache_dir: P
     :return absolute path to pyshipy
     """
 
-    app_ver = None
     pyshipy_dir = None
-    try:
-        app_module = import_module(target_app_info.name)
-        try:
-            app_ver = app_module.__version__
-        except AttributeError:
-            log.error(f"your module {target_app_info.name} does not have a __version__ attribute.  Please add one.")
-    except ModuleNotFoundError:
-        log.error(f"your module {target_app_info.name} not found in your python environment.  Perhaps it is not installed.  Check if {target_app_info.name} is in sys.path.")
-        log.info(f"{sys.path=}")
+    app_ver = get_module_version(target_app_info.name)
 
     if app_ver is not None:
 
@@ -87,7 +98,7 @@ def create_pyshipy(target_app_info: TargetAppInfo, dist_path: Path, cache_dir: P
         zip_file = Path(f"python-{python_ver_str}-embed-amd64.zip")
         zip_url = f"https://www.python.org/ftp/python/{ver_base_str}/{zip_file}"
         get_file(zip_url, cache_dir, zip_file)
-        pyshipy_dir_name = f"{target_app_info.name}_{app_ver}"
+        pyshipy_dir_name = f"{target_app_info.name}_{str(app_ver)}"
         pyshipy_dir = Path(dist_path, pyshipy_dir_name).absolute()
         pyship_print(f"creating application {pyshipy_dir_name} ({pyshipy_dir})")
         extract(cache_dir, zip_file, pyshipy_dir)

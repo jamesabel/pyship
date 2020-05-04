@@ -80,13 +80,7 @@ def extract(source_folder: Path, source_file: Path, destination_folder: Path):
         raise Exception(f"Unsupported file type {source_file} (extension : {extension})")
 
 
-@typechecked(always=True)
-def get_folder_size(folder_path: Path) -> int:
-    total_size = 0
-    for d, _, fns in os.walk(str(folder_path)):
-        for f in fns:
-            total_size += os.path.getsize(os.path.join(d, f))
-    return total_size
+
 
 
 @typechecked(always=True)

@@ -1,18 +1,29 @@
 import os
 import datetime
 import subprocess
-from packaging.version import parse
-import time
+from pathlib import Path
+from semver import VersionInfo
 
+from typeguard import typechecked
 from balsa import get_logger
 
-from pyship import __application_name__
+from pyship import __application_name__, TargetAppInfo
 
 
 log = get_logger(__application_name__)
 
 
-def run_nsis(target_app_info: TargetAppInfo):
+@typechecked(always=True)
+def get_folder_size(folder_path: Path) -> int:
+    total_size = 0
+    for d, _, fns in os.walk(str(folder_path)):
+        for f in fns:
+            total_size += os.path.getsize(os.path.join(d, f))
+    return total_size
+
+
+@typechecked(always=True)
+def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, dist_root: Path):
 
     # basic format is from:
     # http://nsis.sourceforge.net/A_simple_installer_with_start_menu_shortcut_and_uninstaller
@@ -39,10 +50,9 @@ def run_nsis(target_app_info: TargetAppInfo):
     nsis_lines.append(f"!define EXENAME {exe_name}")
     nsis_lines.append(f'!define DESCRIPTION "{target_app_info.description}"')  # the description must be in quotes
 
-    version = parse(target_app_info.version).release
-    nsis_lines.append(f"!define VERSIONMAJOR {version[0]}")
-    nsis_lines.append(f"!define VERSIONMINOR {version[1]}")
-    nsis_lines.append(f"!define VERSIONBUILD {version[2]}")
+    nsis_lines.append(f"!define VERSIONMAJOR {target_app_version.major}")
+    nsis_lines.append(f"!define VERSIONMINOR {target_app_version.minor}")
+    nsis_lines.append(f"!define VERSIONBUILD {target_app_version.patch}")
 
     # These will be displayed by the "Click here for support information" link in "Add/Remove Programs"
     # It is possible to use "mailto:" links in here to open the email client
@@ -50,7 +60,7 @@ def run_nsis(target_app_info: TargetAppInfo):
     nsis_lines.append(f"!define UPDATEURL {target_app_info.url}")  # "Product Updates" link
     nsis_lines.append(f"!define ABOUTURL {target_app_info.url}")  # "Publisher" link
 
-    installed_size = get_folder_size(pubapp_dist_root)
+    installed_size = get_folder_size(dist_root)
     nsis_lines.append(f"!define INSTALLSIZE {installed_size}")
 
     nsis_lines.append("")
@@ -93,7 +103,7 @@ def run_nsis(target_app_info: TargetAppInfo):
     nsis_lines.append("  # Files for the install directory - to build the installer, these should be in the same directory as the install script (this file)")
     nsis_lines.append("  setOutPath $INSTDIR")
     nsis_lines.append('  # Files added here should be removed by the uninstaller (see section "uninstall")')
-    nsis_lines.append(f"  File /r {pubapp_dist_root}\\*")
+    nsis_lines.append(f"  File /r {dist_root}\\*")
 
     nsis_lines.append("")
     nsis_lines.append('  # Uninstaller - See function un.onInit and section "uninstall" for configuration')
@@ -149,7 +159,7 @@ def run_nsis(target_app_info: TargetAppInfo):
     nsis_lines.append('  rmDir "$SMPROGRAMS\\${COMPANYNAME}"')
 
     nsis_lines.append("  # Remove files")
-    nsis_lines.append("  RMDir /r $INSTDIR\\%s" % get_pubapp_sub_dir(target_app_info.name, target_app_info.version))  # all the user files should be here
+    nsis_lines.append("  RMDir /r $INSTDIR\\%s" % target_app_info.name)  # all the user files should be here
     # use these patterns so that we delete the uninstaller last
     nsis_lines.append("  delete $INSTDIR\\LICENSE")
     nsis_lines.append("  delete $INSTDIR\\COPY")  # for GPL
