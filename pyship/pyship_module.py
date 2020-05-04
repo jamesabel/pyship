@@ -49,7 +49,11 @@ class PyShip:
             # remove the python interpreter we don't want
             os.unlink(Path(pyshipy_dir, python_interpreter_exes[not self.target_app_info.is_gui]))
 
-            run_nsis(self.target_app_info, get_module_version(self.target_app_info.name))
+            icon_file_name = f"{self.target_app_info.name}.ico"
+            icon_path = Path(self.target_app_info.name, icon_file_name).absolute()  # this is also in create_launcher.py - make this a function somewhere
+            shutil.copy2(icon_path, icon_file_name)  # temporarily for nsis
+            run_nsis(self.target_app_info, get_module_version(self.target_app_info.name), pyshipy_dir)
+            os.unlink(icon_file_name)
 
             pyship_print(f"{pyship_application_name} done")
         else:

@@ -192,8 +192,10 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, di
         for name, lines in [("stdout", p.stdout), ("stderr", p.stderr)]:
             for line in lines.splitlines():
                 if len(line) > 0:
-                    log.info(f"{name}={line}")
+                    s = f"{name}={line}"
+                    print(s)
+                    log.info(s)
         if p.returncode != 0:
-            raise Exception(f"error : {cmd}")
+            log.error(f"error running : {cmd}")
     else:
         raise Exception(f"{make_nsis_path} not found - see http://nsis.sourceforge.net to get NSIS (Nullsoft Scriptable Install System)")
