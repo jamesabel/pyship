@@ -15,7 +15,7 @@ from attr import attrs, attrib
 from pyship import __application_name__ as pyship_application_name, pyship_print
 from pyship import __author__ as pyship_author
 import pyship
-from pyship import get_file, extract, TargetAppInfo, subprocess_run, python_interpreter_exes, get_logger
+from pyship import get_file, extract, TargetAppInfo, subprocess_run, python_interpreter_exes, get_logger, add_tkinter
 from pyship.create_launcher import create_launcher
 
 log = get_logger(pyship_application_name)
@@ -123,6 +123,9 @@ def create_pyshipy(target_app_info: TargetAppInfo, dist_path: Path, cache_dir: P
         # upgrade pip
         cmd = ["python.exe", "-m", "pip", "install", "--no-deps", "--upgrade", "pip"]
         subprocess.run(cmd, cwd=pyshipy_dir, shell=True)
+
+        # install tkinter (it doesn't come with embedded python)
+        add_tkinter(pyshipy_dir)
 
     return pyshipy_dir
 

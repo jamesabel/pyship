@@ -4,7 +4,6 @@ from pathlib import Path
 from semver import VersionInfo
 import json
 from pprint import pprint
-from logging import getLogger
 import appdirs
 import re
 
