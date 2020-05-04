@@ -1,5 +1,5 @@
 echo off
-del /S /Q venv
+rmdir /S /Q venv
 "\Program Files\Python38\python.exe" -m venv --clear venv
 venv\Scripts\python.exe -m pip install --no-deps --upgrade pip
 venv\Scripts\pip3 install -U setuptools

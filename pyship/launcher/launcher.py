@@ -125,24 +125,10 @@ def launch() -> int:
             while return_code is None or return_code == restart_return_code:
 
                 # locate the python interpreter executable
-                python_exe_path = None
-                is_gui = None
-                python_exe_parent_dir = Path(pyship_parent, f"{target_app_name}_{latest_version}").absolute()
-                # the installer would have left exactly one of these python executables
-                for is_gui_candidate, python_exe_candidate in python_interpreter_exes.items():
-                    python_exe_candidate_path = os.path.join(python_exe_parent_dir, python_exe_candidate)
-                    if os.path.exists(python_exe_candidate_path):
-                        python_exe_path = python_exe_candidate_path
-                        is_gui = is_gui_candidate
-
-                if is_gui is False:
-                    print(f"found {python_exe_path}")
+                python_exe_path = Path(pyship_parent, f"{target_app_name}_{latest_version}", python_interpreter_exes[is_gui])
 
                 # run the target app using the python interpreter we just found
-                if python_exe_path is None:
-                    log.error(f"python exe not found at {python_exe_parent_dir}")
-                    return_code = can_not_find_file_return_code
-                else:
+                if python_exe_path.exists():
                     cmd = [python_exe_path, "-m", target_app_name]
                     if len(sys.argv) > 1:
                         cmd.extend(sys.argv[1:])  # pass along any arguments to the target application
@@ -155,6 +141,9 @@ def launch() -> int:
                     except FileNotFoundError as e:
                         log.error(f"{e} {cmd}")
                         return_code = error_return_code
+                else:
+                    log.error(f"python exe not found at {python_exe_path}")
+                    return_code = can_not_find_file_return_code
 
     if return_code is None:
         return_code = error_return_code
