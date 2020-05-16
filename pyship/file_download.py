@@ -45,7 +45,8 @@ def rm_mk_tree(dir_path: Path) -> bool:
 
 
 @typechecked(always=True)
-def get_file(url: str, destination_folder: Path, file_name: Path):
+def file_download(url: str, destination_folder: Path, file_name: Path):
+    destination_folder.mkdir(parents=True, exist_ok=True)
     destination_path = Path(destination_folder, file_name)
     if destination_path.exists():
         log.info("using existing copy of %s from %s" % (file_name, os.path.abspath(destination_path)))
@@ -57,7 +58,7 @@ def get_file(url: str, destination_folder: Path, file_name: Path):
                 shutil.copyfileobj(response.raw, out_file)
             del response
         else:
-            raise Exception("error getting {} from {}".format(file_name, url))
+            raise Exception(f"error getting {file_name} from {url}")
     return destination_path
 
 
@@ -77,14 +78,4 @@ def extract(source_folder: Path, source_file: Path, destination_folder: Path):
         with tarfile.open(source) as tf:
             tf.extractall(destination_folder)
     else:
-        raise Exception(f"Unsupported file type {source_file} (extension : {extension})")
-
-
-
-
-
-@typechecked(always=True)
-def get_pyship_sub_dir(application_name: str) -> str:
-    application_module = __import__(application_name)
-    application_version = application_module.__version__
-    return f"{pyship_application_name}_{application_name}_{application_version}"
+        raise Exception(f"Unsupported file type {source_file.suffix} ({source_file})")

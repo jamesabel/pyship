@@ -13,6 +13,6 @@ from .subprocess_run import subprocess_run
 from .pyship_tkinter import add_tkinter
 from .target_app_info import TargetAppInfo
 from .nsis import run_nsis
-from .util import get_pyship_sub_dir, get_file, extract
-from .pyship_module import PyShip, create_launcher
+from .file_download import file_download, extract
+from .pyship_module import PyShip, create_launcher, create_pyshipy, get_pyship_sub_dir
 from .pyship_main import pyship_main

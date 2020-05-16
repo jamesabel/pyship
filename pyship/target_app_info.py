@@ -19,7 +19,7 @@ class TargetAppInfo:
         self.run_on_startup = False
 
         self.pyproject_toml_file_path = pyproject_toml_file_path
-        log.info(f"loading {self.pyproject_toml_file_path}")
+        log.info(f"loading {self.pyproject_toml_file_path} ({self.pyproject_toml_file_path.absolute()})")
         if self.pyproject_toml_file_path.exists():
             with self.pyproject_toml_file_path.open() as f:
                 pyproject = toml.load(f)

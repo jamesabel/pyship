@@ -17,7 +17,7 @@ from attr import attrs, attrib
 from pyship import __application_name__ as pyship_application_name, pyship_print
 from pyship import __author__ as pyship_author
 import pyship
-from pyship import get_file, extract, TargetAppInfo, subprocess_run, python_interpreter_exes, get_logger, add_tkinter, run_nsis
+from pyship import file_download, extract, TargetAppInfo, subprocess_run, python_interpreter_exes, get_logger, add_tkinter, run_nsis
 from pyship.create_launcher import create_launcher
 
 log = get_logger(pyship_application_name)
@@ -98,7 +98,7 @@ def create_pyshipy(target_app_info: TargetAppInfo, dist_path: Path, cache_dir: P
         ver_base_str = f"{python_ver_tuple[0]}.{python_ver_tuple[1]}.{base_patch_str}"
         zip_file = Path(f"python-{python_ver_str}-embed-amd64.zip")
         zip_url = f"https://www.python.org/ftp/python/{ver_base_str}/{zip_file}"
-        get_file(zip_url, cache_dir, zip_file)
+        file_download(zip_url, cache_dir, zip_file)
         pyshipy_dir_name = f"{target_app_info.name}_{str(app_ver)}"
         pyshipy_dir = Path(dist_path, pyshipy_dir_name).absolute()
         pyship_print(f"creating application {pyshipy_dir_name} ({pyshipy_dir})")
@@ -168,3 +168,10 @@ def install_target_module(module_name: str, pyshipy_dir: Path, target_dist_dir: 
         subprocess_run(cmd, cwd=pyshipy_dir)
     else:
         log.error(f"unexpected {pth_glob_list=} found at {pyshipy_dir=}")
+
+
+@typechecked(always=True)
+def get_pyship_sub_dir(application_name: str) -> str:
+    application_module = __import__(application_name)
+    application_version = application_module.__version__
+    return f"{pyship_application_name}_{application_name}_{application_version}"
