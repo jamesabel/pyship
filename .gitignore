@@ -136,3 +136,4 @@ _*/
 scripts/all.bat
 installers/
 *.nsi
+cache/
