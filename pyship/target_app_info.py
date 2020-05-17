@@ -17,6 +17,7 @@ class TargetAppInfo:
         self.url = ""
         self.description = ""
         self.run_on_startup = False
+        self.target_app_dir = pyproject_toml_file_path.parent.absolute()
 
         self.pyproject_toml_file_path = pyproject_toml_file_path
         log.info(f"loading {self.pyproject_toml_file_path} ({self.pyproject_toml_file_path.absolute()})")

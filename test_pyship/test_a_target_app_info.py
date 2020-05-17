@@ -8,3 +8,4 @@ def test_pyproject():
     assert(target_app_info.name == pyship_application_name)
     assert(target_app_info.author == pyship_author)
     assert(target_app_info.is_gui is not None)
+    assert(target_app_info.target_app_dir.exists())

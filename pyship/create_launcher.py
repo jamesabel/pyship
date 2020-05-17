@@ -8,7 +8,9 @@ from typeguard import typechecked
 
 import pyship
 from pyship import TargetAppInfo, pyship_print, log_process_output, get_logger
-from pyship.launcher import application_name as launcher_application_name, calculate_launcher_metadata, load_launcher_metadata, store_launcher_metadata
+from pyship import __application_name__ as pyship_application_name
+from pyship.launcher import application_name as launcher_application_name
+from pyship.launcher import calculate_launcher_metadata, load_launcher_metadata, store_launcher_metadata
 
 
 log = get_logger(launcher_application_name)
@@ -40,7 +42,17 @@ def create_launcher(target_app_info: TargetAppInfo, dist_path: Path):
 
     launcher_exe_filename = f"{target_app_info.name}.exe"
     launcher_exe_path = Path(dist_path, launcher_exe_filename)
-    icon_path = Path(target_app_info.name, f"{target_app_info.name}.ico").absolute()
+    icon_path = Path(target_app_info.target_app_dir, f"{target_app_info.name}.ico").absolute()
+
+    if not icon_path.exists():
+        # use pyship's icon if the target app doesn't have one
+        pyship_icon_path = Path(Path(pyship.__file__).parent, f"{pyship_application_name}.ico").absolute()
+        log.warning(f"{target_app_info.name} does not include its own icon - using {pyship_application_name} icon ({pyship_icon_path})")
+        if pyship_icon_path.exists():
+            log.info(f"copying {pyship_icon_path} to {icon_path}")
+            shutil.copy2(pyship_icon_path, icon_path)
+        else:
+            log.fatal(f"{pyship_icon_path} does not exist")
 
     python_interpreter_path = sys.executable
     if python_interpreter_path is None or len(python_interpreter_path) < 1:

@@ -28,6 +28,7 @@ class PyShip:
 
     platform_string = attrib(default="win")  # win, darwin, linux, ...
     platform_bits = attrib(default=64)
+    target_app_dir = attrib(default=None)  # if None, current working directory is used
     pyship_dist_root = attrib(default="app")  # seems like as good a name as any
     target_dist_dir = attrib(default=Path("dist"))
     cache_dir = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))
@@ -43,7 +44,7 @@ class PyShip:
         pyship_print(f"{pyship_application_name} starting")
         if self.target_app_info.is_complete():
             create_launcher(self.target_app_info, self.dist_path)
-            pyshipy_dir = create_pyshipy(self.target_app_info, self.dist_path, self.cache_dir)
+            pyshipy_dir = create_pyshipy(self.target_app_info, self.dist_path, self.cache_dir, self.target_app_dir)
             install_target_module(self.target_app_info.name, pyshipy_dir, self.target_dist_dir.absolute())
 
             icon_file_name = f"{self.target_app_info.name}.ico"
@@ -74,16 +75,22 @@ def get_module_version(module_name: str) -> (VersionInfo, None):
 
 
 @typechecked(always=True)
-def create_pyshipy(target_app_info: TargetAppInfo, dist_path: Path, cache_dir: Path) -> (Path, None):
+def create_pyshipy(target_app_info: TargetAppInfo, dist_path: Path, cache_dir: Path, target_app_dir: (Path, None)) -> (Path, None):
     """
     create pyship python dir
     :param target_app_info: target app info
     :param dist_path: dist path
     :param cache_dir: cache dir
+    :param target_app_dir: target application dir (use if not the current dir)
     :return absolute path to pyshipy
     """
 
     pyshipy_dir = None
+
+    if target_app_dir is not None:
+        # Usually pyship is executed in the parent directory of the target application module.  If it isn't, set this dir to the target application module's parent dir.
+        sys.path.append(str(target_app_dir.absolute()))
+
     app_ver = get_module_version(target_app_info.name)
 
     if app_ver is not None:

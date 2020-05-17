@@ -1,6 +1,5 @@
 import os
 import shutil
-import time
 import tarfile
 import zipfile
 from pathlib import Path
@@ -9,39 +8,9 @@ from typeguard import typechecked
 import requests
 from balsa import get_logger
 
-from pyship import __application_name__ as pyship_application_name
+from pyship import __application_name__ as pyship_application_name, mkdirs
 
 log = get_logger(pyship_application_name)
-
-
-@typechecked(always=True)
-def rm_mk_tree(dir_path: Path) -> bool:
-    """
-    Clears out a dir.  Makes it if it doesn't exist.
-    :param dir_path: dir to clear out
-    :return: True on success
-    """
-
-    # fancy rmtree, since for some reason shutil.rmtree can return before the tree is actually removed
-    count = 0
-    log.debug("removing %s (%s)", dir_path, dir_path.absolute())
-    while dir_path.exists() and count < 30:
-        try:
-            shutil.rmtree(dir_path)
-        except FileNotFoundError:
-            pass
-        except IOError:
-            if count > 1:
-                log.info("retrying removal of %s - perhaps you need to run this as sudo?", dir_path)
-            time.sleep(1)
-        count += 1
-    if dir_path.exists():
-        raise Exception(str(f"error: could not remove {dir_path} - exiting"))
-
-    log.info("making %s (%s)", dir_path, dir_path.absolute())
-    os.makedirs(str(dir_path), exist_ok=True)
-
-    return count > 0
 
 
 @typechecked(always=True)
@@ -64,7 +33,7 @@ def file_download(url: str, destination_folder: Path, file_name: Path):
 
 @typechecked(always=True)
 def extract(source_folder: Path, source_file: Path, destination_folder: Path):
-    rm_mk_tree(destination_folder)
+    mkdirs(destination_folder, remove_first=True)
     source = Path(source_folder, source_file)
     log.debug(f"extracting {source} to {destination_folder}")
     if source_file.suffix == ".zip":

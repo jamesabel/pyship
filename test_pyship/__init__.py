@@ -1,0 +1,1 @@
+from .tst_paths import TST_APP_NAME, TST_APP_DIR, TST_APP_DIST, TST_APP_CACHE
