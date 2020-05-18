@@ -1,0 +1,13 @@
+
+Terminology
+
+app (AKA target app or target application): the target application that we want to ship.
+app source: Target application package source directory.  This is the root directory of the source to a Python module/package that can be invoked via python -m <package_name>.
+app distribution: The target application that has been built into a distributable package, such as a wheel. The app distribution can be installed via pip.
+launcher: An executable file native to the target OS that ultimately runs the target application. To the end user this is the "application", even though it is actually a launcher of the
+          "real" application.
+pyshipy directory: This is a directory pyship creates that contains the complete and relocatable application.  This is similar to a virtual environment, except that it's a complete
+                   Python environment and does not use the "base" Python install.  It does not include the launcher, however.
+frozen app: The target application built into a complete, self-contained, relocatable directory.  This contains the launcher and (one or more) pyshipy directory/directories.  When an
+            application is initially installed there is exactly one pyshipy directory.
+app installer: an executable file that, when executed, installs the frozen app into the user's system.
