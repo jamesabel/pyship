@@ -14,5 +14,8 @@ from .pyship_tkinter import add_tkinter
 from .target_app_info import TargetAppInfo
 from .nsis import run_nsis
 from .file_download import file_download, extract
-from .pyship_module import PyShip, create_launcher, create_pyshipy, get_pyship_sub_dir
+from .create_launcher import create_launcher
+from .module_helper import install_target_module, get_module_version
+from .pyshipy import create_pyshipy
+from .pyship_module import PyShip
 from .pyship_main import pyship_main

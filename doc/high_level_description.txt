@@ -2,7 +2,9 @@
 - Create a virtual environment for your project like usual.
   - Make pyship one of the requirements.
 - Create your a Python package (AKA a module) that can be invoked as an application with the python -m switch.
-- Package up your package.  For example, using flit or setup.py. This will end up in a distribution directory, often called dist.
+- Create a pyproject.toml file.
+  - Optional: package up your package using flit. This will end up in a distribution directory, often called dist.  pyship will do this for you, but you can also do this outside of
+    pyship, for example to publish your app as a package to PyPI.
 - Run pyship.  It will create the following directory structure:
 
   <app_dir>                                                 # default of "app"

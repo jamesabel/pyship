@@ -1,24 +1,13 @@
-import platform
 import os
-import sys
 from pathlib import Path
-import re
-import glob
 import shutil
-import subprocess
-import appdirs
-from importlib import import_module
-from functools import lru_cache
-from semver import VersionInfo
 
-from typeguard import typechecked
+import appdirs
 from attr import attrs, attrib
 
-from pyship import __application_name__ as pyship_application_name, pyship_print
+from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
-import pyship
-from pyship import file_download, extract, TargetAppInfo, subprocess_run, python_interpreter_exes, get_logger, add_tkinter, run_nsis
-from pyship.create_launcher import create_launcher
+from pyship import TargetAppInfo, get_logger, run_nsis, pyship_print, create_pyshipy, create_launcher, install_target_module, get_module_version
 
 log = get_logger(pyship_application_name)
 
@@ -60,127 +49,8 @@ class PyShip:
             log.error(f"insufficient app info in {self.target_app_info.pyproject_toml_file_path} to create application")
 
 
-@typechecked(always=True)
-@lru_cache()
-def get_module_version(module_name: str) -> (VersionInfo, None):
-    app_ver = None
-    try:
-        app_module = import_module(module_name)
-        try:
-            app_ver = VersionInfo.parse(app_module.__version__)
-        except AttributeError:
-            log.error(f"your module {module_name} does not have a __version__ attribute.  Please add one.")
-    except ModuleNotFoundError:
-        log.info(f"{sys.path=}")
-        log.error(f"your module {module_name} not found in your python environment.  Perhaps it is not installed.  Check if {module_name} is in sys.path.")
-    return app_ver
-
-
-@typechecked(always=True)
-def create_pyshipy(target_app_info: TargetAppInfo, app_path_output: Path, cache_dir: Path, target_app_source_dir: (Path, None)) -> (Path, None):
-    """
-    create pyship python dir
-    :param target_app_info: target app info
-    :param app_path_output: app gets built here (i.e. the output of this function)
-    :param cache_dir: cache dir
-    :param target_app_source_dir: target application source dir (use if target app not the current dir nor installed into the venv we're executing from) (input)
-    :return absolute path to created pyshipy
-    """
-
-    pyshipy_dir = None
-
-    if target_app_source_dir is not None:
-        # Usually pyship is executed in the parent directory of the target application module.  If it isn't, set this dir to the target application module's parent dir.
-        sys.path.append(str(target_app_source_dir.absolute()))
-
-    app_ver = get_module_version(target_app_info.name)
-
-    if app_ver is not None:
-
-        # use project's Python (in this venv) to determine target Python version
-        python_ver_str = platform.python_version()
-        python_ver_tuple = platform.python_version_tuple()
-
-        # get the embedded python interpreter
-        base_patch_str = re.search(r"([0-9]+)", python_ver_tuple[2]).group(1)
-        # version but with numbers only and not the extra release info (e.g. b, rc, etc.)
-        ver_base_str = f"{python_ver_tuple[0]}.{python_ver_tuple[1]}.{base_patch_str}"
-        zip_file = Path(f"python-{python_ver_str}-embed-amd64.zip")
-        zip_url = f"https://www.python.org/ftp/python/{ver_base_str}/{zip_file}"
-        file_download(zip_url, cache_dir, zip_file)
-        pyshipy_dir_name = f"{target_app_info.name}_{str(app_ver)}"
-        pyshipy_dir = Path(app_path_output, pyshipy_dir_name).absolute()
-        pyship_print(f"creating application {pyshipy_dir_name} ({pyshipy_dir})")
-        extract(cache_dir, zip_file, pyshipy_dir)
-
-        # Programmatically edit ._pth file, e.g. python38._pth
-        # see https://github.com/pypa/pip/issues/4207
-        # todo: refactor to use Path
-        glob_path = os.path.abspath(os.path.join(pyshipy_dir, "python*._pth"))
-        pth_glob = glob.glob(glob_path)
-        if pth_glob is None or len(pth_glob) != 1:
-            log.critical("could not find '._pth' file at %s" % glob_path)
-        else:
-            pth_path = pth_glob[0]
-            log.info("uncommenting import site in %s" % pth_path)
-            pth_contents = open(pth_path).read()
-            pth_save_path = pth_path.replace("._pth", "._pip_bug_pth")
-            shutil.move(pth_path, pth_save_path)
-            pth_contents = pth_contents.replace("#import site", "import site")  # uncomment import site
-            pth_contents = "..\n" + pth_contents  # add where pyship_main.py will be (one dir 'up' from python.exe)
-            open(pth_path, "w").write(pth_contents)
-
-        # install pip
-        # this is how get-pip was originally obtained
-        # get_pip_file = "get-pip.py"
-        # get_file("https://bootstrap.pypa.io/get-pip.py", cache_folder, get_pip_file)
-        get_pip_file = "get-pip.py"
-        get_pip_path = os.path.join(os.path.dirname(pyship.__file__), get_pip_file)
-        log.info(f"{get_pip_path}")
-        cmd = ["python.exe", os.path.abspath(get_pip_path), "--no-warn-script-location"]
-        log.info(f"{cmd} (cwd={pyshipy_dir})")
-        subprocess.run(cmd, cwd=pyshipy_dir, shell=True)
-
-        # upgrade pip
-        cmd = ["python.exe", "-m", "pip", "install", "--no-deps", "--upgrade", "pip"]
-        subprocess.run(cmd, cwd=pyshipy_dir, shell=True)
-
-        # install tkinter (it doesn't come with embedded python)
-        add_tkinter(pyshipy_dir)
-
-    return pyshipy_dir
-
-
-@typechecked(always=True)
-def install_target_module(module_name: str, pyshipy_dir: Path, target_dist_dir: Path):
-    """
-    install target module and its dependencies into pyshipy
-    :param module_name: module name
-    :param pyshipy_dir: pyshipy dir
-    :param target_dist_dir: target module dist dir
-    :return:
-    """
-
-    # install this local app in the embedded python dir
-    pyship_print(f"installing {module_name} into {pyshipy_dir}")
-
-    # remove python*._pth
-    # https://github.com/PythonCharmers/python-future/issues/411
-    pth_glob_list = [p for p in Path(pyshipy_dir).glob("python*._pth")]
-    if len(pth_glob_list) == 1:
-        pth_path = str(pth_glob_list[0])
-        pth_save_path = pth_path.replace("._pth", "._future_bug_pth")
-        shutil.move(pth_path, pth_save_path)
-
-        # install the target module (and its dependencies)
-        cmd = [str(Path(pyshipy_dir, "python.exe")), "-m", "pip", "install", "-U", module_name, "-f", str(target_dist_dir), "--no-warn-script-location"]
-        subprocess_run(cmd, cwd=pyshipy_dir)
-    else:
-        log.error(f"unexpected {pth_glob_list=} found at {pyshipy_dir=}")
-
-
-@typechecked(always=True)
-def get_pyship_sub_dir(application_name: str) -> str:
-    application_module = __import__(application_name)
-    application_version = application_module.__version__
-    return f"{pyship_application_name}_{application_name}_{application_version}"
+#@typechecked(always=True)
+#def get_pyship_sub_dir(application_name: str) -> str:
+#    application_module = __import__(application_name)
+#    application_version = application_module.__version__
+#    return f"{pyship_application_name}_{application_name}_{application_version}"
