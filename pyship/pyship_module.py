@@ -77,21 +77,21 @@ def get_module_version(module_name: str) -> (VersionInfo, None):
 
 
 @typechecked(always=True)
-def create_pyshipy(target_app_info: TargetAppInfo, app_path_output: Path, cache_dir: Path, target_app_dir: (Path, None)) -> (Path, None):
+def create_pyshipy(target_app_info: TargetAppInfo, app_path_output: Path, cache_dir: Path, target_app_source_dir: (Path, None)) -> (Path, None):
     """
     create pyship python dir
     :param target_app_info: target app info
     :param app_path_output: app gets built here (i.e. the output of this function)
     :param cache_dir: cache dir
-    :param target_app_dir: target application dir (use if not the current dir) (input)
+    :param target_app_source_dir: target application source dir (use if target app not the current dir nor installed into the venv we're executing from) (input)
     :return absolute path to created pyshipy
     """
 
     pyshipy_dir = None
 
-    if target_app_dir is not None:
+    if target_app_source_dir is not None:
         # Usually pyship is executed in the parent directory of the target application module.  If it isn't, set this dir to the target application module's parent dir.
-        sys.path.append(str(target_app_dir.absolute()))
+        sys.path.append(str(target_app_source_dir.absolute()))
 
     app_ver = get_module_version(target_app_info.name)
 
