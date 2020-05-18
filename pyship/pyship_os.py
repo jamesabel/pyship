@@ -73,7 +73,7 @@ def mkdirs(d: Path, remove_first: bool = False, log_function=log.error):
     while count > 0 and not d.exists():
         try:
             # for some reason we can get the FileNotFoundError exception
-            d.mkdir(exist_ok=True)
+            d.mkdir(parents=True, exist_ok=True)
         except FileNotFoundError:
             pass
         if not d.exists():

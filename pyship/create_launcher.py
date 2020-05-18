@@ -17,11 +17,11 @@ log = get_logger(launcher_application_name)
 
 
 @typechecked(always=True)
-def create_launcher(target_app_info: TargetAppInfo, dist_path: Path):
+def create_launcher(target_app_info: TargetAppInfo, app_path_output: Path):
     """
     create the launcher executable
     :param target_app_info: target app info
-    :param dist_path: dist path
+    :param app_path_output: app gets built here
     :return: True if launcher was built
     """
 
@@ -41,7 +41,7 @@ def create_launcher(target_app_info: TargetAppInfo, dist_path: Path):
     launcher_source_path = os.path.join(launcher_module_dir, launcher_source_file_name)
 
     launcher_exe_filename = f"{target_app_info.name}.exe"
-    launcher_exe_path = Path(dist_path, launcher_exe_filename)
+    launcher_exe_path = Path(app_path_output, launcher_exe_filename)
     icon_path = Path(target_app_info.target_app_dir, f"{target_app_info.name}.ico").absolute()
 
     if not icon_path.exists():
@@ -60,15 +60,15 @@ def create_launcher(target_app_info: TargetAppInfo, dist_path: Path):
     else:
 
         try:
-            shutil.rmtree(dist_path)
+            shutil.rmtree(app_path_output)
         except FileNotFoundError:
             pass
-        dist_path.mkdir(parents=True)
+        app_path_output.mkdir(parents=True)
 
         pyinstaller_exe_path = Path(Path(sys.executable).parent, "pyinstaller.exe")  # pyinstaller executable is in the same directory as the python interpreter
         if not pyinstaller_exe_path.exists():
             raise FileNotFoundError(str(pyinstaller_exe_path))
-        command_line = [str(pyinstaller_exe_path), "--clean", "-i", str(icon_path), "-n", target_app_info.name, "--distpath", str(dist_path.absolute())]
+        command_line = [str(pyinstaller_exe_path), "--clean", "-i", str(icon_path), "-n", target_app_info.name, "--distpath", str(app_path_output.absolute())]
 
         # "-F" or "--onefile" is too slow of a start up - was measured at 15 sec for the launch app (experiment with just a print as the app was still 2 sec startup).  --onedir is ~1 sec.
         # I could probably get the full app down a bit, but it'll never be 1 sec.
@@ -82,13 +82,13 @@ def create_launcher(target_app_info: TargetAppInfo, dist_path: Path):
 
         # avoid re-building launcher if its functionality wouldn't change
         launcher_metadata = calculate_launcher_metadata(target_app_info.name, target_app_info.author, Path(launcher_module_dir), icon_path, target_app_info.is_gui)
-        if not launcher_exe_path.exists() or launcher_metadata != load_launcher_metadata(dist_path, launcher_metadata_filename):
+        if not launcher_exe_path.exists() or launcher_metadata != load_launcher_metadata(app_path_output, launcher_metadata_filename):
 
             pyship_print(f"building launcher ({launcher_exe_path})", )
             pyship_print(f"{command_line}")
             launcher_run = subprocess.run(command_line, cwd=launcher_module_dir, capture_output=True)
             # metadata is in the app parent dir
-            store_launcher_metadata(dist_path.parent, launcher_metadata_filename, launcher_metadata)
+            store_launcher_metadata(app_path_output.parent, launcher_metadata_filename, launcher_metadata)
 
             # log/print pyinstaller output
             log_lines = {}

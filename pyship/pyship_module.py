@@ -37,14 +37,16 @@ class PyShip:
 
         self.target_app_info = TargetAppInfo()
         if self.target_app_info.is_complete():
-            target_os = f"{self.platform_string}{self.platform_bits}"
-            self.dist_path = Path(self.pyship_dist_root, target_os, self.target_app_info.name).absolute()
+            self.app_path = Path(self.pyship_dist_root, self.get_target_os(), self.target_app_info.name).absolute()
+
+    def get_target_os(self):
+        return f"{self.platform_string}{self.platform_bits}"
 
     def ship(self):
         pyship_print(f"{pyship_application_name} starting")
         if self.target_app_info.is_complete():
-            create_launcher(self.target_app_info, self.dist_path)
-            pyshipy_dir = create_pyshipy(self.target_app_info, self.dist_path, self.cache_dir, self.target_app_dir)
+            create_launcher(self.target_app_info, self.app_path)
+            pyshipy_dir = create_pyshipy(self.target_app_info, self.app_path, self.cache_dir, self.target_app_dir)
             install_target_module(self.target_app_info.name, pyshipy_dir, self.target_dist_dir.absolute())
 
             icon_file_name = f"{self.target_app_info.name}.ico"
@@ -75,14 +77,14 @@ def get_module_version(module_name: str) -> (VersionInfo, None):
 
 
 @typechecked(always=True)
-def create_pyshipy(target_app_info: TargetAppInfo, dist_path: Path, cache_dir: Path, target_app_dir: (Path, None)) -> (Path, None):
+def create_pyshipy(target_app_info: TargetAppInfo, app_path_output: Path, cache_dir: Path, target_app_dir: (Path, None)) -> (Path, None):
     """
     create pyship python dir
     :param target_app_info: target app info
-    :param dist_path: dist path
+    :param app_path_output: app gets built here (i.e. the output of this function)
     :param cache_dir: cache dir
-    :param target_app_dir: target application dir (use if not the current dir)
-    :return absolute path to pyshipy
+    :param target_app_dir: target application dir (use if not the current dir) (input)
+    :return absolute path to created pyshipy
     """
 
     pyshipy_dir = None
@@ -107,7 +109,7 @@ def create_pyshipy(target_app_info: TargetAppInfo, dist_path: Path, cache_dir: P
         zip_url = f"https://www.python.org/ftp/python/{ver_base_str}/{zip_file}"
         file_download(zip_url, cache_dir, zip_file)
         pyshipy_dir_name = f"{target_app_info.name}_{str(app_ver)}"
-        pyshipy_dir = Path(dist_path, pyshipy_dir_name).absolute()
+        pyshipy_dir = Path(app_path_output, pyshipy_dir_name).absolute()
         pyship_print(f"creating application {pyshipy_dir_name} ({pyshipy_dir})")
         extract(cache_dir, zip_file, pyshipy_dir)
 

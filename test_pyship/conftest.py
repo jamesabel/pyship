@@ -17,9 +17,10 @@ class TestPyshipLoggingHandler(logging.Handler):
 @pytest.fixture(scope="session", autouse=True)
 def setup_logging():
     balsa = Balsa(pyship_application_name, pyship_author, log_directory=Path("log", "pytest"), delete_existing_log_files=True, verbose=True)
-    balsa.init_logger()
 
     # add handler that will throw an assert on ERROR or greater
     test_handler = TestPyshipLoggingHandler()
     test_handler.setLevel(logging.ERROR)
     logging.getLogger().addHandler(test_handler)
+
+    balsa.init_logger()
