@@ -81,3 +81,12 @@ def mkdirs(d: Path, remove_first: bool = False, log_function=log.error):
         count -= 1
     if not d.exists():
         log_function(f'could not mkdirs "{d}" ({d.absolute()})')
+
+
+@typechecked(always=True)
+def copy_tree(source: Path, dest: Path, subdir: str):
+    # copy the tree, but don't copy things like __pycache__
+    dest.mkdir(parents=True, exist_ok=True)
+    source = Path(source, subdir)
+    dest = Path(dest, subdir)
+    shutil.copytree(str(source), str(dest), ignore=shutil.ignore_patterns("__pycache__"), dirs_exist_ok=True)

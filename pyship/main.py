@@ -5,7 +5,7 @@ from balsa import verbose_arg_string, log_dir_arg_string, delete_existing_arg_st
 from pyship import PyShip, __application_name__, __version__, PyshipLog
 
 
-def pyship_main():
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-V', '--version', dest="version", action='store_true', help='display version')
     parser.add_argument('-v', f"--{verbose_arg_string}", dest=verbose_arg_string, action='store_true', help='verbose')

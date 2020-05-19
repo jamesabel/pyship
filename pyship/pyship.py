@@ -47,10 +47,3 @@ class PyShip:
             pyship_print(f"{pyship_application_name} done")
         else:
             log.error(f"insufficient app info in {self.target_app_info.pyproject_toml_file_path} to create application")
-
-
-#@typechecked(always=True)
-#def get_pyship_sub_dir(application_name: str) -> str:
-#    application_module = __import__(application_name)
-#    application_version = application_module.__version__
-#    return f"{pyship_application_name}_{application_name}_{application_version}"
