@@ -18,16 +18,16 @@ class PyShip:
 
     platform_string = attrib(default="win")  # win, darwin, linux, ...
     platform_bits = attrib(default=64)
-    target_app_dir = attrib(default=Path())  # if None, current working directory is used
-    pyship_dist_root = attrib(default="app")  # seems like as good a name as any
+    target_app_parent_dir = attrib(default=Path())  # if None, current working directory is used
+    frozen_app_dir_name = attrib(default="app")  # seems like as good a name as any
     dist_dir = attrib(default="dist")  # filt, etc. use "dist" as the package destination directory
     cache_dir = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))
 
     def __attrs_post_init__(self):
 
-        self.target_app_info = TargetAppInfo(self.target_app_dir)
+        self.target_app_info = TargetAppInfo(self.target_app_parent_dir)
         if self.target_app_info.is_complete():
-            self.frozen_app_path = Path(self.pyship_dist_root, self.get_target_os(), self.target_app_info.name).absolute()
+            self.frozen_app_path = Path(self.target_app_parent_dir, self.frozen_app_dir_name, self.get_target_os(), self.target_app_info.name).absolute()
 
     def get_target_os(self):
         return f"{self.platform_string}{self.platform_bits}"
@@ -43,12 +43,12 @@ class PyShip:
 
             pyshipy_dir = create_base_pyshipy(self.target_app_info, self.frozen_app_path, self.cache_dir)  # create the base pyshipy
 
-            install_target_app(self.target_app_info.name, pyshipy_dir, Path(self.target_app_dir, self.dist_dir), True)
+            install_target_app(self.target_app_info.name, pyshipy_dir, Path(self.target_app_parent_dir, self.dist_dir), True)
 
             icon_file_name = f"{self.target_app_info.name}.ico"
-            shutil.copy2(Path(self.target_app_dir, icon_file_name), self.target_app_dir)  # temporarily for nsis
+            # shutil.copy2(Path(self.target_app_dir, icon_file_name), self.target_app_dir)  # temporarily for nsis
             run_nsis(self.target_app_info, target_app_version, pyshipy_dir)
-            os.unlink(Path(self.target_app_dir, icon_file_name))
+            os.unlink(Path(self.target_app_parent_dir, icon_file_name))
 
             pyship_print(f"{pyship_application_name} done")
         else:
