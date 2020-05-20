@@ -28,7 +28,7 @@ def create_base_pyshipy(target_app_info: TargetAppInfo, app_path_output: Path, c
     :return absolute path to created pyshipy
     """
 
-    mkdirs(app_path_output, remove_first=True)
+    mkdirs(app_path_output)
 
     # use project's Python (in this venv) to determine target Python version
     python_ver_str = platform.python_version()
