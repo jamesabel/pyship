@@ -38,10 +38,6 @@ class PyShip:
         pyship_print(f"{pyship_application_name} starting")
         if self.target_app_info.is_complete():
 
-            # use flit to build the target app into a distributable package
-            package_dist_dir = Path("dist")
-            mkdirs(package_dist_dir, remove_first=True)
-
             module_info = ModuleInfo(self.target_app_info.name, self.target_app_info.target_app_dir)
             target_app_version = module_info.version
 
@@ -49,7 +45,11 @@ class PyShip:
 
             pyshipy_dir = create_base_pyshipy(self.target_app_info, self.frozen_app_path, self.cache_dir, self.target_app_dir)  # create the base pyshipy
 
+            # use flit to build the target app into a distributable package
+            package_dist_dir = Path("dist")
+            mkdirs(package_dist_dir, remove_first=True)
             flit_build(self.target_app_info.pyproject_toml_file_path)  # flit places the package in the "dist" directory
+
             install_target_app(self.target_app_info.name, pyshipy_dir, package_dist_dir, pyshipy_dir, True)
 
             icon_file_name = f"{self.target_app_info.name}.ico"

@@ -1,4 +1,6 @@
+from ismain import is_main
+
 from .app import tstpyshipapp
 
-if __name__ == "__main__":
+if is_main():
     tstpyshipapp()
