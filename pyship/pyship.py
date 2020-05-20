@@ -25,26 +25,26 @@ class PyShip:
 
         self.target_app_info = TargetAppInfo(self.target_app_parent_dir)
         if self.target_app_info.is_complete():
-            self.frozen_app_path = Path(self.target_app_parent_dir, self.frozen_app_dir_name, self.target_app_info.name).absolute()
+            self.frozen_app_dir = Path(self.target_app_parent_dir, self.frozen_app_dir_name, self.target_app_info.name).absolute()
 
     def ship(self):
         pyship_print(f"{pyship_application_name} starting")
         if self.target_app_info.is_complete():
 
-            mkdirs(self.frozen_app_path, remove_first=True)
+            mkdirs(self.frozen_app_dir, remove_first=True)
 
-            target_app_module_info = ModuleInfo(self.target_app_info.name, self.target_app_info.target_app_dir)
+            target_app_module_info = ModuleInfo(self.target_app_info.name, self.target_app_info.target_app_project_dir)
 
-            create_launcher(self.target_app_info, self.frozen_app_path)  # create the OS specific launcher executable
+            create_launcher(self.target_app_info, self.frozen_app_dir)  # create the OS specific launcher executable
 
-            pyshipy_dir = create_base_pyshipy(self.target_app_info, self.frozen_app_path, self.cache_dir)  # create the base pyshipy
+            pyshipy_dir = create_base_pyshipy(self.target_app_info, self.frozen_app_dir, self.cache_dir)  # create the base pyshipy
 
             install_target_app(self.target_app_info.name, pyshipy_dir, Path(self.target_app_parent_dir, self.dist_dir), True)
 
             icon_file_name = f"{self.target_app_info.name}.ico"
-            shutil.copy2(Path(self.target_app_parent_dir, icon_file_name), self.frozen_app_path)  # temporarily for nsis
-            run_nsis(self.target_app_info, target_app_module_info.version, self.frozen_app_path)
-            os.unlink(Path(self.frozen_app_path, icon_file_name))
+            shutil.copy2(Path(self.target_app_parent_dir, icon_file_name), self.frozen_app_dir)  # temporarily for nsis
+            run_nsis(self.target_app_info, target_app_module_info.version, self.frozen_app_dir)
+            os.unlink(Path(self.frozen_app_dir, icon_file_name))
 
             pyship_print(f"{pyship_application_name} done")
         else:

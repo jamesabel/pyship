@@ -2,7 +2,8 @@
 Terminology
 
 app (AKA target app or target application): the target application that we want to ship.
-app source: Target application package source directory.  This is the root directory of the source to a Python module/package that can be invoked via python -m <package_name>.
+app project dir: Target application project directory.  This directory contain the app package/module directory (that can be invoked via python -m <package_name>) and a pyproject.toml file.
+                 Typically this is the "root" of the project directory structure.
 app distribution: The target application that has been built into a distributable package, such as a wheel. The app distribution can be installed via pip.
 launcher: An executable file native to the target OS that ultimately runs the target application. To the end user this is the "application", even though it is actually a launcher of the
           "real" application.

@@ -18,17 +18,15 @@ log = get_logger(__application_name__)
 
 
 @typechecked(always=True)
-def create_base_pyshipy(target_app_info: TargetAppInfo, app_path_output: Path, cache_dir: Path) -> (Path, None):
+def create_base_pyshipy(target_app_info: TargetAppInfo, frozen_app_dir: Path, cache_dir: Path) -> (Path, None):
     """
     create pyship python environment called pyshipy
 
     :param target_app_info: target app info
-    :param app_path_output: app gets built here (i.e. the output of this function)
+    :param frozen_app_dir: app gets built here (i.e. the output of this function)
     :param cache_dir: cache dir
     :return absolute path to created pyshipy
     """
-
-    mkdirs(app_path_output)
 
     # use project's Python (in this venv) to determine target Python version
     python_ver_str = platform.python_version()
@@ -42,7 +40,7 @@ def create_base_pyshipy(target_app_info: TargetAppInfo, app_path_output: Path, c
     zip_url = f"https://www.python.org/ftp/python/{ver_base_str}/{zip_file}"
     file_download(zip_url, cache_dir, zip_file)
     pyshipy_dir_name = f"{target_app_info.name}_{str(target_app_info.version)}"
-    pyshipy_dir = Path(app_path_output, pyshipy_dir_name).absolute()
+    pyshipy_dir = Path(frozen_app_dir, pyshipy_dir_name).absolute()
     pyship_print(f"creating application {pyshipy_dir_name} ({pyshipy_dir})")
     extract(cache_dir, zip_file, pyshipy_dir)
 

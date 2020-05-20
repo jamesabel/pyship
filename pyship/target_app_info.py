@@ -12,10 +12,10 @@ class TargetAppInfo:
     get target app info
     """
 
-    def __init__(self, target_app_dir: Path = Path()):
+    def __init__(self, target_app_project_dir: Path = Path()):
         """
         get target app info
-        :param target_app_dir: path to target module package (directory with a __init__.py) or None to use the current directory
+        :param target_app_project_dir: path to target module package (directory with a __init__.py) or omit to use the current directory
         """
 
         pyproject_toml_file_name = "pyproject.toml"
@@ -26,8 +26,8 @@ class TargetAppInfo:
         self.url = ""
         self.description = ""
         self.run_on_startup = False
-        self.target_app_dir = target_app_dir
-        self.pyproject_toml_file_path = Path(self.target_app_dir, pyproject_toml_file_name)
+        self.target_app_project_dir = target_app_project_dir
+        self.pyproject_toml_file_path = Path(self.target_app_project_dir, pyproject_toml_file_name)
 
         log.info(f"loading {self.pyproject_toml_file_path} ({self.pyproject_toml_file_path.absolute()})")
         if self.pyproject_toml_file_path.exists():

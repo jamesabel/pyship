@@ -30,14 +30,14 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, fr
 
     license_file_name = "LICENSE"
 
-    if Path(target_app_info.target_app_dir, license_file_name).exists():
+    if Path(target_app_info.target_app_project_dir, license_file_name).exists():
 
-        nsis_file_path = Path(target_app_info.target_app_dir, f"{target_app_info.name}.nsi").absolute()
+        nsis_file_path = Path(target_app_info.target_app_project_dir, f"{target_app_info.name}.nsi").absolute()
         log.info(f"making {nsis_file_path}")
 
         exe_name = f"{target_app_info.name}.exe"
         installers_folder = "installers"
-        mkdirs(Path(target_app_info.target_app_dir, installers_folder), remove_first=True)
+        mkdirs(Path(target_app_info.target_app_project_dir, installers_folder), remove_first=True)
 
         nsis_lines = []
         nsis_lines.append("")
@@ -193,7 +193,7 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, fr
         if os.path.exists(make_nsis_path):
             cmd = [make_nsis_path, nsis_file_path]
             log.info(cmd)
-            p = subprocess.run(cmd, capture_output=True, shell=True, cwd=str(target_app_info.target_app_dir))
+            p = subprocess.run(cmd, capture_output=True, shell=True, cwd=str(target_app_info.target_app_project_dir))
             for name, lines in [("stdout", p.stdout), ("stderr", p.stderr)]:
                 for line in lines.splitlines():
                     if len(line) > 0:
@@ -206,4 +206,4 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, fr
             raise Exception(f"{make_nsis_path} not found - see http://nsis.sourceforge.net to get NSIS (Nullsoft Scriptable Install System)")
 
     else:
-        log.error(f"{license_file_name} file does not exist at {target_app_info.target_app_dir}")
+        log.error(f"{license_file_name} file does not exist at {target_app_info.target_app_project_dir}")
