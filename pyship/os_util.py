@@ -4,6 +4,7 @@ import time
 from pathlib import Path
 import stat
 from platform import system
+from platform import architecture
 
 from typeguard import typechecked
 
@@ -12,12 +13,19 @@ from pyship import get_logger, __application_name__
 log = get_logger(__application_name__)
 
 
-def is_windows():
+@typechecked(always=True)
+def is_windows() -> bool:
     return system() == "Windows"
 
 
-def get_target_os(self):
-    return f"{self.platform_string}{self.platform_bits}"
+@typechecked(always=True)
+def get_target_os() -> (str, None):
+    if is_windows():
+        bit_string, os_string = architecture()
+        target_os = f"{os_string[0:3].lower()}{bit_string[0:2]}"
+    else:
+        target_os = None
+    return target_os
 
 
 @typechecked(always=True)

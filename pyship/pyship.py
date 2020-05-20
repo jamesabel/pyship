@@ -16,8 +16,6 @@ log = get_logger(pyship_application_name)
 @attrs()
 class PyShip:
 
-    platform_string = attrib(default="win")  # win, darwin, linux, ...
-    platform_bits = attrib(default=64)
     target_app_parent_dir = attrib(default=Path())  # if None, current working directory is used
     frozen_app_dir_name = attrib(default="frozen")  # seems like as good a name as any
     dist_dir = attrib(default="dist")  # filt, etc. use "dist" as the package destination directory
