@@ -48,9 +48,9 @@ class PyShip:
             install_target_app(self.target_app_info.name, pyshipy_dir, Path(self.target_app_parent_dir, self.dist_dir), True)
 
             icon_file_name = f"{self.target_app_info.name}.ico"
-            # shutil.copy2(Path(self.target_app_dir, icon_file_name), self.target_app_dir)  # temporarily for nsis
+            shutil.copy2(Path(self.target_app_parent_dir, icon_file_name), self.frozen_app_path)  # temporarily for nsis
             run_nsis(self.target_app_info, target_app_version, pyshipy_dir)
-            os.unlink(Path(self.target_app_parent_dir, icon_file_name))
+            os.unlink(Path(self.frozen_app_path, icon_file_name))
 
             pyship_print(f"{pyship_application_name} done")
         else:

@@ -23,13 +23,13 @@ def get_folder_size(folder_path: Path) -> int:
 
 
 @typechecked(always=True)
-def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, dist_root: Path):
+def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, frozen_dir: Path):
 
     # basic format is from:
     # http://nsis.sourceforge.net/A_simple_installer_with_start_menu_shortcut_and_uninstaller
 
-    nsis_file_name = f"{target_app_info.name}.nsi"
-    log.info(f"making {nsis_file_name}")
+    nsis_file_path = Path(target_app_info.target_app_dir, f"{target_app_info.name}.nsi")
+    log.info(f"making {nsis_file_path}")
 
     exe_name = f"{target_app_info.name}.exe"
     installers_folder = "installers"
@@ -60,7 +60,7 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, di
     nsis_lines.append(f"!define UPDATEURL {target_app_info.url}")  # "Product Updates" link
     nsis_lines.append(f"!define ABOUTURL {target_app_info.url}")  # "Publisher" link
 
-    installed_size = get_folder_size(dist_root)
+    installed_size = get_folder_size(frozen_dir)
     nsis_lines.append(f"!define INSTALLSIZE {installed_size}")
 
     nsis_lines.append("")
@@ -103,7 +103,7 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, di
     nsis_lines.append("  # Files for the install directory - to build the installer, these should be in the same directory as the install script (this file)")
     nsis_lines.append("  setOutPath $INSTDIR")
     nsis_lines.append('  # Files added here should be removed by the uninstaller (see section "uninstall")')
-    nsis_lines.append(f"  File /r {dist_root}\\*")
+    nsis_lines.append(f"  File /r {frozen_dir}\\*")
 
     nsis_lines.append("")
     nsis_lines.append('  # Uninstaller - See function un.onInit and section "uninstall" for configuration')
@@ -180,15 +180,15 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, di
     for nsis_line in nsis_lines:
         log.debug(nsis_line)
 
-    with open(nsis_file_name, "w") as nsis_file:
+    with open(nsis_file_path, "w") as nsis_file:
         nsis_file.write("\n".join(nsis_lines))
 
     # run nsis
     make_nsis_path = os.environ.get("MAKE_NSIS_PATH", default=os.path.join("c:", os.sep, "Program Files (x86)", "NSIS", "makensis.exe"))
     if os.path.exists(make_nsis_path):
-        cmd = [make_nsis_path, nsis_file_name]
+        cmd = [make_nsis_path, nsis_file_path]
         log.info(cmd)
-        p = subprocess.run(cmd, capture_output=True, shell=True)
+        p = subprocess.run(cmd, capture_output=True, shell=True, cwd=str(target_app_info.target_app_dir))
         for name, lines in [("stdout", p.stdout), ("stderr", p.stderr)]:
             for line in lines.splitlines():
                 if len(line) > 0:
