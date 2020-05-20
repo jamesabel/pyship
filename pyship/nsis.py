@@ -7,7 +7,7 @@ from semver import VersionInfo
 from typeguard import typechecked
 from balsa import get_logger
 
-from pyship import __application_name__, TargetAppInfo
+from pyship import __application_name__, TargetAppInfo, mkdirs
 
 
 log = get_logger(__application_name__)
@@ -37,7 +37,7 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, fr
 
         exe_name = f"{target_app_info.name}.exe"
         installers_folder = "installers"
-        os.makedirs(installers_folder, exist_ok=True)
+        mkdirs(Path(target_app_info.target_app_dir, installers_folder), remove_first=True)
 
         nsis_lines = []
         nsis_lines.append("")

@@ -22,10 +22,10 @@ def subprocess_run(cmd: list, cwd: Path = None, is_gui: bool = False) -> int:
                 if out is not None and len(out.strip()) > 0:
                     log.warning(out)
 
-        if not is_gui:
-            for out in [target_process.stdout, target_process.stderr]:
-                if out is not None and len(out.strip()) > 0:
-                    print(out)
+        # if not is_gui:
+        #     for out in [target_process.stdout, target_process.stderr]:
+        #         if out is not None and len(out.strip()) > 0:
+        #             print(out)
 
         return_code = target_process.returncode
 
