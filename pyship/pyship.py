@@ -36,6 +36,8 @@ class PyShip:
         pyship_print(f"{pyship_application_name} starting")
         if self.target_app_info.is_complete():
 
+            mkdirs(self.frozen_app_path, remove_first=True)
+
             module_info = ModuleInfo(self.target_app_info.name, self.target_app_info.target_app_dir)
             target_app_version = module_info.version
 
