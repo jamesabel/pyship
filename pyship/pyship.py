@@ -1,12 +1,10 @@
 import os
 from pathlib import Path
 import shutil
-import sys
 
 import appdirs
 from attr import attrs, attrib
 from typeguard import typechecked
-from flit.build import main as flit_build
 
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
@@ -45,12 +43,7 @@ class PyShip:
 
             pyshipy_dir = create_base_pyshipy(self.target_app_info, self.frozen_app_path, self.cache_dir)  # create the base pyshipy
 
-            # use flit to build the target app into a distributable package
-            package_dist_dir = Path("dist")
-            mkdirs(package_dist_dir, remove_first=True)
-            flit_build(self.target_app_info.pyproject_toml_file_path)  # flit places the package in the "dist" directory
-
-            install_target_app(self.target_app_info.name, pyshipy_dir, package_dist_dir, pyshipy_dir, True)
+            install_target_app(self.target_app_info.name, pyshipy_dir, package_dist_dir, True)
 
             icon_file_name = f"{self.target_app_info.name}.ico"
             icon_path = Path(self.target_app_info.name, icon_file_name).absolute()  # this is also in create_launcher.py - make this a function somewhere
