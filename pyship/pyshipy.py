@@ -4,39 +4,34 @@ import platform
 import re
 import shutil
 import subprocess
-import sys
 import tkinter
 from pathlib import Path
+from platform import system
+from semver import VersionInfo
 
 from typeguard import typechecked
 
 import pyship
-from pyship import TargetAppInfo, file_download, pyship_print, extract, get_logger, get_module_version, __application_name__, is_windows
-from pyship.os_util import copy_tree
+from pyship import TargetAppInfo, file_download, pyship_print, extract, get_logger, __application_name__, is_windows, mkdirs, copy_tree
 
 log = get_logger(__application_name__)
 
 
 @typechecked(always=True)
-def create_pyshipy(target_app_info: TargetAppInfo, app_path_output: Path, cache_dir: Path, target_app_source_dir: (Path, None)) -> (Path, None):
+def create_base_pyshipy(target_app_info: TargetAppInfo, app_path_output: Path, cache_dir: Path) -> (Path, None):
     """
     create pyship python dir
     :param target_app_info: target app info
     :param app_path_output: app gets built here (i.e. the output of this function)
     :param cache_dir: cache dir
-    :param target_app_source_dir: target application source dir (use if target app not the current dir nor installed into the venv we're executing from) (input)
     :return absolute path to created pyshipy
     """
 
     pyshipy_dir = None
 
-    if target_app_source_dir is not None:
-        # Usually pyship is executed in the parent directory of the target application module.  If it isn't, set this dir to the target application module's parent dir.
-        sys.path.append(str(target_app_source_dir.absolute()))
-
-    app_ver = get_module_version(target_app_info.name)
-
     if app_ver is not None:
+
+        mkdirs(app_path_output, remove_first=True)
 
         # use project's Python (in this venv) to determine target Python version
         python_ver_str = platform.python_version()
@@ -86,23 +81,16 @@ def create_pyshipy(target_app_info: TargetAppInfo, app_path_output: Path, cache_
         cmd = ["python.exe", "-m", "pip", "install", "--no-deps", "--upgrade", "pip"]
         subprocess.run(cmd, cwd=pyshipy_dir, shell=True)
 
-        # install tkinter (it doesn't come with embedded python)
-        add_tkinter(pyshipy_dir)
+        # the embedded Python doesn't ship with tkinter, so add it to pyshipy
+        # https://stackoverflow.com/questions/37710205/python-embeddable-zip-install-tkinter
+        if is_windows():
+            python_base_install_dir = Path(tkinter.__file__).parent.parent.parent
+            copy_tree(Path(python_base_install_dir), pyshipy_dir, "tcl")  # tcl dir
+            copy_tree(Path(python_base_install_dir, "Lib"), Path(pyshipy_dir, "Lib", "site-packages"), "tkinter")  # tkinter dir
+            # dlls
+            for file_name in ["_tkinter.pyd", "tcl86t.dll", "tk86t.dll"]:
+                shutil.copy2(str(Path(python_base_install_dir, "DLLs", file_name)), str(pyshipy_dir))
+        else:
+            log.fatal(f"Unsupported OS: {system()}")
 
     return pyshipy_dir
-
-
-@typechecked(always=True)
-def add_tkinter(pyshipy: Path):
-    # the embedded Python doesn't ship with tkinter, so add it to pyshipy
-    # https://stackoverflow.com/questions/37710205/python-embeddable-zip-install-tkinter
-
-    if is_windows():
-        python_base_install_dir = Path(tkinter.__file__).parent.parent.parent
-
-        copy_tree(Path(python_base_install_dir), pyshipy, "tcl")  # tcl dir
-        copy_tree(Path(python_base_install_dir, "Lib"), Path(pyshipy, "Lib", "site-packages"), "tkinter")  # tkinter dir
-
-        # dlls
-        for file_name in ["_tkinter.pyd", "tcl86t.dll", "tk86t.dll"]:
-            shutil.copy2(str(Path(python_base_install_dir, "DLLs", file_name)), str(pyshipy))

@@ -1,13 +1,16 @@
 import os
 from pathlib import Path
 import shutil
+import sys
 
 import appdirs
 from attr import attrs, attrib
+from typeguard import typechecked
+from flit.build import main as flit_build
 
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
-from pyship import TargetAppInfo, get_logger, run_nsis, pyship_print, create_pyshipy, create_launcher, install_target_module, get_module_version
+from pyship import TargetAppInfo, get_logger, run_nsis, pyship_print, create_base_pyshipy, create_launcher, pyship_print, subprocess_run, mkdirs, ModuleInfo
 
 log = get_logger(pyship_application_name)
 
@@ -26,7 +29,7 @@ class PyShip:
 
         self.target_app_info = TargetAppInfo()
         if self.target_app_info.is_complete():
-            self.app_path = Path(self.pyship_dist_root, self.get_target_os(), self.target_app_info.name).absolute()
+            self.frozen_app_path = Path(self.pyship_dist_root, self.get_target_os(), self.target_app_info.name).absolute()
 
     def get_target_os(self):
         return f"{self.platform_string}{self.platform_bits}"
@@ -34,16 +37,56 @@ class PyShip:
     def ship(self):
         pyship_print(f"{pyship_application_name} starting")
         if self.target_app_info.is_complete():
-            create_launcher(self.target_app_info, self.app_path)
-            pyshipy_dir = create_pyshipy(self.target_app_info, self.app_path, self.cache_dir, self.target_app_dir)
-            install_target_module(self.target_app_info.name, pyshipy_dir, self.target_dist_dir.absolute())
+
+            # use flit to build the target app into a distributable package
+            package_dist_dir = Path("dist")
+            mkdirs(package_dist_dir, remove_first=True)
+
+            module_info = ModuleInfo(self.target_app_info.name, self.target_app_info.target_app_dir)
+            target_app_version = module_info.version
+
+            create_launcher(self.target_app_info, self.frozen_app_path)  # create the OS specific launcher executable
+
+            pyshipy_dir = create_base_pyshipy(self.target_app_info, self.frozen_app_path, self.cache_dir, self.target_app_dir)  # create the base pyshipy
+
+            flit_build(self.target_app_info.pyproject_toml_file_path)  # flit places the package in the "dist" directory
+            install_target_app(self.target_app_info.name, pyshipy_dir, package_dist_dir, pyshipy_dir, True)
 
             icon_file_name = f"{self.target_app_info.name}.ico"
             icon_path = Path(self.target_app_info.name, icon_file_name).absolute()  # this is also in create_launcher.py - make this a function somewhere
             shutil.copy2(icon_path, icon_file_name)  # temporarily for nsis
-            run_nsis(self.target_app_info, get_module_version(self.target_app_info.name), pyshipy_dir)
+            run_nsis(self.target_app_info, target_app_version, pyshipy_dir)
             os.unlink(icon_file_name)
 
             pyship_print(f"{pyship_application_name} done")
         else:
             log.error(f"insufficient app info in {self.target_app_info.pyproject_toml_file_path} to create application")
+
+
+@typechecked(always=True)
+def install_target_app(module_name: str, python_env_dir: Path, target_app_package_dist_dir: Path, remove_pth: bool = False):
+    """
+    install target app as a module (and its dependencies) into pyshipy
+    :param module_name: module name
+    :param python_env_dir: venv or pyshipy dir
+    :param target_app_package_dist_dir: target app module dist dir (as a package)
+    :param remove_pth: remove remove python*._pth files as a workaround (see bug URL below)
+    """
+
+    # install this local app in the embedded python dir
+    pyship_print(f"installing {module_name} into {python_env_dir}")
+
+    if remove_pth:
+        # remove python*._pth
+        # https://github.com/PythonCharmers/python-future/issues/411
+        pth_glob_list = [p for p in Path(python_env_dir).glob("python*._pth")]
+        if len(pth_glob_list) == 1:
+            pth_path = str(pth_glob_list[0])
+            pth_save_path = pth_path.replace("._pth", "._future_bug_pth")
+            shutil.move(pth_path, pth_save_path)
+        else:
+            log.error(f"unexpected {pth_glob_list=} found at {python_env_dir=}")
+
+    # install the target module (and its dependencies)
+    cmd = [str(Path(python_env_dir, "python.exe")), "-m", "pip", "install", "-U", module_name, "-f", str(target_app_package_dist_dir), "--no-warn-script-location"]
+    subprocess_run(cmd, cwd=python_env_dir)
