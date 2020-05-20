@@ -43,7 +43,7 @@ class PyShip:
 
             create_launcher(self.target_app_info, self.frozen_app_path)  # create the OS specific launcher executable
 
-            pyshipy_dir = create_base_pyshipy(self.target_app_info, self.frozen_app_path, self.cache_dir, self.target_app_dir)  # create the base pyshipy
+            pyshipy_dir = create_base_pyshipy(self.target_app_info, self.frozen_app_path, self.cache_dir)  # create the base pyshipy
 
             # use flit to build the target app into a distributable package
             package_dist_dir = Path("dist")
