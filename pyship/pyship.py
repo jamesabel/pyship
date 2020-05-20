@@ -82,5 +82,5 @@ def install_target_app(module_name: str, python_env_dir: Path, target_app_packag
             log.error(f"unexpected {pth_glob_list=} found at {python_env_dir=}")
 
     # install the target module (and its dependencies)
-    cmd = [str(Path(python_env_dir, "python.exe")), "-m", "pip", "install", "-U", module_name, "-f", str(target_app_package_dist_dir), "--no-warn-script-location"]
+    cmd = [str(Path(python_env_dir, "python.exe")), "-m", "pip", "install", "-U", module_name, "-f", str(target_app_package_dist_dir.absolute()), "--no-warn-script-location"]
     subprocess_run(cmd, cwd=python_env_dir)
