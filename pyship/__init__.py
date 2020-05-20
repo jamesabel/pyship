@@ -6,7 +6,7 @@ python_interpreter_exes = {True: "pythonw.exe", False: "python.exe"}  # True is 
 
 from .__version__ import __version__, __author__
 from .logging import PyshipLog, get_logger, log_process_output
-from .os_util import is_windows, mkdirs, copy_tree
+from .os_util import is_windows, mkdirs, copy_tree, get_target_os
 from .exe_return_codes import restart_return_code, can_not_find_file_return_code, ok_return_code, error_return_code
 from .pyship_print import pyship_print
 from .subprocess_run import subprocess_run

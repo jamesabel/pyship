@@ -16,6 +16,10 @@ def is_windows():
     return system() == "Windows"
 
 
+def get_target_os(self):
+    return f"{self.platform_string}{self.platform_bits}"
+
+
 @typechecked(always=True)
 def remove_readonly(path: Path):
     os.chmod(str(path), stat.S_IWRITE)

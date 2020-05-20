@@ -7,7 +7,7 @@ from semver import VersionInfo
 from typeguard import typechecked
 from balsa import get_logger
 
-from pyship import __application_name__, TargetAppInfo, mkdirs
+from pyship import __application_name__, TargetAppInfo, mkdirs, get_target_os
 
 
 log = get_logger(__application_name__)
@@ -51,6 +51,7 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, fr
         nsis_lines.append(f"!define COMPANYNAME {company_name}")
 
         nsis_lines.append(f"!define APPNAME {target_app_info.name}")
+        nsis_lines.append(f"!define OS {get_target_os()}")
         nsis_lines.append(f"!define EXENAME {exe_name}")
         nsis_lines.append(f'!define DESCRIPTION "{target_app_info.description}"')  # the description must be in quotes
 
@@ -77,7 +78,7 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, fr
         nsis_lines.append(r"# This will be in the installer/uninstaller's title bar")
         nsis_lines.append('Name "${COMPANYNAME} - ${APPNAME}"')
         nsis_lines.append('Icon "${APPNAME}.ico"')
-        nsis_lines.append('outFile "' + installers_folder + "\\" + '${APPNAME}_installer.exe"')
+        nsis_lines.append('outFile "' + installers_folder + "\\" + '${APPNAME}_installer_${OS}.exe"')
         nsis_lines.append("")
         nsis_lines.append("!include LogicLib.nsh")
 
