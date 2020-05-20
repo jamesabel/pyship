@@ -20,14 +20,14 @@ class PyShip:
 
     platform_string = attrib(default="win")  # win, darwin, linux, ...
     platform_bits = attrib(default=64)
-    target_app_dir = attrib(default=None)  # if None, current working directory is used
+    target_app_dir = attrib(default=Path())  # if None, current working directory is used
     pyship_dist_root = attrib(default="app")  # seems like as good a name as any
     target_dist_dir = attrib(default=Path("dist"))
     cache_dir = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))
 
     def __attrs_post_init__(self):
 
-        self.target_app_info = TargetAppInfo()
+        self.target_app_info = TargetAppInfo(self.target_app_dir)
         if self.target_app_info.is_complete():
             self.frozen_app_path = Path(self.pyship_dist_root, self.get_target_os(), self.target_app_info.name).absolute()
 

@@ -7,7 +7,7 @@ from test_pyship import TST_APP_ROOT_DIR, TST_APP_FROZEN_DIR, TST_APP_NAME, TST_
 
 def test_create_launcher():
 
-    target_app_info = TargetAppInfo(Path(TST_APP_ROOT_DIR, "pyproject.toml"))
+    target_app_info = TargetAppInfo(Path(TST_APP_ROOT_DIR))
     test_app_icon_path = Path(TST_APP_ROOT_DIR, f"{TST_APP_NAME}.ico")
 
     try:

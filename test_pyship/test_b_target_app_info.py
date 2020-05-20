@@ -7,7 +7,7 @@ from test_pyship import TST_APP_ROOT_DIR, TST_APP_NAME
 
 
 def test_pyproject():
-    target_app_info = TargetAppInfo(Path(TST_APP_ROOT_DIR, "pyproject.toml"))
+    target_app_info = TargetAppInfo(Path(TST_APP_ROOT_DIR))
     assert(target_app_info.name == TST_APP_NAME)
     assert(target_app_info.author == pyship_author)
     assert(target_app_info.is_gui is not None)
