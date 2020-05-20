@@ -7,7 +7,7 @@ from pathlib import Path
 from typeguard import typechecked
 
 import pyship
-from pyship import TargetAppInfo, pyship_print, log_process_output, get_logger
+from pyship import TargetAppInfo, pyship_print, log_process_output, get_logger, mkdirs
 from pyship import __application_name__ as pyship_application_name
 from pyship.launcher import application_name as launcher_application_name
 from pyship.launcher import calculate_launcher_metadata, load_launcher_metadata, store_launcher_metadata
@@ -59,11 +59,7 @@ def create_launcher(target_app_info: TargetAppInfo, app_path_output: Path):
         log.error(f"python interpreter path not found")
     else:
 
-        try:
-            shutil.rmtree(app_path_output)
-        except FileNotFoundError:
-            pass
-        app_path_output.mkdir(parents=True)
+        mkdirs(app_path_output)
 
         pyinstaller_exe_path = Path(Path(sys.executable).parent, "pyinstaller.exe")  # pyinstaller executable is in the same directory as the python interpreter
         if not pyinstaller_exe_path.exists():
