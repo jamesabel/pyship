@@ -17,4 +17,5 @@ requires = [
 ]
 
 [tool.pyship]
-is_gui = true
+# while most apps will be GUI apps, for testing tstpyshipapp is a CLI app
+is_gui = false
