@@ -2,7 +2,6 @@ import pytest
 from pathlib import Path
 import logging
 import sys
-import os
 
 from balsa import Balsa
 from flit.build import main as flit_build
@@ -21,11 +20,6 @@ class TestPyshipLoggingHandler(logging.Handler):
 
 @pytest.fixture(scope="session", autouse=True)
 def session_fixture(request):
-
-    # def remove_test_dir():
-    #     mkdirs(TST_APP_FROZEN_DIR, remove_first=True)  # there are test_* files in the python dist (i.e. will be in pyshipy), so we have to delete them on exit
-    #     os.unlink(Path(TST_APP_PROJECT_DIR, f"{TST_APP_NAME}.ico"))  # pyship copied over an icon since this app didn't provide it, but delete it as part of clean up
-    # request.addfinalizer(remove_test_dir)
 
     balsa = Balsa(pyship_application_name, pyship_author, log_directory=Path("log", "pytest"), delete_existing_log_files=True, verbose=False)
 
