@@ -11,8 +11,10 @@ log = get_logger(__application_name__)
 
 @attrs()
 class ModuleInfo:
-    name = attrib()
-    path = attrib(default=None)
+    name = attrib()  # module/package name
+    path = attrib(default=None)  # module/package dir if not current working directory
+
+    # derived from the module
     version = attrib(default=None)
     docstring = attrib(default="")
 
@@ -27,13 +29,13 @@ class ModuleInfo:
 
             version_string = app_module.__dict__.get("__version__")
             if version_string is None:
-                log.error(f"your module {self.name} does not have a version attribute.  Please add one.")
+                log.error(f"{self.name} does not have a version attribute.  Please add one.")
             else:
                 self.version = VersionInfo.parse(version_string)
 
             self.docstring = app_module.__dict__.get("__doc__")
             if self.docstring is None:
-                log.warning(f"your module {self.name} does not have a docstring.  Please add one.")
+                log.warning(f"{self.name} does not have a docstring.  Please add one.")
             else:
                 self.docstring = self.docstring.strip()
 

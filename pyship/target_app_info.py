@@ -67,7 +67,7 @@ class TargetAppInfo:
                                 if flit_metadata is not None:
                                     self.url = flit_metadata.get("home-page")
 
-                        module_info = ModuleInfo(self.name, Path(self.pyproject_toml_file_path.parent, self.name))
+                        module_info = ModuleInfo(self.name, target_app_project_dir)
                         self.version = module_info.version
                         self.description = module_info.docstring
 

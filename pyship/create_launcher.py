@@ -38,7 +38,6 @@ def create_launcher(target_app_info: TargetAppInfo, app_path_output: Path):
     pyship_path = pyship_path_list[0]  # parent dir of launcher source
     launcher_module_dir = Path(pyship_path, launcher_application_name)
     launcher_source_file_name = f"launcher.py"
-    launcher_source_path = os.path.join(launcher_module_dir, launcher_source_file_name)
 
     launcher_exe_filename = f"{target_app_info.name}.exe"
     launcher_exe_path = Path(app_path_output, launcher_exe_filename)
