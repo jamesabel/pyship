@@ -11,7 +11,7 @@ def test_create_launcher():
     test_app_icon_path = Path(TST_APP_PROJECT_DIR, f"{TST_APP_NAME}.ico")
 
     try:
-        # first time with no user provided icon
+        # first time with no user provided icon - will exit with the icon put back
         os.unlink(test_app_icon_path)
     except FileNotFoundError:
         pass
@@ -20,5 +20,3 @@ def test_create_launcher():
         mkdirs(TST_APP_FROZEN_DIR, remove_first=True)
         create_launcher(target_app_info, TST_APP_FROZEN_DIR)
         assert(TST_APP_LAUNCHER_EXE_PATH.exists())
-
-    os.unlink(test_app_icon_path)
