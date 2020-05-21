@@ -8,7 +8,7 @@ from typeguard import typechecked
 
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
-from pyship import TargetAppInfo, get_logger, run_nsis, pyship_print, create_base_pyshipy, create_launcher, pyship_print, subprocess_run, mkdirs, ModuleInfo
+from pyship import TargetAppInfo, get_logger, run_nsis, create_base_pyshipy, create_launcher, pyship_print, subprocess_run, mkdirs, ModuleInfo
 
 log = get_logger(pyship_application_name)
 

@@ -15,13 +15,14 @@ classifiers = ["License :: OSI Approved :: MIT License"]
 requires = [
     "attrs",
     "balsa",
+    "ismain",
     "pyinstaller",
     "sundry",
     "typeguard",
     "requests",
     "semver",
-    "toml",
-    "ismain"
+    "sentry-sdk",
+    "toml"
 ]
 
 [tool.pyship]

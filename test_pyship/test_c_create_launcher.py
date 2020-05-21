@@ -1,6 +1,8 @@
 from pathlib import Path
 import os
 
+from ismain import is_main
+
 from pyship import create_launcher, TargetAppInfo, mkdirs
 from test_pyship import TST_APP_PROJECT_DIR, TST_APP_FROZEN_DIR, TST_APP_NAME, TST_APP_LAUNCHER_EXE_PATH
 
@@ -20,3 +22,7 @@ def test_create_launcher():
         mkdirs(TST_APP_FROZEN_DIR, remove_first=True)
         create_launcher(target_app_info, TST_APP_FROZEN_DIR)
         assert(TST_APP_LAUNCHER_EXE_PATH.exists())
+
+
+if is_main():
+    test_create_launcher()

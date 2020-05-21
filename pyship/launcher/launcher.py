@@ -1,14 +1,12 @@
-import os
 import sys
 from pathlib import Path
 from semver import VersionInfo
 import json
-from pprint import pprint
 import appdirs
 import re
 
-
 from ismain import is_main
+import requests
 
 from pyship import __application_name__, __author__, restart_return_code, error_return_code, can_not_find_file_return_code, subprocess_run, python_interpreter_exes
 from pyship import PyshipLog, get_logger
@@ -19,23 +17,36 @@ launcher_application_name = f"{__application_name__}_launcher"
 log = get_logger(launcher_application_name)
 
 
-def setup_logging(target_app_name: str, is_gui: bool) -> bool:
-
-    if not is_gui:
-        print("sys.argv:")
-        pprint(sys.argv)  # todo: remove this one everything is working OK
+def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
 
     verbose = len(sys.argv) > 1 and (sys.argv[1].lower() == "-v" or sys.argv[1].lower() == "--verbose")
 
     balsa = PyshipLog(launcher_application_name, __author__, gui=is_gui, verbose=verbose)
 
-    # use Sentry's exception service
-    sentry_dsn = os.environ.get(f"SENTRY_DSN_{target_app_name.upper()}")
-    if sentry_dsn is not None:
-        balsa.sentry_dsn = sentry_dsn
-        balsa.use_sentry = True
+    exception_string = None  # store exception strings here until logging gets set up
+
+    if report_exceptions:
+        # use Sentry's exception service
+        sentry_dsn = None
+        try:
+            response = requests.get("https://api.pyship.org/resources/pyship/sentry")
+            if response.status_code == 200:
+                try:
+                    sentry_dsn = json.loads(response.text)["dsn"]
+                except json.decoder.JSONDecodeError as e:
+                    exception_string = e
+        except KeyError as e:
+            exception_string = e
+        except requests.exceptions.RequestException as e:
+            exception_string = e
+        if sentry_dsn is not None:
+            balsa.sentry_dsn = sentry_dsn
+            balsa.use_sentry = True
 
     balsa.init_logger()
+
+    if exception_string is not None:
+        log.info(exception_string)  # don't present these to the user unless verbose selected
 
     return verbose
 
@@ -49,8 +60,6 @@ def launch() -> int:
     return_code = None
 
     # derive the target app name based on the pyshipy dir(s) that exist
-
-
     pyshipy_regex_string = "([_a-z0-9]*)_([.0-9]+)"
     pyshipy_regex = re.compile(pyshipy_regex_string, flags=re.IGNORECASE)  # simple format that accepts common semver (but not all semver)
 
@@ -58,6 +67,7 @@ def launch() -> int:
 
     # these should be set below, but in case there's no metadata file set them to something to allow the logging to be set up
     is_gui = False
+    report_exceptions = True
     target_app_name = __application_name__
     target_app_author = __author__
 
@@ -65,16 +75,17 @@ def launch() -> int:
         with metadata_file_path.open() as f:
             metadata = json.load(f)
             target_app_name = metadata.get("app")
-            target_app_author = metadata.get("author")
-            is_gui = metadata.get("is_gui")
+            target_app_author = metadata.get("author", target_app_author)
+            is_gui = metadata.get("is_gui", is_gui)
+            report_exceptions = metadata.get("report_exceptions", report_exceptions)
 
-    verbose = setup_logging(target_app_name, is_gui)
+    setup_logging(is_gui, report_exceptions)
 
     if target_app_name is None:
         log.error(f'could not derive target app name in {pyship_parent.absolute()}")')
     else:
 
-        log.info(f"{target_app_name}")
+        log.info(f"{target_app_name=}")
 
         # 1) find the latest <application_name>_<version>
         # 2) execute it via python -m <application_name>
@@ -134,9 +145,6 @@ def launch() -> int:
                         cmd.extend(sys.argv[1:])  # pass along any arguments to the target application
                     log.info(f"{cmd}")
                     try:
-                        if is_gui is False:
-                            print("subprocess:")
-                            print(cmd)
                         return_code = subprocess_run(cmd, is_gui=is_gui)  # if app returns "restart_value" then it wants to be restarted
                     except FileNotFoundError as e:
                         log.error(f"{e} {cmd}")

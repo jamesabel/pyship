@@ -59,10 +59,15 @@ def create_launcher(target_app_info: TargetAppInfo, app_path_output: Path):
 
         mkdirs(app_path_output)
 
+        explicit_modules_to_import = ["ismain", "sentry-sdk"]
+
         pyinstaller_exe_path = Path(Path(sys.executable).parent, "pyinstaller.exe")  # pyinstaller executable is in the same directory as the python interpreter
         if not pyinstaller_exe_path.exists():
             raise FileNotFoundError(str(pyinstaller_exe_path))
         command_line = [str(pyinstaller_exe_path), "--clean", "-i", str(icon_path), "-n", target_app_info.name, "--distpath", str(app_path_output.absolute())]
+        for explicit_module_to_import in explicit_modules_to_import:
+            # modules pyinstalled doesn't seem to be able to find on its own
+            command_line.extend(["--hiddenimport", explicit_module_to_import])
 
         # "-F" or "--onefile" is too slow of a start up - was measured at 15 sec for the launch app (experiment with just a print as the app was still 2 sec startup).  --onedir is ~1 sec.
         # I could probably get the full app down a bit, but it'll never be 1 sec.
@@ -82,7 +87,7 @@ def create_launcher(target_app_info: TargetAppInfo, app_path_output: Path):
             pyship_print(f"{command_line}")
             launcher_run = subprocess.run(command_line, cwd=launcher_module_dir, capture_output=True)
             # metadata is in the app parent dir
-            store_launcher_metadata(app_path_output.parent, launcher_metadata_filename, launcher_metadata)
+            store_launcher_metadata(app_path_output, launcher_metadata_filename, launcher_metadata)
 
             # log/print pyinstaller output
             log_lines = {}
