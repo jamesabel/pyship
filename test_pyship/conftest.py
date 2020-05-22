@@ -9,7 +9,7 @@ from flit.build import main as flit_build
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
 from pyship import mkdirs
-from test_pyship import TST_APP_FROZEN_DIR, TST_APP_PROJECT_DIR, TST_APP_NAME, TST_APP_DIST_DIR
+from test_pyship import TST_APP_PROJECT_DIR, TST_APP_DIST_DIR
 
 
 class TestPyshipLoggingHandler(logging.Handler):
@@ -19,7 +19,7 @@ class TestPyshipLoggingHandler(logging.Handler):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def session_fixture(request):
+def session_fixture():
 
     balsa = Balsa(pyship_application_name, pyship_author, log_directory=Path("log", "pytest"), delete_existing_log_files=True, verbose=False)
 
@@ -31,7 +31,7 @@ def session_fixture(request):
     balsa.init_logger()
 
     # use flit to build the target app into a distributable package in the "dist" directory
-    mkdirs(TST_APP_DIST_DIR, remove_first=True)
+    mkdirs(TST_APP_DIST_DIR)
     flit_build(Path(TST_APP_PROJECT_DIR, "pyproject.toml"))
 
     if pyship_application_name not in sys.path:
