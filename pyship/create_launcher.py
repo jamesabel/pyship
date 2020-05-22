@@ -59,7 +59,7 @@ def create_launcher(target_app_info: TargetAppInfo, app_path_output: Path):
 
         mkdirs(app_path_output)
 
-        explicit_modules_to_import = ["ismain", "sentry-sdk"]
+        explicit_modules_to_import = ["ismain", "sentry-sdk", "sentry_sdk.integrations.stdlib"]  # todo: remove ones that are not needed
 
         pyinstaller_exe_path = Path(Path(sys.executable).parent, "pyinstaller.exe")  # pyinstaller executable is in the same directory as the python interpreter
         if not pyinstaller_exe_path.exists():

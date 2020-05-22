@@ -8,6 +8,9 @@ import re
 from ismain import is_main
 import requests
 
+import sentry_sdk
+
+
 from pyship import __application_name__, __author__, restart_return_code, error_return_code, can_not_find_file_return_code, subprocess_run, python_interpreter_exes
 from pyship import PyshipLog, get_logger
 
@@ -41,7 +44,11 @@ def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
             exception_string = e
         if sentry_dsn is not None:
             balsa.sentry_dsn = sentry_dsn
-            balsa.use_sentry = True
+
+            # init sentry outside of balsa and turn off integrations to workaround bug:
+            # ModuleNotFoundError: No module named 'sentry_sdk.integrations.excepthook'
+            balsa.use_sentry = False
+            sentry_sdk.init(sentry_dsn, default_integrations=False)
 
     balsa.init_logger()
 
