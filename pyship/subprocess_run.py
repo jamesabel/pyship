@@ -9,17 +9,21 @@ log = get_logger(__application_name__)
 
 
 @typechecked(always=True)
-def subprocess_run(cmd: list, cwd: Path = None, is_gui: bool = False) -> int:
+def subprocess_run(cmd: list, cwd: Path = None, capture_output: bool = True) -> (int, (str, None), (str, None)):
+    """
+    subprocess run taking return code into account
+    :param cmd: run command
+    :param cwd: current directory
+    :param capture_output: True to capture output
+    :return:
+    """
 
     if cwd is not None:
         cwd = str(cwd)  # subprocess requires a string
 
     try:
         log.info(cmd)
-        if is_gui:
-            target_process = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
-        else:
-            target_process = subprocess.run(cmd, cwd=cwd)
+        target_process = subprocess.run(cmd, cwd=cwd, capture_output=capture_output, text=True)
         if target_process.returncode != ok_return_code and target_process.returncode != restart_return_code:
             for out in [target_process.stdout, target_process.stderr]:
                 if out is not None and len(out.strip()) > 0:

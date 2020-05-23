@@ -1,13 +1,12 @@
 import os
 import datetime
-import subprocess
 from pathlib import Path
 from semver import VersionInfo
 
 from typeguard import typechecked
 from balsa import get_logger
 
-from pyship import __application_name__, TargetAppInfo, mkdirs, get_target_os
+from pyship import __application_name__, TargetAppInfo, mkdirs, get_target_os, subprocess_run
 
 
 log = get_logger(__application_name__)
@@ -191,19 +190,10 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, fr
         # run nsis
         make_nsis_path = os.environ.get("MAKE_NSIS_PATH", default=os.path.join("c:", os.sep, "Program Files (x86)", "NSIS", "makensis.exe"))
         if os.path.exists(make_nsis_path):
-            cmd = [make_nsis_path, nsis_file_path]
-            log.info(cmd)
-            p = subprocess.run(cmd, capture_output=True, shell=True, cwd=str(target_app_info.target_app_project_dir))
-            for name, lines in [("stdout", p.stdout), ("stderr", p.stderr)]:
-                for line in lines.splitlines():
-                    if len(line) > 0:
-                        s = f"{name}={line}"
-                        print(s)
-                        log.info(s)
-            if p.returncode != 0:
-                log.error(f"error running : {cmd}")
+            subprocess_run([make_nsis_path, nsis_file_path], target_app_info.target_app_project_dir)
         else:
-            raise Exception(f"{make_nsis_path} not found - see http://nsis.sourceforge.net to get NSIS (Nullsoft Scriptable Install System)")
+            log.fatal(f"{make_nsis_path} not found - see http://nsis.sourceforge.net to get NSIS (Nullsoft Scriptable Install System)")
+            raise FileNotFoundError(make_nsis_path)
 
     else:
         log.error(f"{license_file_name} file does not exist at {target_app_info.target_app_project_dir}")
