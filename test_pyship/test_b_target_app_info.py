@@ -1,5 +1,5 @@
 from pathlib import Path
-from semver import parse
+from semver import VersionInfo
 
 from pyship import TargetAppInfo
 from pyship import __author__ as pyship_author
@@ -15,4 +15,4 @@ def test_pyproject():
     assert(target_app_info.description is not None)
     assert(len(target_app_info.description) > 1)
     assert(target_app_info.version is not None)
-    assert(target_app_info.version > parse("0.0.0"))
+    assert(target_app_info.version > VersionInfo.parse("0.0.0"))
