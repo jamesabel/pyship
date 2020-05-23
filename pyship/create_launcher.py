@@ -39,7 +39,7 @@ def create_launcher(target_app_info: TargetAppInfo, app_path_output: Path):
     launcher_source_file_name = f"launcher.py"
 
     launcher_exe_filename = f"{target_app_info.name}.exe"
-    launcher_exe_path = Path(app_path_output, launcher_exe_filename)
+    launcher_exe_path = Path(app_path_output, target_app_info.name, launcher_exe_filename)
     icon_path = Path(target_app_info.target_app_project_dir, f"{target_app_info.name}.ico").absolute()
 
     if not icon_path.exists():
