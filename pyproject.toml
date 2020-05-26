@@ -22,7 +22,8 @@ requires = [
     "requests",
     "semver",
     "sentry-sdk",
-    "toml"
+    "toml",
+    "boto3"
 ]
 
 [tool.pyship]
