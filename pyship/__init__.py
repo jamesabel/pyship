@@ -15,7 +15,7 @@ from .target_app_info import TargetAppInfo
 from .nsis import run_nsis
 from .file_download import file_download, extract
 from .create_launcher import create_launcher
-from .updater import Updater, AwsS3
+from .updater import Updater
 from .pyshipy import create_base_pyshipy
 from .pyship import PyShip, install_target_app
 from .main import main

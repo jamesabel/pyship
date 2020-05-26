@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
 import typing
 from pathlib import Path
@@ -49,23 +48,3 @@ class Updater(ABC):
         """
         success_flag = False
         return success_flag
-
-
-@dataclass()
-class UpdaterAwsS3(Updater):
-    """
-    pyship updater via AWS S3
-    """
-
-    s3_bucket: str
-    target_app_name: str
-    region: str = None
-    aws_access_key_id: str = None
-    aws_secret_access_key: str = None
-
-    def get_available_versions(self) -> (list, None):
-        raise NotImplemented
-
-    def push(self, pyshipy_dir: Path) -> bool:
-        success = False
-        return success
