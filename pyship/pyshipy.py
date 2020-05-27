@@ -7,14 +7,38 @@ import subprocess
 import tkinter
 from pathlib import Path
 from platform import system
-from semver import VersionInfo
 
+from semver import VersionInfo
 from typeguard import typechecked
 
 import pyship
 from pyship import TargetAppInfo, file_download, pyship_print, extract, get_logger, __application_name__, is_windows, mkdirs, copy_tree
 
 log = get_logger(__application_name__)
+
+
+@typechecked(always=True)
+def version_from_pyshipy(target_app_name: str, pyshipy: str) -> (VersionInfo, None):
+    """
+    extract the version from a pyshipy string
+    example: a pyshipy string of "abc_1.2.3" returns VersionInfo of 1.2.3
+    :param target_app_name: target app name
+    :param pyshipy: pyshipy app string
+    :return: version or None if not parses as a pyshipy string
+    """
+    version = None
+    if pyshipy.startswith(target_app_name):
+        version_string = pyshipy[len(target_app_name):]
+        if version_string.startswith("_"):
+            try:
+                version = VersionInfo.parse(version_string[1:])  # passes over the "_"
+            except IndexError as e:
+                log.info(f"{pyshipy} {e}")
+            except TypeError as e:
+                log.info(f"{pyshipy} {e}")
+            except ValueError as e:
+                log.info(f"{pyshipy} {e}")
+    return version
 
 
 @typechecked(always=True)
