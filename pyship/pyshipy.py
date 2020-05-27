@@ -18,26 +18,29 @@ log = get_logger(__application_name__)
 
 
 @typechecked(always=True)
-def version_from_pyshipy(target_app_name: str, pyshipy: str) -> (VersionInfo, None):
+def version_from_pyshipy_zip(target_app_name: str, candidate_pyshipy_zip: str) -> (VersionInfo, None):
     """
-    extract the version from a pyshipy string
-    example: a pyshipy string of "abc_1.2.3" returns VersionInfo of 1.2.3
+    Tests if a string is a pyshipy zip string.  If so, extract the version from a pyshipy zip string.  If the string is not a valid pyshipy zip string, return None.
+    Example: a pyshipy zip string of "abc_1.2.3.zip" for app "abc" returns VersionInfo of 1.2.3.
     :param target_app_name: target app name
-    :param pyshipy: pyshipy app string
-    :return: version or None if not parses as a pyshipy string
+    :param candidate_pyshipy_zip: candidate pyshipy app zip string to try to get the version from
+    :return: version or None if not a successful parse for a pyshipy zip string
     """
     version = None
-    if pyshipy.startswith(target_app_name):
-        version_string = pyshipy[len(target_app_name):]
-        if version_string.startswith("_"):
-            try:
-                version = VersionInfo.parse(version_string[1:])  # passes over the "_"
-            except IndexError as e:
-                log.info(f"{pyshipy} {e}")
-            except TypeError as e:
-                log.info(f"{pyshipy} {e}")
-            except ValueError as e:
-                log.info(f"{pyshipy} {e}")
+    if candidate_pyshipy_zip.startswith(target_app_name):
+        version_string = candidate_pyshipy_zip[len(target_app_name):]
+        for extension in [".zip", ".7z"]:
+            if version is None and version_string.endswith(extension):
+                version_string = version_string[:-len(extension)]  # remove extension
+                if version_string.startswith("_"):
+                    try:
+                        version = VersionInfo.parse(version_string[1:])  # pass over the "_"
+                    except IndexError as e:
+                        pass
+                    except TypeError as e:
+                        pass
+                    except ValueError as e:
+                        pass
     return version
 
 

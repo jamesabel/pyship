@@ -16,6 +16,6 @@ from .nsis import run_nsis
 from .file_download import file_download, extract
 from .create_launcher import create_launcher
 from .updater import Updater
-from .pyshipy import create_base_pyshipy, version_from_pyshipy
+from .pyshipy import create_base_pyshipy, version_from_pyshipy_zip
 from .pyship import PyShip, install_target_app
 from .main import main
