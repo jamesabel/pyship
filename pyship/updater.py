@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import typing
 from pathlib import Path
+from enum import Enum
 
 from semver import VersionInfo
 
@@ -9,10 +10,20 @@ from pyship import get_logger, __application_name__
 log = get_logger(__application_name__)
 
 
+class PreReleaseTypes(Enum):
+    test = "test"
+    dev = "dev"
+    alpha = "alpha"
+    beta = "beta"
+
+
 class Updater(ABC):
     """
     pyship updater
     """
+
+    def __init__(self):
+        self.allowed_pre_release = []  # test, dev, beta, etc.
 
     @abstractmethod
     def get_available_versions(self) -> (typing.List[VersionInfo], None):
