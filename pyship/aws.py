@@ -76,6 +76,10 @@ class UpdaterAwsS3(Updater):
 
         success = False
 
+        # zip the pyshipy dir
+        temp_dir = mkdtemp()
+        pyshipy_zip_file_path = shutil.make_archive(Path(temp_dir, pyshipy_dir.name), "zip", str(pyshipy_dir))
+
         try:
             s3_bucket = self._get_s3_bucket()
 
@@ -87,17 +91,13 @@ class UpdaterAwsS3(Updater):
                     acl = 'authenticated-read'
                 s3_bucket.create(ACL=acl)
 
-            # zip the pyshipy dir
-            zip_file_type = "zip"
-            temp_dir = mkdtemp()
-            pyshipy_zip_file_path = shutil.make_archive(Path(temp_dir, pyshipy_dir.name), zip_file_type, str(pyshipy_dir))
-
             # upload the pyshipy zip
             s3_bucket.upload_file(pyshipy_zip_file_path, pyshipy_zip_file_path.name)
             success = True
-            rmdir(temp_dir)
 
         except boto3.exceptions.Boto3Error as e:
             log.warning(f"{pyshipy_dir=} {e}")
+
+        rmdir(temp_dir)
 
         return success
