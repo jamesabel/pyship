@@ -32,6 +32,7 @@ class UpdaterAwsS3(Updater):
     def __init__(self):
         if self.s3_bucket_name is None:
             self.s3_bucket_name = f"{self.target_app_name}-{pyship_application_name}"  # S3 buckets can't have underscores, so use a dash
+        super().__init__()
 
     def _get_s3_bucket(self):
         session = boto3.Session(region_name=self.region_name, aws_access_key_id=self.aws_access_key_id, aws_secret_access_key=self.aws_secret_access_key)

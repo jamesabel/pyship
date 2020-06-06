@@ -20,14 +20,24 @@ class PyShip:
     frozen_app_dir_name = attrib(default="frozen")  # seems like as good a name as any
     dist_dir = attrib(default="dist")  # filt, etc. use "dist" as the package destination directory
     cache_dir = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))
+    frozen_app_dir = None
 
     def __attrs_post_init__(self):
 
         self.target_app_info = TargetAppInfo(self.target_app_parent_dir)
         if self.target_app_info.is_complete():
-            self.frozen_app_dir = Path(self.target_app_parent_dir, self.frozen_app_dir_name, self.target_app_info.name).absolute()
+            self.set_frozen_app_dir()
+
+    def set_frozen_app_dir(self):
+        """
+        set frozen app dir (override this to use a different frozen app dir)
+        """
+        self.frozen_app_dir = Path(self.target_app_parent_dir, self.frozen_app_dir_name, self.target_app_info.name).absolute()
 
     def ship(self):
+        """
+        perform all the steps to ship the app, including creating the installer
+        """
         pyship_print(f"{pyship_application_name} starting")
         if self.target_app_info.is_complete():
 
