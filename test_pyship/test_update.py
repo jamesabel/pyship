@@ -37,10 +37,7 @@ def test_update():
         # todo: DEBUG
         py_ship.ship()
 
-        return_code, std_out, std_err = subprocess_run([TST_APP_LAUNCHER_EXE_PATH])  # always the same app exe, first time through does an update
-        for out in [std_out, std_err]:
-            if out is not None and len(out) > 0:
-                print(out)
+        return_code, std_out, std_err = subprocess_run([TST_APP_LAUNCHER_EXE_PATH], stdout_log=print)
 
         app_run_dict = json.loads(std_out)
         run_version_string = app_run_dict.get("version")

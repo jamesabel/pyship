@@ -1,5 +1,6 @@
 import subprocess
 from pathlib import Path
+from typing import Callable
 
 from typeguard import typechecked
 
@@ -9,12 +10,14 @@ log = get_logger(__application_name__)
 
 
 @typechecked(always=True)
-def subprocess_run(cmd: list, cwd: Path = None, capture_output: bool = True) -> (int, (str, None), (str, None)):
+def subprocess_run(cmd: list, cwd: Path = None, capture_output: bool = True, stdout_log: Callable = log.info, stderr_log: Callable = log.warning) -> (int, (str, None), (str, None)):
     """
     subprocess run taking return code into account
     :param cmd: run command
     :param cwd: current directory
     :param capture_output: True to capture output
+    :param stdout_log: function to call for stdout string
+    :param stderr_log: function to call for stderr string
     :return: process return code, stdout, stderr
     """
 
@@ -28,7 +31,7 @@ def subprocess_run(cmd: list, cwd: Path = None, capture_output: bool = True) -> 
         log.info(cmd)
         target_process = subprocess.run(cmd, cwd=cwd, capture_output=capture_output, text=True)
         if target_process.returncode != ok_return_code and target_process.returncode != restart_return_code:
-            for out, log_function in [(target_process.stdout, log.info), (target_process.stderr, log.warning)]:
+            for out, log_function in [(target_process.stdout, stdout_log), (target_process.stderr, stderr_log)]:
                 if out is not None and len(out.strip()) > 0:
                     log_function(out)
         std_out = target_process.stdout
