@@ -15,8 +15,11 @@ def subprocess_run(cmd: list, cwd: Path = None, capture_output: bool = True) -> 
     :param cmd: run command
     :param cwd: current directory
     :param capture_output: True to capture output
-    :return:
+    :return: process return code, stdout, stderr
     """
+
+    std_out = None
+    std_err = None
 
     if cwd is not None:
         cwd = str(cwd)  # subprocess requires a string
@@ -25,9 +28,11 @@ def subprocess_run(cmd: list, cwd: Path = None, capture_output: bool = True) -> 
         log.info(cmd)
         target_process = subprocess.run(cmd, cwd=cwd, capture_output=capture_output, text=True)
         if target_process.returncode != ok_return_code and target_process.returncode != restart_return_code:
-            for out in [target_process.stdout, target_process.stderr]:
+            for out, log_function in [(target_process.stdout, log.info), (target_process.stderr, log.warning)]:
                 if out is not None and len(out.strip()) > 0:
-                    log.warning(out)
+                    log_function(out)
+        std_out = target_process.stdout
+        std_err = target_process.stderr
 
         return_code = target_process.returncode
 
@@ -35,4 +40,4 @@ def subprocess_run(cmd: list, cwd: Path = None, capture_output: bool = True) -> 
         log.error(f"{e} {cmd}")
         return_code = error_return_code
 
-    return return_code
+    return return_code, std_out, std_err

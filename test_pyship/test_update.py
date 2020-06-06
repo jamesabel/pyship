@@ -1,7 +1,11 @@
 from pathlib import Path
+import subprocess
+import json
 
-from pyship import PyShip
-from test_pyship import TST_APP_PROJECT_DIR
+from semver import VersionInfo
+
+from pyship import PyShip, subprocess_run
+from test_pyship import TST_APP_PROJECT_DIR, TST_APP_LAUNCHER_EXE_PATH
 
 
 class TstPyShip(PyShip):
@@ -24,9 +28,26 @@ def test_update():
     # run the original frozen app via the launcher.  if it works, it will auto-update. capture it's output
     # check that the original frozen app prints out the 2 version strings when it exits
 
-    py_ship = PyShip(target_app_parent_dir=TST_APP_PROJECT_DIR)
-    py_ship.ship()
+    # initial version
+    initial_py_ship = PyShip(target_app_parent_dir=TST_APP_PROJECT_DIR)
 
-    tst_py_ship = TstPyShip(target_app_parent_dir=TST_APP_PROJECT_DIR)
-    tst_py_ship.target_app_info.version.bump_patch()  # inject a version higher than the original
-    tst_py_ship.ship()
+    # updated version
+    updated_py_ship = TstPyShip(target_app_parent_dir=TST_APP_PROJECT_DIR)
+    updated_py_ship.target_app_info.version.bump_patch()  # inject a version higher than the original
+
+    # run first with initial version and check the version, then run updated version and check the version
+    for py_ship in [initial_py_ship, updated_py_ship]:
+
+        # todo: DEBUG
+        py_ship.ship()
+
+        return_code, std_out, std_err = subprocess_run([TST_APP_LAUNCHER_EXE_PATH])  # always the same app exe, first time through does an update
+        for out in [std_out, std_err]:
+            if out is not None and len(out) > 0:
+                print(out)
+
+        app_run_dict = json.loads(std_out)
+        run_version_string = app_run_dict.get("version")
+        run_version = VersionInfo.parse(run_version_string)
+
+        assert run_version == py_ship.target_app_info.version
