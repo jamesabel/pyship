@@ -29,7 +29,7 @@ def test_update():
 
     # initial version
     version = write_test_app_version()
-    py_ship = PyShip(target_app_parent_dir=TST_APP_PROJECT_DIR)
+    py_ship = PyShip(target_app_parent_dir=TST_APP_PROJECT_DIR, find_links=["dist"])  # uses pyship under development (what's in "dist", not what's in PyPI)
 
     # run first with initial version and check the version, then run updated version and check the version
     for _ in range(0, 2):

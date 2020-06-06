@@ -19,6 +19,7 @@ class PyShip:
     target_app_parent_dir = attrib(default=Path())  # if None, current working directory is used
     frozen_app_dir_name = attrib(default="frozen")  # seems like as good a name as any
     dist_dir = attrib(default="dist")  # filt, etc. use "dist" as the package destination directory
+    find_links = attrib(default=None)  # extra dirs for pip to use for code not yet on PyPI (e.g. under local development)
     cache_dir = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))
     frozen_app_dir = None
 
@@ -49,7 +50,7 @@ class PyShip:
 
             pyshipy_dir = create_base_pyshipy(self.target_app_info, self.frozen_app_dir, self.cache_dir)  # create the base pyshipy
 
-            install_target_app(self.target_app_info.name, pyshipy_dir, Path(self.target_app_parent_dir, self.dist_dir), True)
+            install_target_app(self.target_app_info.name, pyshipy_dir, Path(self.target_app_parent_dir, self.dist_dir), True, self.find_links)
 
             icon_file_name = f"{self.target_app_info.name}.ico"
             shutil.copy2(Path(self.target_app_parent_dir, icon_file_name), self.frozen_app_dir)  # temporarily for nsis
@@ -62,13 +63,14 @@ class PyShip:
 
 
 @typechecked(always=True)
-def install_target_app(module_name: str, python_env_dir: Path, target_app_package_dist_dir: Path, remove_pth: bool = False):
+def install_target_app(module_name: str, python_env_dir: Path, target_app_package_dist_dir: Path, remove_pth: bool, find_links: (None, list)):
     """
     install target app as a module (and its dependencies) into pyshipy
     :param module_name: module name
     :param python_env_dir: venv or pyshipy dir
     :param target_app_package_dist_dir: target app module dist dir (as a package)
     :param remove_pth: remove remove python*._pth files as a workaround (see bug URL below)
+    :param find_links: a list of "find links" to add to pip invocation
     """
 
     # install this local app in the embedded python dir
@@ -86,5 +88,8 @@ def install_target_app(module_name: str, python_env_dir: Path, target_app_packag
             log.error(f"unexpected {pth_glob_list=} found at {python_env_dir=}")
 
     # install the target module (and its dependencies)
-    cmd = [str(Path(python_env_dir, "python.exe")), "-m", "pip", "install", "-U", module_name, "-f", str(target_app_package_dist_dir.absolute()), "--no-warn-script-location"]
+    cmd = [str(Path(python_env_dir, "python.exe")), "-m", "pip", "install", "-U", module_name, "--no-warn-script-location", "-f", str(target_app_package_dist_dir.absolute())]
+    if find_links is not None:
+        for find_link in find_links:
+            cmd.extend(["-f", find_link])
     subprocess_run(cmd, cwd=python_env_dir)
