@@ -9,7 +9,7 @@ from flit.build import main as flit_build
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
 from pyship import mkdirs
-from test_pyship import TST_APP_PROJECT_DIR, TST_APP_DIST_DIR
+from test_pyship import TST_APP_PROJECT_DIR, TST_APP_DIST_DIR, write_test_app_version
 
 
 class TestPyshipLoggingHandler(logging.Handler):
@@ -29,6 +29,8 @@ def session_fixture():
     logging.getLogger().addHandler(test_handler)
 
     balsa.init_logger()
+
+    write_test_app_version()
 
     # use flit to build the target app into a distributable package in the "dist" directory
     mkdirs(TST_APP_DIST_DIR)

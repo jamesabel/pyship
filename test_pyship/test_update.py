@@ -1,11 +1,10 @@
 from pathlib import Path
-import subprocess
 import json
 
 from semver import VersionInfo
 
 from pyship import PyShip, subprocess_run
-from test_pyship import TST_APP_PROJECT_DIR, TST_APP_LAUNCHER_EXE_PATH
+from test_pyship import TST_APP_PROJECT_DIR, TST_APP_LAUNCHER_EXE_PATH, write_test_app_version
 
 
 class TstPyShip(PyShip):
@@ -29,14 +28,11 @@ def test_update():
     # check that the original frozen app prints out the 2 version strings when it exits
 
     # initial version
-    initial_py_ship = PyShip(target_app_parent_dir=TST_APP_PROJECT_DIR)
-
-    # updated version
-    updated_py_ship = TstPyShip(target_app_parent_dir=TST_APP_PROJECT_DIR)
-    updated_py_ship.target_app_info.version.bump_patch()  # inject a version higher than the original
+    version = write_test_app_version()
+    py_ship = PyShip(target_app_parent_dir=TST_APP_PROJECT_DIR)
 
     # run first with initial version and check the version, then run updated version and check the version
-    for py_ship in [initial_py_ship, updated_py_ship]:
+    for _ in range(0, 2):
 
         # todo: DEBUG
         py_ship.ship()
@@ -51,3 +47,8 @@ def test_update():
         run_version = VersionInfo.parse(run_version_string)
 
         assert run_version == py_ship.target_app_info.version
+
+        version.bump_patch()  # inject a version higher than the original
+        write_test_app_version(version)
+
+    write_test_app_version()  # leave the version file the way we found it
