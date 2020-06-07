@@ -3,10 +3,9 @@ import json
 import os
 
 from semver import VersionInfo
-from flit.build import main as flit_build
 
-from pyship import PyShip, subprocess_run, rmdir, mkdirs
-from test_pyship import TST_APP_PROJECT_DIR, TST_APP_LAUNCHER_EXE_PATH, write_test_app_version, TST_APP_FROZEN_DIR, TST_APP_NAME, TST_APP_DIST_DIR, TST_APP_VERSION
+from pyship import PyShip, subprocess_run, rmdir
+from test_pyship import TST_APP_PROJECT_DIR, TST_APP_LAUNCHER_EXE_PATH, write_test_app_version, TST_APP_FROZEN_DIR, TST_APP_NAME, TST_APP_VERSION, test_app_flit_build
 
 
 def test_update():
@@ -15,8 +14,7 @@ def test_update():
     """
 
     def do_pyship():
-        mkdirs(TST_APP_DIST_DIR)
-        flit_build(Path(TST_APP_PROJECT_DIR, "pyproject.toml"))  # use flit to build the target app into a distributable package in the "dist" directory
+        test_app_flit_build()
         ps = PyShip(target_app_parent_dir=TST_APP_PROJECT_DIR, find_links=["dist"])  # uses pyship under development (what's in "dist", not what's in PyPI)
         ps.ship()
         return ps
