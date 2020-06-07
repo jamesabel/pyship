@@ -8,19 +8,18 @@ import boto3.s3
 import boto3.exceptions
 import semver
 
-from pyship import get_logger, Updater, rmdir
+from pyship import get_logger, rmdir, Updater
 from pyship import __application_name__ as pyship_application_name
 
 log = get_logger(pyship_application_name)
 
 
-@dataclass()
+@dataclass
 class UpdaterAwsS3(Updater):
     """
     pyship updater via AWS S3
     """
 
-    target_app_name: str
     s3_bucket_name: str = None
 
     # if not provided, boto3 will try to determine these (see boto3's docs on where it looks)
@@ -29,12 +28,9 @@ class UpdaterAwsS3(Updater):
     aws_secret_access_key: str = None
     is_public_readable = bool = False
 
-    def __init__(self):
+    def _get_s3_bucket(self):
         if self.s3_bucket_name is None:
             self.s3_bucket_name = f"{self.target_app_name}-{pyship_application_name}"  # S3 buckets can't have underscores, so use a dash
-        super().__init__()
-
-    def _get_s3_bucket(self):
         session = boto3.Session(region_name=self.region_name, aws_access_key_id=self.aws_access_key_id, aws_secret_access_key=self.aws_secret_access_key)
         s3_resource = session.resource("s3")
         return s3_resource.Bucket(self.s3_bucket_name)

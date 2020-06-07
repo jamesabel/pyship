@@ -2,7 +2,9 @@ from abc import ABC, abstractmethod
 import typing
 from pathlib import Path
 from enum import Enum
+from dataclasses import dataclass
 
+from typeguard import typechecked
 from semver import VersionInfo
 
 from pyship import get_logger, __application_name__
@@ -17,13 +19,14 @@ class PreReleaseTypes(Enum):
     beta = "beta"
 
 
+@dataclass
 class Updater(ABC):
     """
     pyship updater
     """
 
-    def __init__(self):
-        self.allowed_pre_release = []  # test, dev, beta, etc.
+    target_app_name: str
+    allowed_pre_release = []  # test, dev, beta, etc.
 
     @abstractmethod
     def get_available_versions(self) -> (typing.List[VersionInfo], None):
