@@ -10,6 +10,7 @@ from .__version__ import __version__ as version
 def tstpyshipapp():
 
     updater = UpdaterAwsS3(name)
+    updater.packaged_app_dirs.add()
 
     if updater.update():
         exit_code = restart_return_code  # app has been updated so restart to run the updated version

@@ -20,9 +20,11 @@ class ModuleInfo:
 
     def __attrs_post_init__(self):
 
-        if self.path is not None:
-            if self.path not in sys.path:
-                sys.path.append(str(self.path))
+        if self.path is not None and self.path not in sys.path:
+            save_path = sys.path
+            sys.path.append(str(self.path))
+        else:
+            save_path = None
 
         try:
             app_module = import_module(self.name)
@@ -42,3 +44,6 @@ class ModuleInfo:
         except ModuleNotFoundError:
             log.info(f"{sys.path=}")
             log.error(f"your module {self.name} not found in your python environment.  Perhaps it is not installed.  Check if {self.name} is in sys.path.")
+
+        if save_path is not None:
+            sys.path = save_path

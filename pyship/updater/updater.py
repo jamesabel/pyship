@@ -4,10 +4,9 @@ from pathlib import Path
 from enum import Enum
 from dataclasses import dataclass
 
-from typeguard import typechecked
 from semver import VersionInfo
 
-from pyship import get_logger, __application_name__
+from pyship import get_logger, __application_name__, ModuleInfo
 
 log = get_logger(__application_name__)
 
@@ -26,15 +25,15 @@ class Updater(ABC):
     """
 
     target_app_name: str
+    packaged_app_dirs = set()  # directories to search for packaged app (i.e. "dist" distribution dirs)
     allowed_pre_release = []  # test, dev, beta, etc.
+    available_versions = set()
 
-    @abstractmethod
     def get_available_versions(self) -> (typing.List[VersionInfo], None):
         """
-        get a list of available versions
-        :return: list of versions
+        get available versions
         """
-        ...
+        [self.available_versions.add(ModuleInfo(self.target_app_name, p).version) for p in self.packaged_app_dirs]
 
     @abstractmethod
     def push(self, pyshipy_dir: Path) -> bool:
@@ -46,12 +45,11 @@ class Updater(ABC):
         ...
 
     def get_greatest_version(self) -> (VersionInfo, None):
-        versions = self.get_available_versions()
-        log.debug(f"{versions=}")
-        if versions is None or len(versions) == 0:
+        log.debug(f"{self.available_versions=}")
+        if self.available_versions is None or len(self.available_versions) == 0:
             greatest_version = None
         else:
-            greatest_version = sorted(versions)[-1]
+            greatest_version = sorted(list(self.available_versions))[-1]
         log.info(f"{greatest_version=}")
         return greatest_version
 

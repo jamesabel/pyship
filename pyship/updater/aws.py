@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import mkdtemp
 import shutil
 
+from typeguard import typechecked
 import boto3
 import boto3.s3
 import boto3.exceptions
@@ -12,6 +13,10 @@ from pyship import get_logger, rmdir, Updater
 from pyship import __application_name__ as pyship_application_name
 
 log = get_logger(pyship_application_name)
+
+
+def _s3_bucket_exists(bucket):
+    return bucket.creation_date is not None  # apparently the best way to determine if a bucket exists
 
 
 @dataclass
@@ -35,21 +40,16 @@ class UpdaterAwsS3(Updater):
         s3_resource = session.resource("s3")
         return s3_resource.Bucket(self.s3_bucket_name)
 
-    def _s3_bucket_exists(self, bucket):
-        return bucket.creation_date is not None
-
-    def get_available_versions(self) -> (list, None):
-        versions = None
+    def get_available_versions(self):
         try:
             s3_bucket = self._get_s3_bucket()
-            versions = []
             for s3_object in s3_bucket.filter(Prefix=self.target_app_name):
                 key = s3_object.key
                 if key is not None and len(key) > 0:
                     key_split = key.split("_")  # todo: use a regex with the target app name so this is more robust
                     if len(key_split) > 1:
                         try:
-                            versions.append(semver.VersionInfo.parse(key_split[-1]))
+                            self.available_versions.add(semver.VersionInfo.parse(key_split[-1]))
                         except IndexError as e:
                             log.info(f"{key} {e}")
                         except TypeError as e:
@@ -62,11 +62,11 @@ class UpdaterAwsS3(Updater):
                     log.info(f"{key=}")
         except boto3.exceptions.Boto3Error as e:
             log.info(e)
-        return versions
 
+    @typechecked(always=True)
     def push(self, pyshipy_dir: Path) -> bool:
         """
-        push a pyshipy dir to S3
+        push a pyshipy dir up to S3
         :param pyshipy_dir: pyshipy dir (name is <app>_<version>)
         :return: True on success, False otherwise
         """
@@ -81,7 +81,7 @@ class UpdaterAwsS3(Updater):
             s3_bucket = self._get_s3_bucket()
 
             # create the S3 bucket if it doesn't exist
-            if not self._s3_bucket_exists(s3_bucket):
+            if not _s3_bucket_exists(s3_bucket):
                 if self.is_public_readable:
                     acl = 'public-read'
                 else:

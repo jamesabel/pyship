@@ -5,7 +5,7 @@ import os
 from semver import VersionInfo
 
 from pyship import PyShip, subprocess_run, rmdir
-from test_pyship import TST_APP_PROJECT_DIR, TST_APP_LAUNCHER_EXE_PATH, write_test_app_version, TST_APP_FROZEN_DIR, TST_APP_NAME, TST_APP_VERSION, test_app_flit_build
+from test_pyship import TST_APP_PROJECT_DIR, TST_APP_LAUNCHER_EXE_PATH, write_test_app_version, TST_APP_FROZEN_DIR, TST_APP_NAME, TST_APP_VERSION, test_app_flit_build, TST_APP_DIST_DIR
 
 
 def test_update():
@@ -20,12 +20,13 @@ def test_update():
         return ps
 
     # create the version we're going to upgrade *to* and put it in a separate dir
-    updated_version = TST_APP_VERSION.bump_patch()  # bump patch to create version to be upgraded to
-    write_test_app_version(updated_version)  # get default version
+    updated_version = TST_APP_VERSION.bump_patch()
+    write_test_app_version(updated_version)  # bump patch to create version to be upgraded to
     do_pyship()
-    upgrade_dir = Path(TST_APP_FROZEN_DIR.parent, f"{TST_APP_NAME}_{str(updated_version)}")
-    rmdir(upgrade_dir)
-    os.rename(TST_APP_FROZEN_DIR, upgrade_dir)
+    for d in TST_APP_FROZEN_DIR, TST_APP_DIST_DIR:
+        upgrade_dir = Path(d.parent, f"{d.name}_{updated_version}")
+        rmdir(upgrade_dir)
+        os.rename(d, upgrade_dir)
 
     # now create the 'original' version
     write_test_app_version(TST_APP_VERSION)
