@@ -139,6 +139,7 @@ installers/
 cache/
 frozen/
 dist_*/
+frozen_*/
 
 # this will change during testing and flit does not run if it does and its tracked
 test_pyship/tstpyshipapp/tstpyshipapp/__version__.py
