@@ -1,18 +1,12 @@
 from pathlib import Path
 import json
+import os
 
 from semver import VersionInfo
+from flit.build import main as flit_build
 
-from pyship import PyShip, subprocess_run
-from test_pyship import TST_APP_PROJECT_DIR, TST_APP_LAUNCHER_EXE_PATH, write_test_app_version
-
-
-class TstPyShip(PyShip):
-    def set_frozen_app_dir(self):
-        """
-        set frozen app dir (override this to use a different frozen app dir)
-        """
-        self.frozen_app_dir = Path(self.target_app_parent_dir, self.frozen_app_dir_name, f"{self.target_app_info.name}_2").absolute()
+from pyship import PyShip, subprocess_run, rmdir, mkdirs
+from test_pyship import TST_APP_PROJECT_DIR, TST_APP_LAUNCHER_EXE_PATH, write_test_app_version, TST_APP_FROZEN_DIR, TST_APP_NAME, TST_APP_DIST_DIR, TST_APP_VERSION
 
 
 def test_update():
@@ -20,32 +14,29 @@ def test_update():
     test that we can update the app (i.e. update pyshipy)
     """
 
-    # todo:
-    # create an app (with some version, say 0.0.1) that does an automatic update and when it exits it prints the version number (to stdout)
-    # freeze that app into some temp dir (emulates the install)
-    # create an update of that app (a pyshipy dir) with a higher version (say 0.0.2) and "release" that version (which zips the pyshipy dir and copies it up to S3).
-    # run the original frozen app via the launcher.  if it works, it will auto-update. capture it's output
-    # check that the original frozen app prints out the 2 version strings when it exits
+    def do_pyship():
+        mkdirs(TST_APP_DIST_DIR)
+        flit_build(Path(TST_APP_PROJECT_DIR, "pyproject.toml"))  # use flit to build the target app into a distributable package in the "dist" directory
+        ps = PyShip(target_app_parent_dir=TST_APP_PROJECT_DIR, find_links=["dist"])  # uses pyship under development (what's in "dist", not what's in PyPI)
+        ps.ship()
+        return ps
 
-    # initial version
-    version = write_test_app_version()
-    py_ship = PyShip(target_app_parent_dir=TST_APP_PROJECT_DIR, find_links=["dist"])  # uses pyship under development (what's in "dist", not what's in PyPI)
+    # create the version we're going to upgrade *to* and put it in a separate dir
+    updated_version = TST_APP_VERSION.bump_patch()  # bump patch to create version to be upgraded to
+    write_test_app_version(updated_version)  # get default version
+    do_pyship()
+    upgrade_dir = Path(TST_APP_FROZEN_DIR.parent, f"{TST_APP_NAME}_{str(updated_version)}")
+    rmdir(upgrade_dir)
+    os.rename(TST_APP_FROZEN_DIR, upgrade_dir)
 
-    # run first with initial version and check the version, then run updated version and check the version
-    for _ in range(0, 2):
+    # now create the 'original' version
+    write_test_app_version(TST_APP_VERSION)
+    py_ship = do_pyship()
+    assert TST_APP_VERSION == py_ship.target_app_info.version
 
-        # todo: DEBUG
-        py_ship.ship()
-
-        return_code, std_out, std_err = subprocess_run([TST_APP_LAUNCHER_EXE_PATH], stdout_log=print)
-
-        app_run_dict = json.loads(std_out)
-        run_version_string = app_run_dict.get("version")
-        run_version = VersionInfo.parse(run_version_string)
-
-        assert run_version == py_ship.target_app_info.version
-
-        version.bump_patch()  # inject a version higher than the original
-        write_test_app_version(version)
-
-    write_test_app_version()  # leave the version file the way we found it
+    # run the 'original' version and test that it updates itself
+    return_code, std_out, std_err = subprocess_run([TST_APP_LAUNCHER_EXE_PATH], stdout_log=print)
+    app_run_dict = json.loads(std_out)
+    run_version_string = app_run_dict.get("version")
+    run_version = VersionInfo.parse(run_version_string)
+    assert run_version == updated_version
