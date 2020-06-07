@@ -24,7 +24,7 @@ def test_update():
     write_test_app_version(updated_version)  # bump patch to create version to be upgraded to
     do_pyship()
     for d in TST_APP_FROZEN_PARENT, TST_APP_DIST_DIR:
-        upgrade_dir = Path(d.parent, f"{d.name}_{updated_version}")
+        upgrade_dir = Path(d.parent, f"{d.name}_upgrade")
         rmdir(upgrade_dir)
         os.rename(d, upgrade_dir)
 
