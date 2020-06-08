@@ -3,7 +3,7 @@ import json
 from semver import VersionInfo
 
 from pyship import PyShip, subprocess_run, get_logger, __application_name__, pyship_print
-from test_pyship import TST_APP_NAME, TST_APP_VERSION, tst_app_flit_build, TstAppDirs
+from test_pyship import TST_APP_NAME, tst_app_flit_build, TstAppDirs
 
 log = get_logger(__application_name__)
 
@@ -21,13 +21,15 @@ def test_update():
         return ps
 
     # create the version we're going to upgrade *to* and put it in a separate dir
-    updated_version = TST_APP_VERSION.bump_patch()
-    do_pyship(TstAppDirs(TST_APP_NAME, updated_version))  # bump patch to create version to be upgraded to
+    updated_version = VersionInfo(0, 0, 2)
+    updated_app_dirs = TstAppDirs(TST_APP_NAME, updated_version)
+    do_pyship(updated_app_dirs)  # bump patch to create version to be upgraded to
 
     # now create the 'original' version
-    original_app_dirs = TstAppDirs(TST_APP_NAME, TST_APP_VERSION)
+    original_version = VersionInfo(0, 0, 1)
+    original_app_dirs = TstAppDirs(TST_APP_NAME, original_version)
     py_ship = do_pyship(original_app_dirs)
-    assert TST_APP_VERSION == py_ship.target_app_info.version  # make sure we just made the intended version
+    assert original_version == py_ship.target_app_info.version  # make sure we just made the intended version
 
     # run the 'original' version and test that it updates itself
     return_code, std_out, std_err = subprocess_run([original_app_dirs.launcher_exe_path], stdout_log=print)

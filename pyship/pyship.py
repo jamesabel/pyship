@@ -21,13 +21,8 @@ class PyShip:
     dist_dir = attrib(default="dist")  # filt, etc. use "dist" as the package destination directory
     find_links = attrib(default=None)  # extra dirs for pip to use for code not yet on PyPI (e.g. under local development)
     cache_dir = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))
+    target_app_info = None
     frozen_app_dir = None
-
-    def __attrs_post_init__(self):
-
-        self.target_app_info = TargetAppInfo(self.target_app_parent_dir)
-        if self.target_app_info.is_complete():
-            self.set_frozen_app_dir()
 
     def set_frozen_app_dir(self):
         """
@@ -40,7 +35,11 @@ class PyShip:
         perform all the steps to ship the app, including creating the installer
         """
         pyship_print(f"{pyship_application_name} starting")
+
+        self.target_app_info = TargetAppInfo(self.target_app_parent_dir)
         if self.target_app_info.is_complete():
+
+            self.set_frozen_app_dir()
 
             mkdirs(self.frozen_app_dir, remove_first=True)
 

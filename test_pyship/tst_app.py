@@ -4,7 +4,6 @@ from semver import VersionInfo
 from pyship import mkdirs, subprocess_run, get_logger, __application_name__
 
 TST_APP_NAME = "tstpyshipapp"
-TST_APP_VERSION = VersionInfo(0, 0, 1)
 
 
 log = get_logger(__application_name__)
