@@ -24,12 +24,6 @@ class PyShip:
     target_app_info = None
     frozen_app_dir = None
 
-    def set_frozen_app_dir(self):
-        """
-        set frozen app dir (override this to use a different frozen app dir)
-        """
-        self.frozen_app_dir = Path(self.target_app_parent_dir, self.frozen_app_dir_name, self.target_app_info.name).absolute()
-
     def ship(self):
         """
         perform all the steps to ship the app, including creating the installer
@@ -39,7 +33,7 @@ class PyShip:
         self.target_app_info = TargetAppInfo(self.target_app_parent_dir)
         if self.target_app_info.is_complete():
 
-            self.set_frozen_app_dir()
+            self.frozen_app_dir = Path(self.target_app_parent_dir, self.frozen_app_dir_name, self.target_app_info.name).absolute()
 
             mkdirs(self.frozen_app_dir, remove_first=True)
 
