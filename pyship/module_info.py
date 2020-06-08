@@ -1,5 +1,5 @@
 import sys
-from importlib import import_module
+from importlib import import_module, reload
 
 from attr import attrs, attrib
 from semver import VersionInfo
@@ -28,6 +28,7 @@ class ModuleInfo:
 
         try:
             app_module = import_module(self.name)
+            app_module = reload(app_module)  # for our test cases we need to reload a modified module (it doesn't hurt to reload an unmodified module)
 
             version_string = app_module.__dict__.get("__version__")
             if version_string is None:

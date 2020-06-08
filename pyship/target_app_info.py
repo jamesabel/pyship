@@ -22,6 +22,7 @@ class TargetAppInfo:
 
         self.name = None
         self.author = None
+        self.version = None
         self.is_gui = False
         self.url = ""
         self.description = ""
@@ -75,4 +76,4 @@ class TargetAppInfo:
             log.error(f"{str(self.pyproject_toml_file_path)} does not exist at {self.pyproject_toml_file_path.absolute().parent}")
 
     def is_complete(self):
-        return self.name is not None and self.author is not None
+        return all([v is not None for v in [self.name, self.author, self.version, self.description]])
