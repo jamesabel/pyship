@@ -37,8 +37,6 @@ class PyShip:
 
             mkdirs(self.frozen_app_dir, remove_first=True)
 
-            target_app_module_info = ModuleInfo(self.target_app_info.name, self.target_app_info.target_app_project_dir)
-
             create_launcher(self.target_app_info, self.frozen_app_dir)  # create the OS specific launcher executable
 
             pyshipy_dir = create_base_pyshipy(self.target_app_info, self.frozen_app_dir, self.cache_dir)  # create the base pyshipy
@@ -47,7 +45,7 @@ class PyShip:
 
             icon_file_name = f"{self.target_app_info.name}.ico"
             shutil.copy2(Path(self.target_app_parent_dir, icon_file_name), self.frozen_app_dir)  # temporarily for nsis
-            run_nsis(self.target_app_info, target_app_module_info.version, self.frozen_app_dir)
+            run_nsis(self.target_app_info, self.target_app_info.version, self.frozen_app_dir)
             os.unlink(Path(self.frozen_app_dir, icon_file_name))
 
             pyship_print(f"{pyship_application_name} done")

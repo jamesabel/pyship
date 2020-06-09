@@ -4,7 +4,7 @@ import sys
 from pyship import restart_return_code, ok_return_code, UpdaterAwsS3
 
 from .__init__ import __application_name__ as name
-from .__version__ import __version__ as version
+from .__init__ import __version__ as version
 
 
 def tstpyshipapp():
