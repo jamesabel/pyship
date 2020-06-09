@@ -1,7 +1,8 @@
 import sys
 from importlib import import_module, reload
+from dataclasses import dataclass
+from pathlib import Path
 
-from attr import attrs, attrib
 from semver import VersionInfo
 
 from pyship import __application_name__, get_logger
@@ -9,16 +10,15 @@ from pyship import __application_name__, get_logger
 log = get_logger(__application_name__)
 
 
-@attrs()
+@dataclass
 class ModuleInfo:
-    name = attrib()  # module/package name
-    path = attrib(default=None)  # module/package dir if not current working directory
 
-    # derived from the module
-    version = attrib(default=None)
-    docstring = attrib(default="")
+    def __init__(self, name: str, path: Path = None):
 
-    def __attrs_post_init__(self):
+        self.name = name
+        self.path = path
+        self.version = None
+        self.docstring = ""
 
         if self.path is not None and self.path not in sys.path:
             save_path = sys.path
