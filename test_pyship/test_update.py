@@ -32,11 +32,9 @@ def test_update():
     py_ship = do_pyship(original_app_dirs)
     assert original_version == py_ship.target_app_info.version  # make sure we just made the intended version
 
-    # Check that the app is the same (except for version differences) for both copies. We need the same file in 2 different places for the test infrastructure, but they have
+    # Check that the app is the same for both copies. We need the same file in 2 different places for the test infrastructure, but they have
     # to have the same functional contents.
     app_contents = [open(Path(ps.target_app_parent_dir, TST_APP_NAME, "app.py")).read() for ps in [py_ship, updated_pyship]]
-    for i, content in enumerate(app_contents):
-        app_contents[i] = app_contents[i].replace(f"0.0.{i+1}", "")  # each app will have code specific to their version
     assert app_contents[0] == app_contents[1]
 
     # run the 'original' version and test that it updates itself

@@ -11,8 +11,8 @@ from .__init__ import __version__ as version
 def tstpyshipapp():
 
     updater = UpdaterAwsS3(name)
-    dist_path = Path("test_pyship", "tstpyshipapp_0.0.1", "dist").resolve().absolute()
-    updater.packaged_app_dirs.add(dist_path)
+    updated_dist_path = Path("test_pyship", "tstpyshipapp_0.0.2", "dist").resolve().absolute()
+    updater.packaged_app_dirs.add(updated_dist_path)
 
     if updater.update():
         exit_code = restart_return_code  # app has been updated so restart to run the updated version
