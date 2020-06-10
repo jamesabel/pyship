@@ -40,7 +40,11 @@ def test_update():
     assert app_contents[0] == app_contents[1]
 
     # run the 'original' version and test that it updates itself
-    return_code, std_out, std_err = subprocess_run([original_app_dirs.launcher_exe_path], stdout_log=pyship_print)
+    cmd = [original_app_dirs.launcher_exe_path]
+    return_code, std_out, std_err = subprocess_run(cmd, stdout_log=pyship_print)
+    pyship_print(str(cmd))
+    pyship_print(std_out)
+    pyship_print(std_err)
     app_run_dict = json.loads(std_out)
     run_version_string = app_run_dict.get("version")
     run_version = VersionInfo.parse(run_version_string)

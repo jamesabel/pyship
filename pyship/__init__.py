@@ -19,4 +19,5 @@ from .pyshipy import create_base_pyshipy, version_from_pyshipy_zip
 from .pyship import PyShip, install_target_app
 from .updater.updater import Updater
 from .updater.aws import UpdaterAwsS3
+from .updater.local import UpdaterLocal
 from .main import main

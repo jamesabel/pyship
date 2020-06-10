@@ -25,38 +25,43 @@ class Updater(ABC):
     """
 
     target_app_name: str
-    packaged_app_dirs = set()  # directories to search for packaged app (i.e. "dist" distribution dirs)
     allowed_pre_release = []  # test, dev, beta, etc.
-    available_versions = set()
+    available_versions = {}  # key is VersionInfo, value is path to the version
 
+    @abstractmethod
     def get_available_versions(self) -> (typing.List[VersionInfo], None):
         """
         get available versions
         """
-        [self.available_versions.add(ModuleInfo(self.target_app_name, p).version) for p in self.packaged_app_dirs]
+        ...
 
     @abstractmethod
-    def push(self, pyshipy_dir: Path) -> bool:
+    def get_pyshipy(self, pyshipy_source, destination_dir: Path):
         """
-        push a new target application version (a pyshipy dir)
-        :param pyshipy_dir: new pyshipy to push
-        :return: True on push success, False otherwise
+        get a pyshipy dir from the pyshipy_source
+        :param pyshipy_source: place to get the pyshipy dir (type is dependent on the derived class)
+        :param destination_dir: dir to put the pyshipy dir
         """
         ...
 
     def get_greatest_version(self) -> (VersionInfo, None):
         log.debug(f"{self.available_versions=}")
-        if self.available_versions is None or len(self.available_versions) == 0:
+        if len(self.available_versions) == 0:
             greatest_version = None
         else:
-            greatest_version = sorted(list(self.available_versions))[-1]
+            greatest_version = sorted(list(self.available_versions.keys()))[-1]
         log.info(f"{greatest_version=}")
         return greatest_version
 
-    def update(self) -> bool:
+    def update(self, current_version: (str, VersionInfo)) -> bool:
         """
         update this (the target) application (pyshipy dir)
         :return: True if successful, False otherwise
         """
         success_flag = False
+        if isinstance(current_version, str):
+            current_version = VersionInfo.parse(current_version)
+        greatest_version = self.get_greatest_version()
+        if greatest_version is not None and greatest_version > current_version:
+            self.get_pyshipy(self.available_versions[greatest_version], Path(".."))
         return success_flag
