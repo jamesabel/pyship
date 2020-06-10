@@ -82,5 +82,6 @@ def install_target_app(module_name: str, python_env_dir: Path, target_app_packag
     cmd = [str(Path(python_env_dir, "python.exe")), "-m", "pip", "install", "-U", module_name, "--no-warn-script-location", "-f", str(target_app_package_dist_dir.absolute())]
     if find_links is not None:
         for find_link in find_links:
-            cmd.extend(["-f", find_link])
+            cmd.extend(["-f", str(find_link)])
+    pyship_print(str(cmd))
     subprocess_run(cmd, cwd=python_env_dir)

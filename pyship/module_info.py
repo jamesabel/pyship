@@ -35,7 +35,7 @@ class ModuleInfo:
             app_module = import_module(self.name)
             app_module = reload(app_module)  # for our test cases we need to reload a modified module (it doesn't hurt to reload an unmodified module)
             version_string = app_module.__dict__.get("__version__")
-            pyship_print(f"{version_string=}")
+            pyship_print(f"{self.name=} {version_string=}")
 
             if version_string is None:
                 log.error(f"{self.name} does not have a __version__.  Please add one.")

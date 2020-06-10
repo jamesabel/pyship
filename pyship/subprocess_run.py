@@ -4,7 +4,7 @@ from typing import Callable
 
 from typeguard import typechecked
 
-from pyship import __application_name__, ok_return_code, restart_return_code, error_return_code, get_logger
+from pyship import __application_name__, ok_return_code, restart_return_code, error_return_code, get_logger, pyship_print
 
 log = get_logger(__application_name__)
 

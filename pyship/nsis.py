@@ -6,7 +6,7 @@ from semver import VersionInfo
 from typeguard import typechecked
 from balsa import get_logger
 
-from pyship import __application_name__, TargetAppInfo, mkdirs, get_target_os, subprocess_run
+from pyship import __application_name__, TargetAppInfo, mkdirs, get_target_os, subprocess_run, pyship_print
 
 
 log = get_logger(__application_name__)
@@ -190,7 +190,9 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, fr
         # run nsis
         make_nsis_path = os.environ.get("MAKE_NSIS_PATH", default=os.path.join("c:", os.sep, "Program Files (x86)", "NSIS", "makensis.exe"))
         if os.path.exists(make_nsis_path):
-            subprocess_run([make_nsis_path, nsis_file_path], target_app_info.target_app_project_dir)
+            cmd = [make_nsis_path, nsis_file_path]
+            pyship_print(str(cmd))
+            subprocess_run(cmd, target_app_info.target_app_project_dir)
         else:
             log.fatal(f"{make_nsis_path} not found - see http://nsis.sourceforge.net to get NSIS (Nullsoft Scriptable Install System)")
             raise FileNotFoundError(make_nsis_path)

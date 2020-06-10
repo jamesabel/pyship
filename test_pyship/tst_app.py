@@ -24,6 +24,10 @@ class TstAppDirs:
 
 
 def tst_app_flit_build(tst_app_dirs: TstAppDirs):
+    """
+    build the test app as a package
+    :param tst_app_dirs: instance of a test app dirs
+    """
     mkdirs(tst_app_dirs.dist_dir, remove_first=True)
     flit_exe_path = Path("venv", "Scripts", "flit.exe")
     pyproject_path = Path(tst_app_dirs.project_dir, "pyproject.toml")

@@ -5,8 +5,10 @@ import sys
 
 from balsa import Balsa
 
+from pyship import mkdirs, subprocess_run, pyship_print
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
+from pyship import __version__ as pyship_version
 
 
 class TestPyshipLoggingHandler(logging.Handler):
@@ -26,6 +28,11 @@ def session_fixture():
     logging.getLogger().addHandler(test_handler)
 
     balsa.init_logger()
+
+    # use flit to build pyship into a distributable package in the "dist" directory
+    mkdirs(Path("dist"), remove_first=True)
+    subprocess_run([str(Path("venv", "Scripts", "flit.exe")), "build"], stdout_log=print)
+    pyship_print(f"{pyship_application_name=} {pyship_version=} {pyship_author=}")
 
     if pyship_application_name not in sys.path:
         sys.path.append(pyship_application_name)  # since, when testing pyship, pyship itself isn't in the venv

@@ -14,10 +14,12 @@ def test_update():
     test that we can update the app (i.e. update pyshipy)
     """
 
+    pyship_dist_dir = Path("dist").resolve().absolute()
+
     def do_pyship(tst_app_dirs: TstAppDirs):
         pyship_print(f"{tst_app_dirs.target_app_version=}")
         tst_app_flit_build(tst_app_dirs)
-        ps = PyShip(target_app_parent_dir=tst_app_dirs.project_dir, find_links=["dist"])  # uses pyship under development (what's in "dist", not what's in PyPI)
+        ps = PyShip(target_app_parent_dir=tst_app_dirs.project_dir, find_links=[pyship_dist_dir])  # uses pyship under development (what's in "dist", not what's in PyPI)
         ps.ship()
         return ps
 
@@ -38,7 +40,7 @@ def test_update():
     assert app_contents[0] == app_contents[1]
 
     # run the 'original' version and test that it updates itself
-    return_code, std_out, std_err = subprocess_run([original_app_dirs.launcher_exe_path], stdout_log=print)
+    return_code, std_out, std_err = subprocess_run([original_app_dirs.launcher_exe_path], stdout_log=pyship_print)
     app_run_dict = json.loads(std_out)
     run_version_string = app_run_dict.get("version")
     run_version = VersionInfo.parse(run_version_string)
