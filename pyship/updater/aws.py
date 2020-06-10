@@ -62,6 +62,7 @@ class UpdaterAwsS3(Updater):
                     log.info(f"{key=}")
         except boto3.exceptions.Boto3Error as e:
             log.info(e)
+        return self.available_versions
 
     @typechecked(always=True)
     def push(self, pyshipy_dir: Path) -> bool:

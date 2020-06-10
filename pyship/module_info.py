@@ -30,7 +30,8 @@ class ModuleInfo:
 
         try:
 
-            # do as much as we can to ensure we can import a module already imported, since we do that in our test cases (probably not something we'll see in normal usage though)
+            # Do as much as we can to ensure we can import a module already imported, since we re-load the test app module in our test cases (probably not something we'll see in normal
+            # usage though).
             invalidate_caches()
             app_module = import_module(self.name)
             app_module = reload(app_module)  # for our test cases we need to reload a modified module (it doesn't hurt to reload an unmodified module)
@@ -50,7 +51,7 @@ class ModuleInfo:
 
         except ModuleNotFoundError:
             log.info(f"{sys.path=}")
-            log.error(f"your module {self.name} not found in your python environment.  Perhaps it is not installed.  Check if {self.name} is in sys.path.")
+            log.error(f"Your module {self.name} was not found in your python environment.  Perhaps it is not installed.  Check if {self.name} is in sys.path.")
 
         if appended_path:
             sys.path.remove(str(self.path))

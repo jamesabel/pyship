@@ -26,10 +26,9 @@ class Updater(ABC):
 
     target_app_name: str
     allowed_pre_release = []  # test, dev, beta, etc.
-    available_versions = {}  # key is VersionInfo, value is path to the version
 
     @abstractmethod
-    def get_available_versions(self) -> (typing.List[VersionInfo], None):
+    def get_available_versions(self) -> dict:
         """
         get available versions
         """
@@ -44,24 +43,25 @@ class Updater(ABC):
         """
         ...
 
-    def get_greatest_version(self) -> (VersionInfo, None):
-        log.debug(f"{self.available_versions=}")
-        if len(self.available_versions) == 0:
+    def get_greatest_version(self, available_versions: dict) -> (VersionInfo, None):
+        log.debug(f"{available_versions=}")
+        if len(available_versions) == 0:
             greatest_version = None
         else:
-            greatest_version = sorted(list(self.available_versions.keys()))[-1]
+            greatest_version = sorted(list(available_versions.keys()))[-1]
         log.info(f"{greatest_version=}")
         return greatest_version
 
-    def update(self, current_version: (str, VersionInfo)) -> bool:
+    def update(self, current_version: (str, VersionInfo)):
         """
         update this (the target) application (pyshipy dir)
-        :return: True if successful, False otherwise
         """
-        success_flag = False
         if isinstance(current_version, str):
             current_version = VersionInfo.parse(current_version)
-        greatest_version = self.get_greatest_version()
+        available_versions = self.get_available_versions()
+        greatest_version = self.get_greatest_version(available_versions)
+        log.info(f"{greatest_version=}")
+        log.info(f"{available_versions[greatest_version]=}")
         if greatest_version is not None and greatest_version > current_version:
-            self.get_pyshipy(self.available_versions[greatest_version], Path(".."))
-        return success_flag
+            self.get_pyshipy(available_versions[greatest_version], Path(".."))
+

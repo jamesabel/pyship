@@ -8,7 +8,7 @@ from platform import architecture
 
 from typeguard import typechecked
 
-from pyship import get_logger, __application_name__
+from pyship import get_logger, __application_name__, pyship_print
 
 log = get_logger(__application_name__)
 
@@ -101,4 +101,5 @@ def copy_tree(source: Path, dest: Path, subdir: str):
     dest.mkdir(parents=True, exist_ok=True)
     source = Path(source, subdir)
     dest = Path(dest, subdir)
+    log.info(f'copying "{source}" ("{source.resolve().absolute()}") to "{dest}" ("{dest.resolve().absolute()}")')
     shutil.copytree(str(source), str(dest), ignore=shutil.ignore_patterns("__pycache__"), dirs_exist_ok=True)
