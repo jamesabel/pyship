@@ -43,7 +43,8 @@ def test_update():
     cmd = [original_app_dirs.launcher_exe_path]
     if VERBOSE:
         cmd.append("-v")
-    return_code, std_out, std_err = subprocess_run(cmd, stdout_log=pyship_print)
+    # run the app from it's own directory
+    return_code, std_out, std_err = subprocess_run(cmd, cwd=original_app_dirs.launcher_exe_path.parent, stdout_log=pyship_print)
     pyship_print(str(cmd))
     pyship_print(std_out)
     pyship_print(std_err)

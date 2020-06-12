@@ -21,7 +21,7 @@ def tstpyshipapp():
 
     updater = UpdaterLocal(name)
     updated_app_path = Path(Path.home(), "projects", pyship_application_name,  "test_pyship", f"{name}_0.0.2", APP_DIR_NAME, name).resolve().absolute()
-    log.info(f"{updated_app_path}")
+    log.info(f"{updated_app_path=}")
     updater.app_dirs.add(updated_app_path)
 
     if updater.update(version):
