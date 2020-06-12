@@ -1,7 +1,7 @@
 from pathlib import Path
 from semver import VersionInfo
 
-from pyship import mkdirs, subprocess_run, get_logger, __application_name__
+from pyship import mkdirs, subprocess_run, get_logger, __application_name__, APP_DIR_NAME
 
 TST_APP_NAME = "tstpyshipapp"
 
@@ -16,8 +16,7 @@ class TstAppDirs:
         self.target_app_version = version
 
         self.project_dir = Path("test_pyship", f"{self.target_app_name}_{str(self.target_app_version)}")
-        self.app_parent = Path(self.project_dir, "app")
-        self.app_dir = Path(self.app_parent, self.target_app_name)
+        self.app_dir = Path(self.project_dir, APP_DIR_NAME, self.target_app_name)
         self.cache = Path(self.project_dir, "cache")
         self.dist_dir = Path(self.project_dir, "dist")
         self.launcher_exe_path = Path(self.app_dir, self.target_app_name, f"{TST_APP_NAME}.exe")

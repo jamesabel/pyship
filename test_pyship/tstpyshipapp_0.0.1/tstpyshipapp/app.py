@@ -11,7 +11,7 @@ from .__init__ import __version__ as version
 def tstpyshipapp():
 
     updater = UpdaterLocal(name)
-    updated_app_path = Path("test_pyship", "tstpyshipapp_0.0.2", APP_DIR_NAME).resolve().absolute()
+    updated_app_path = Path("test_pyship", f"{name}_0.0.2", APP_DIR_NAME, name).resolve().absolute()
     updater.app_dirs.add(updated_app_path)
 
     if updater.update(version):
