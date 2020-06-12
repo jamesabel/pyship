@@ -4,6 +4,8 @@ __application_name__ = "pyship"
 
 python_interpreter_exes = {True: "pythonw.exe", False: "python.exe"}  # True is GUI, False is CLI
 
+APP_DIR_NAME = "app"
+
 from .__version__ import __version__, __author__
 from .logging import PyshipLog, get_logger, log_process_output
 from .pyship_print import pyship_print

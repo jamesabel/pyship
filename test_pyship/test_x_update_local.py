@@ -13,5 +13,5 @@ def test_update_local():
     versions = [VersionInfo.parse(vs) for vs in ["0.0.1", "0.0.2"]]
     updater_local = UpdaterLocal(TST_APP_NAME)
     updater_local.app_dirs = set([TstAppDirs(TST_APP_NAME, v).app_dir for v in versions])
-    did_update = updater_local.update(versions[0], TstAppDirs(TST_APP_NAME, versions[0]).app_parent)
+    did_update = updater_local.update(versions[0], TstAppDirs(TST_APP_NAME, versions[0]).app_dir)
     assert did_update

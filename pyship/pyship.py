@@ -8,7 +8,7 @@ from typeguard import typechecked
 
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
-from pyship import TargetAppInfo, get_logger, run_nsis, create_base_pyshipy, create_launcher, pyship_print, subprocess_run, mkdirs, ModuleInfo
+from pyship import TargetAppInfo, get_logger, run_nsis, create_base_pyshipy, create_launcher, pyship_print, subprocess_run, mkdirs, APP_DIR_NAME
 
 log = get_logger(pyship_application_name)
 
@@ -17,7 +17,6 @@ log = get_logger(pyship_application_name)
 class PyShip:
 
     app_parent_dir = attrib(default=Path())  # target app parent dir.  If None, current working directory is used.
-    app_dir_name = attrib(default="app")  # frozen app parent directory
     dist_dir = attrib(default="dist")  # filt, etc. use "dist" as the package destination directory
     find_links = attrib(default=None)  # extra dirs for pip to use for code not yet on PyPI (e.g. under local development)
     cache_dir = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))
@@ -33,7 +32,7 @@ class PyShip:
         self.target_app_info = TargetAppInfo(self.app_parent_dir)
         if self.target_app_info.is_complete():
 
-            self.app_dir = Path(self.app_parent_dir, self.app_dir_name, self.target_app_info.name).absolute()
+            self.app_dir = Path(self.app_parent_dir, APP_DIR_NAME, self.target_app_info.name).absolute()
 
             mkdirs(self.app_dir, remove_first=True)
 
