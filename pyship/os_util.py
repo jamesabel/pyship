@@ -40,31 +40,40 @@ def _remove_readonly_onerror(func, path, excinfo):
 
 
 @typechecked(always=True)
-def rmdir(p: Path, log_function=log.error) -> (bool, bool):
+def rmdir(p: Path, failure_log_function=log.error) -> (bool, bool):
     retry_count = 0
     retry_limit = 4
     delete_ok = False
     delay = 1.0
+
+    # use these to increase the log level on exceptions if seen more than once
+    lowest_log_function = log.debug
+    mid_log_function = log.info
+
     while p.exists() and retry_count < retry_limit:
         try:
             shutil.rmtree(p, onerror=_remove_readonly_onerror)
-            delete_ok = True
         except FileNotFoundError as e:
-            log.debug(str(e))  # this can happen when first doing the shutil.rmtree()
+            lowest_log_function(str(e))  # this can happen when first doing the shutil.rmtree()
             time.sleep(delay)
         except PermissionError as e:
-            log.info(str(e))
+            mid_log_function(str(e))
             time.sleep(delay)
         except OSError as e:
-            log.info(str(e))
+            mid_log_function(str(e))
             time.sleep(delay)
         time.sleep(0.1)
         if p.exists:
             time.sleep(delay)
         retry_count += 1
         delay *= 2.0
+
+        # up the log level 2nd time around
+        lowest_log_function = log.info
+        mid_log_function = log.warning
+
     if p.exists():
-        log_function(f'could not remove {p} ({retry_count=})', stack_info=True)
+        failure_log_function(f'could not remove {p} ({retry_count=})', stack_info=True)
     else:
         delete_ok = True
     return delete_ok
