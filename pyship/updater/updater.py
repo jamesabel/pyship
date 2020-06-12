@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
-import typing
 from pathlib import Path
 from enum import Enum
 from dataclasses import dataclass
 
 from semver import VersionInfo
+from typeguard import typechecked
 
 from pyship import get_logger, __application_name__, ModuleInfo
 
@@ -35,15 +35,22 @@ class Updater(ABC):
         ...
 
     @abstractmethod
-    def get_pyshipy(self, pyshipy_source, destination_dir: Path):
+    def install_pyshipy(self, version, destination_dir: Path) -> bool:
         """
-        get a pyshipy dir from the pyshipy_source
-        :param pyshipy_source: place to get the pyshipy dir (type is dependent on the derived class)
-        :param destination_dir: dir to put the pyshipy dir
+        put a pyshipy into a destination dir
+        :param version: version of pyshipy to get
+        :param destination_dir: dir to put the pyshipy
+        :return: True if were able to get the pyshipy, False otherwise
         """
         ...
 
-    def get_greatest_version(self, available_versions: dict) -> (VersionInfo, None):
+    @typechecked(always=True)
+    def get_greatest_version(self) -> (VersionInfo, None):
+        """
+        determine the greatest version and return it
+        :return: the greatest version, or None if no versions available
+        """
+        available_versions = self.get_available_versions()
         log.debug(f"{available_versions=}")
         if len(available_versions) == 0:
             greatest_version = None
@@ -52,16 +59,19 @@ class Updater(ABC):
         log.info(f"{greatest_version=}")
         return greatest_version
 
-    def update(self, current_version: (str, VersionInfo)):
+    @typechecked(always=True)
+    def update(self, current_version: (str, VersionInfo), app_dir: Path = Path("..")) -> bool:
         """
         update this (the target) application (pyshipy dir)
+        :param current_version: current version of the running app
+        :param app_dir: application directory.  Normally this is just one level "up" from the execution directory, but this can be provided mainly for testing purposes.
         """
+        did_update = False
         if isinstance(current_version, str):
             current_version = VersionInfo.parse(current_version)
-        available_versions = self.get_available_versions()
-        greatest_version = self.get_greatest_version(available_versions)
+        greatest_version = self.get_greatest_version()
         log.info(f"{greatest_version=}")
-        log.info(f"{available_versions[greatest_version]=}")
-        if greatest_version is not None and greatest_version > current_version:
-            self.get_pyshipy(available_versions[greatest_version], Path(".."))
-
+        if greatest_version is not None:
+            if greatest_version > current_version:
+                did_update = self.install_pyshipy(greatest_version, app_dir)
+        return did_update

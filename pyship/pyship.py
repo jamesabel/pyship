@@ -16,13 +16,13 @@ log = get_logger(pyship_application_name)
 @attrs()
 class PyShip:
 
-    target_app_parent_dir = attrib(default=Path())  # if None, current working directory is used
-    frozen_app_dir_name = attrib(default="frozen")  # seems like as good a name as any
+    app_parent_dir = attrib(default=Path())  # target app parent dir.  If None, current working directory is used.
+    app_dir_name = attrib(default="app")  # frozen app parent directory
     dist_dir = attrib(default="dist")  # filt, etc. use "dist" as the package destination directory
     find_links = attrib(default=None)  # extra dirs for pip to use for code not yet on PyPI (e.g. under local development)
     cache_dir = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))
     target_app_info = None
-    frozen_app_dir = None
+    app_dir = None
 
     def ship(self):
         """
@@ -30,23 +30,23 @@ class PyShip:
         """
         pyship_print(f"{pyship_application_name} starting")
 
-        self.target_app_info = TargetAppInfo(self.target_app_parent_dir)
+        self.target_app_info = TargetAppInfo(self.app_parent_dir)
         if self.target_app_info.is_complete():
 
-            self.frozen_app_dir = Path(self.target_app_parent_dir, self.frozen_app_dir_name, self.target_app_info.name).absolute()
+            self.app_dir = Path(self.app_parent_dir, self.app_dir_name, self.target_app_info.name).absolute()
 
-            mkdirs(self.frozen_app_dir, remove_first=True)
+            mkdirs(self.app_dir, remove_first=True)
 
-            create_launcher(self.target_app_info, self.frozen_app_dir)  # create the OS specific launcher executable
+            create_launcher(self.target_app_info, self.app_dir)  # create the OS specific launcher executable
 
-            pyshipy_dir = create_base_pyshipy(self.target_app_info, self.frozen_app_dir, self.cache_dir)  # create the base pyshipy
+            pyshipy_dir = create_base_pyshipy(self.target_app_info, self.app_dir, self.cache_dir)  # create the base pyshipy
 
-            install_target_app(self.target_app_info.name, pyshipy_dir, Path(self.target_app_parent_dir, self.dist_dir), True, self.find_links)
+            install_target_app(self.target_app_info.name, pyshipy_dir, Path(self.app_parent_dir, self.dist_dir), True, self.find_links)
 
             icon_file_name = f"{self.target_app_info.name}.ico"
-            shutil.copy2(Path(self.target_app_parent_dir, icon_file_name), self.frozen_app_dir)  # temporarily for nsis
-            run_nsis(self.target_app_info, self.target_app_info.version, self.frozen_app_dir)
-            os.unlink(Path(self.frozen_app_dir, icon_file_name))
+            shutil.copy2(Path(self.app_parent_dir, icon_file_name), self.app_dir)  # temporarily for nsis
+            run_nsis(self.target_app_info, self.target_app_info.version, self.app_dir)
+            os.unlink(Path(self.app_dir, icon_file_name))
 
             pyship_print(f"{pyship_application_name} done")
         else:

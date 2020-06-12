@@ -16,11 +16,11 @@ class TstAppDirs:
         self.target_app_version = version
 
         self.project_dir = Path("test_pyship", f"{self.target_app_name}_{str(self.target_app_version)}")
-        self.frozen_parent = Path(self.project_dir, "frozen")
-        self.frozen_dir = Path(self.frozen_parent, self.target_app_name)
+        self.app_parent = Path(self.project_dir, "app")
+        self.app_dir = Path(self.app_parent, self.target_app_name)
         self.cache = Path(self.project_dir, "cache")
         self.dist_dir = Path(self.project_dir, "dist")
-        self.launcher_exe_path = Path(self.frozen_dir, self.target_app_name, f"{TST_APP_NAME}.exe")
+        self.launcher_exe_path = Path(self.app_dir, self.target_app_name, f"{TST_APP_NAME}.exe")
 
 
 def tst_app_flit_build(tst_app_dirs: TstAppDirs):

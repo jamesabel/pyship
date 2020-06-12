@@ -19,7 +19,7 @@ def test_update():
     def do_pyship(tst_app_dirs: TstAppDirs):
         pyship_print(f"{tst_app_dirs.target_app_version=}")
         tst_app_flit_build(tst_app_dirs)
-        ps = PyShip(target_app_parent_dir=tst_app_dirs.project_dir, find_links=[pyship_dist_dir])  # uses pyship under development (what's in "dist", not what's in PyPI)
+        ps = PyShip(app_parent_dir=tst_app_dirs.project_dir, find_links=[pyship_dist_dir])  # uses pyship under development (what's in "dist", not what's in PyPI)
         ps.ship()
         return ps
 
@@ -36,7 +36,7 @@ def test_update():
 
     # Check that the app is the same for both copies. We need the same file in 2 different places for the test infrastructure, but they have
     # to have the same functional contents.
-    app_contents = [open(Path(ps.target_app_parent_dir, TST_APP_NAME, "app.py")).read() for ps in [py_ship, updated_pyship]]
+    app_contents = [open(Path(ps.app_parent_dir, TST_APP_NAME, "app.py")).read() for ps in [py_ship, updated_pyship]]
     assert app_contents[0] == app_contents[1]
 
     # run the 'original' version and test that it updates itself

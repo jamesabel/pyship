@@ -12,7 +12,7 @@ def tstpyshipapp():
 
     updater = UpdaterLocal(name)
     updated_dist_path = Path("test_pyship", "tstpyshipapp_0.0.2", "dist").resolve().absolute()
-    updater.packaged_app_dirs.add(updated_dist_path)
+    updater.app_dirs.add(updated_dist_path)
 
     if updater.update(version):
         exit_code = restart_return_code  # app has been updated so restart to run the updated version

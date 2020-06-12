@@ -22,7 +22,7 @@ def get_folder_size(folder_path: Path) -> int:
 
 
 @typechecked(always=True)
-def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, frozen_dir: Path):
+def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, app_dir: Path):
 
     # basic format is from:
     # http://nsis.sourceforge.net/A_simple_installer_with_start_menu_shortcut_and_uninstaller
@@ -64,7 +64,7 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, fr
         nsis_lines.append(f"!define UPDATEURL {target_app_info.url}")  # "Product Updates" link
         nsis_lines.append(f"!define ABOUTURL {target_app_info.url}")  # "Publisher" link
 
-        installed_size = get_folder_size(frozen_dir)
+        installed_size = get_folder_size(app_dir)
         nsis_lines.append(f"!define INSTALLSIZE {installed_size}")
 
         nsis_lines.append("")
@@ -107,7 +107,7 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, fr
         nsis_lines.append("  # Files for the install directory - to build the installer, these should be in the same directory as the install script (this file)")
         nsis_lines.append("  setOutPath $INSTDIR")
         nsis_lines.append('  # Files added here should be removed by the uninstaller (see section "uninstall")')
-        nsis_lines.append(f"  File /r {frozen_dir}\\*")
+        nsis_lines.append(f"  File /r {app_dir}\\*")
 
         nsis_lines.append("")
         nsis_lines.append('  # Uninstaller - See function un.onInit and section "uninstall" for configuration')
