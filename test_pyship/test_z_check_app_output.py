@@ -4,6 +4,8 @@ from semver import VersionInfo
 
 from typeguard import typechecked
 
+from pyship import ok_return_code
+
 from test_pyship import TstAppDirs
 from test_pyship import TST_APP_NAME
 
@@ -15,8 +17,11 @@ def test_check_app_output():
     @typechecked(always=True)
     def check_output(check_process: subprocess.CompletedProcess):
         app_out = json.loads(check_process.stdout)  # the test app prints out JSON
+        print(app_out)
         assert app_out["name"] == TST_APP_NAME
-        assert app_out["version"] == version
+        app_version = app_out["version"]
+        assert VersionInfo.parse(app_version) == version or VersionInfo.parse(app_version) == version.bump_patch()  # allow either original or upgraded version
+        assert app_out["exit_code"] == ok_return_code
 
     tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
     # test that the created frozen app can run correctly, including checking its output
