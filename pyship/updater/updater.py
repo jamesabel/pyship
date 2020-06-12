@@ -69,6 +69,7 @@ class Updater(ABC):
         did_update = False
         if isinstance(current_version, str):
             current_version = VersionInfo.parse(current_version)
+        log.info(f"{current_version=}")
         greatest_version = self.get_greatest_version()
         log.info(f"{greatest_version=}")
         if greatest_version is not None:

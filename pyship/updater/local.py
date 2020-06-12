@@ -51,6 +51,7 @@ class UpdaterLocal(Updater):
         :return: True on success, False otherwise
         """
         available_versions = self.get_available_versions()
+        log.info(f"{available_versions=}")
         if version in available_versions:
             pyshipy = available_versions[version]
             copy_tree(pyshipy.parent, app_dir, pyshipy.name)
@@ -58,4 +59,5 @@ class UpdaterLocal(Updater):
         else:
             log.warning(f"could not find version {version}")
             success_flag = False
+        log.info(f"{success_flag=}")
         return success_flag

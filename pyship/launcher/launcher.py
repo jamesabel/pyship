@@ -11,7 +11,9 @@ import requests
 import sentry_sdk
 
 
-from pyship import __application_name__, __author__, restart_return_code, error_return_code, can_not_find_file_return_code, subprocess_run, python_interpreter_exes
+from pyship import __application_name__, __author__
+from pyship import __version__ as pyship_version
+from pyship import restart_return_code, error_return_code, can_not_find_file_return_code, subprocess_run, python_interpreter_exes
 from pyship import PyshipLog, get_logger
 
 # Just for the launcher, not the user's app that pyship is launching
@@ -54,6 +56,9 @@ def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
 
     if exception_string is not None:
         log.info(exception_string)  # don't present these to the user unless verbose selected
+
+    log.info(f"{verbose=}")
+    log.info(f"{pyship_version=}")
 
     return verbose
 
