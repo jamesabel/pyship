@@ -5,6 +5,7 @@ from pathlib import Path
 import stat
 from platform import system
 from platform import architecture
+from typing import Callable
 
 from typeguard import typechecked
 
@@ -40,7 +41,7 @@ def _remove_readonly_onerror(func, path, excinfo):
 
 
 @typechecked(always=True)
-def rmdir(p: Path, failure_log_function=log.error) -> (bool, bool):
+def rmdir(p: Path, failure_function: Callable = None) -> (bool, bool):
     retry_count = 0
     retry_limit = 4
     delete_ok = False
@@ -73,7 +74,10 @@ def rmdir(p: Path, failure_log_function=log.error) -> (bool, bool):
         mid_log_function = log.warning
 
     if p.exists():
-        failure_log_function(f'could not remove {p} ({retry_count=})', stack_info=True)
+        problem_message = f'could not remove "{p}" ({retry_count=})'
+        log.error(problem_message, stack_info=True)
+        if failure_function is not None:
+            failure_function(problem_message)
     else:
         delete_ok = True
     return delete_ok

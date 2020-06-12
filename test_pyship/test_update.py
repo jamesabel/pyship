@@ -4,7 +4,7 @@ from pathlib import Path
 from semver import VersionInfo
 
 from pyship import PyShip, subprocess_run, get_logger, __application_name__, pyship_print
-from test_pyship import TST_APP_NAME, tst_app_flit_build, TstAppDirs
+from test_pyship import TST_APP_NAME, tst_app_flit_build, TstAppDirs, VERBOSE
 
 log = get_logger(__application_name__)
 
@@ -41,6 +41,8 @@ def test_update():
 
     # run the 'original' version and test that it updates itself
     cmd = [original_app_dirs.launcher_exe_path]
+    if VERBOSE:
+        cmd.append("-v")
     return_code, std_out, std_err = subprocess_run(cmd, stdout_log=pyship_print)
     pyship_print(str(cmd))
     pyship_print(std_out)

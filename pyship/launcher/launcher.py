@@ -70,7 +70,7 @@ def launch() -> int:
     pyshipy_regex_string = "([_a-z0-9]*)_([.0-9]+)"
     pyshipy_regex = re.compile(pyshipy_regex_string, flags=re.IGNORECASE)  # simple format that accepts common semver (but not all semver)
 
-    pyship_parent = Path(Path(sys.executable).parent, "..").resolve().absolute()  # up one dir from where the python interpreter is
+    pyship_parent = Path(sys.executable).parent.parent.resolve().absolute()  # up one dir from where the python interpreter is
 
     # these should be set below, but in case there's no metadata file set them to something to allow the logging to be set up
     is_gui = False
@@ -88,8 +88,10 @@ def launch() -> int:
 
     setup_logging(is_gui, report_exceptions)
 
+    log.info(f"{pyship_parent=}")
+
     if target_app_name is None:
-        log.error(f'could not derive target app name in {pyship_parent.absolute()}")')
+        log.error(f'could not derive target app name in {pyship_parent}")')
     else:
 
         log.info(f"{target_app_name=}")
