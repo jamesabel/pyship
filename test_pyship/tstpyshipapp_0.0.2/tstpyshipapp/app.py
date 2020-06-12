@@ -16,7 +16,9 @@ log = get_logger(f"{name}_{version}")
 
 def tstpyshipapp():
 
-    balsa = Balsa(name, pyship_author, verbose=True)
+    verbose = len(sys.argv) > 1 and (sys.argv[1].lower() == "-v" or sys.argv[1].lower() == "--verbose")
+
+    balsa = Balsa(name, pyship_author, verbose=verbose)
     balsa.init_logger()
 
     updater = UpdaterLocal(name)

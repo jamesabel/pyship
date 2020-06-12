@@ -26,7 +26,7 @@ def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
 
     verbose = len(sys.argv) > 1 and (sys.argv[1].lower() == "-v" or sys.argv[1].lower() == "--verbose")
 
-    balsa = PyshipLog(launcher_application_name, __author__, gui=is_gui, verbose=verbose)
+    pyship_log = PyshipLog(launcher_application_name, __author__, gui=is_gui, verbose=verbose)
 
     exception_string = None  # store exception strings here until logging gets set up
 
@@ -45,14 +45,14 @@ def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
         except requests.exceptions.RequestException as e:
             exception_string = e
         if sentry_dsn is not None:
-            balsa.sentry_dsn = sentry_dsn
+            pyship_log.sentry_dsn = sentry_dsn
 
             # init sentry outside of balsa and turn off integrations to workaround bug:
             # ModuleNotFoundError: No module named 'sentry_sdk.integrations.excepthook'
-            balsa.use_sentry = False
+            pyship_log.use_sentry = False
             sentry_sdk.init(sentry_dsn, default_integrations=False)
 
-    balsa.init_logger()
+    pyship_log.init_logger()
 
     if exception_string is not None:
         log.info(exception_string)  # don't present these to the user unless verbose selected

@@ -41,8 +41,11 @@ def test_update():
 
     # run the 'original' version and test that it updates itself
     cmd = [original_app_dirs.launcher_exe_path]
-    if VERBOSE:
-        cmd.append("-v")
+
+    # uncomment for detailed debugging, but rote that it will fail the output assertion below (remember the launcher logs at info level without this, which is usually sufficient)
+    # if VERBOSE:
+    #     cmd.append("-v")
+
     # run the app from it's own directory
     return_code, std_out, std_err = subprocess_run(cmd, cwd=original_app_dirs.launcher_exe_path.parent, stdout_log=pyship_print)
     pyship_print(str(cmd))
