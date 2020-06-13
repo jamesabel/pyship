@@ -1,6 +1,7 @@
 import subprocess
 from pathlib import Path
 from typing import Callable
+import sys
 
 from typeguard import typechecked
 
@@ -10,12 +11,12 @@ log = get_logger(__application_name__)
 
 
 @typechecked(always=True)
-def subprocess_run(cmd: list, cwd: Path = None, capture_output: bool = True, stdout_log: Callable = log.info, stderr_log: Callable = log.warning) -> (int, (str, None), (str, None)):
+def subprocess_run(cmd: list, cwd: Path = None, mute_output: bool = True, stdout_log: Callable = log.info, stderr_log: Callable = log.warning) -> (int, (str, None), (str, None)):
     """
     subprocess run taking return code into account
     :param cmd: run command
     :param cwd: current directory
-    :param capture_output: True to capture output
+    :param mute_output: True to mute output, False to sent output to stdout/stderr
     :param stdout_log: function to call for stdout string
     :param stderr_log: function to call for stderr string
     :return: process return code, stdout, stderr
@@ -30,17 +31,21 @@ def subprocess_run(cmd: list, cwd: Path = None, capture_output: bool = True, std
     try:
         log.info(f"{cmd=}")
         log.info(f"{cwd=}")
-        log.info(f"{capture_output=}")
-        target_process = subprocess.run(cmd, cwd=cwd, capture_output=capture_output, text=True)
-        if target_process.returncode != ok_return_code and target_process.returncode != restart_return_code:
-            # if there's a problem, output it
-            for out, log_function in [(target_process.stdout, stdout_log), (target_process.stderr, stderr_log)]:
-                if out is not None and len(out.strip()) > 0:
-                    log_function(out)
+        log.info(f"{mute_output=}")
+        target_process = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
         std_out = target_process.stdout
         std_err = target_process.stderr
+        if target_process.returncode != ok_return_code and target_process.returncode != restart_return_code:
+            # if there's a problem, output it
+            for out, log_function in [(std_out, stdout_log), (std_err, stderr_log)]:
+                if out is not None and len(out.strip()) > 0:
+                    log_function(out)
         log.info(f"{std_out=}")
         log.info(f"{std_err=}")
+        if not mute_output:
+            for s, f in [(std_out, sys.stdout), (std_err, sys.stderr)]:
+                if s is not None and len(s.strip()) > 0:
+                    print(s, file=f)
 
         return_code = target_process.returncode
 

@@ -159,7 +159,7 @@ def launch() -> int:
                         cmd.extend(sys.argv[1:])  # pass along any arguments to the target application
                     log.info(f"{cmd}")
                     try:
-                        return_code, _, _ = subprocess_run(cmd, capture_output=is_gui)  # if app returns "restart_value" then it wants to be restarted
+                        return_code, _, _ = subprocess_run(cmd, mute_output=is_gui)  # if app returns "restart_value" then it wants to be restarted
                     except FileNotFoundError as e:
                         log.error(f"{e} {cmd}")
                         return_code = error_return_code

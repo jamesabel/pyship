@@ -83,4 +83,4 @@ def install_target_app(module_name: str, python_env_dir: Path, target_app_packag
         for find_link in find_links:
             cmd.extend(["-f", str(find_link)])
     pyship_print(str(cmd))
-    subprocess_run(cmd, cwd=python_env_dir)
+    subprocess_run(cmd, cwd=python_env_dir, mute_output=False)

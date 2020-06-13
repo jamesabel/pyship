@@ -192,7 +192,7 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, ap
         if os.path.exists(make_nsis_path):
             cmd = [make_nsis_path, nsis_file_path]
             pyship_print(str(cmd))
-            subprocess_run(cmd, target_app_info.target_app_project_dir)
+            subprocess_run(cmd, target_app_info.target_app_project_dir, mute_output=True)
         else:
             log.fatal(f"{make_nsis_path} not found - see http://nsis.sourceforge.net to get NSIS (Nullsoft Scriptable Install System)")
             raise FileNotFoundError(make_nsis_path)
