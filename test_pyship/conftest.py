@@ -33,7 +33,7 @@ def session_fixture():
 
     # use flit to build pyship into a distributable package in the "dist" directory
     mkdirs(Path("dist"), remove_first=True)
-    subprocess_run([str(Path("venv", "Scripts", "flit.exe")), "build"], stdout_log=print)
+    subprocess_run([str(Path("venv", "Scripts", "flit.exe")), "build"], mute_output=False, stderr_log=logging.info)  # flit writes output to stderr, not sure why
     pyship_print(f"{pyship_application_name=} {pyship_version=} {pyship_author=}")
 
     if pyship_application_name not in sys.path:

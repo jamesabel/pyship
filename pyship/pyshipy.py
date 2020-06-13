@@ -97,11 +97,11 @@ def create_base_pyshipy(target_app_info: TargetAppInfo, app_dir: Path, cache_dir
     log.info(f"{get_pip_path}")
     cmd = ["python.exe", os.path.abspath(get_pip_path), "--no-warn-script-location"]
     log.info(f"{cmd} (cwd={pyshipy_dir})")
-    subprocess.run(cmd, cwd=pyshipy_dir, shell=True)
+    subprocess.run(cmd, cwd=pyshipy_dir, shell=True)  # todo: use subprocess_run
 
     # upgrade pip
     cmd = ["python.exe", "-m", "pip", "install", "--no-deps", "--upgrade", "pip"]
-    subprocess.run(cmd, cwd=pyshipy_dir, shell=True)
+    subprocess.run(cmd, cwd=pyshipy_dir, shell=True)  # todo: use subprocess_run
 
     # the embedded Python doesn't ship with tkinter, so add it to pyshipy
     # https://stackoverflow.com/questions/37710205/python-embeddable-zip-install-tkinter

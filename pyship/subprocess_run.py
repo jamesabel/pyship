@@ -35,7 +35,7 @@ def subprocess_run(cmd: list, cwd: Path = None, mute_output: bool = True, stdout
         target_process = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
         std_out = target_process.stdout
         std_err = target_process.stderr
-        if target_process.returncode != ok_return_code and target_process.returncode != restart_return_code:
+        if (std_err is not None and len(std_err.strip()) > 0) or (target_process.returncode != ok_return_code and target_process.returncode != restart_return_code):
             # if there's a problem, output it
             for out, log_function in [(std_out, stdout_log), (std_err, stderr_log)]:
                 if out is not None and len(out.strip()) > 0:

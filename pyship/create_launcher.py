@@ -1,4 +1,3 @@
-import subprocess
 import sys
 import shutil
 from pathlib import Path
@@ -6,7 +5,7 @@ from pathlib import Path
 from typeguard import typechecked
 
 import pyship
-from pyship import TargetAppInfo, pyship_print, log_process_output, get_logger, mkdirs
+from pyship import TargetAppInfo, pyship_print, log_process_output, get_logger, mkdirs, subprocess_run
 from pyship import __application_name__ as pyship_application_name
 from pyship.launcher import application_name as launcher_application_name
 from pyship.launcher import calculate_launcher_metadata, load_launcher_metadata, store_launcher_metadata
@@ -85,24 +84,17 @@ def create_launcher(target_app_info: TargetAppInfo, app_path_output: Path):
 
             pyship_print(f"building launcher ({launcher_exe_path})", )
             pyship_print(f"{command_line}")
-            launcher_run = subprocess.run(command_line, cwd=launcher_module_dir, capture_output=True)
+            process_return_code, std_out, std_err = subprocess_run(command_line, cwd=launcher_module_dir, mute_output=True)
             # metadata is in the app parent dir
             store_launcher_metadata(app_path_output, launcher_metadata_filename, launcher_metadata)
-
-            # log/print pyinstaller output
-            log_lines = {}
-            for output_type, output_bytes in [("stdout", launcher_run.stdout), ("stderr", launcher_run.stderr)]:
-                log_lines[output_type] = log_process_output(output_type, output_bytes)
 
             if launcher_exe_path.exists():
                 built_it = True
                 pyship_print(f"launcher built ({launcher_exe_path})")
             else:
                 # launcher wasn't built - there was an error - so display the pyinstaller output to the user
-                for output_type, log_lines in log_lines.items():
-                    pyship_print(f"{output_type}:")
-                    for log_line in log_lines:
-                        pyship_print(log_line)
+                pyship_print(std_out)
+                pyship_print(std_err)
         else:
             pyship_print(f"{launcher_exe_path} already built - no need to rebuild")
 
