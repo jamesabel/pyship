@@ -43,7 +43,7 @@ def _remove_readonly_onerror(func, path, excinfo):
 @typechecked(always=True)
 def rmdir(p: Path, failure_function: Callable = None) -> (bool, bool):
     retry_count = 0
-    retry_limit = 4
+    retry_limit = 5
     delete_ok = False
     delay = 1.0
 
