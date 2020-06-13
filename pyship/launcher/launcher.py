@@ -23,6 +23,7 @@ log = get_logger(launcher_application_name)
 
 launcher_verbose_string = "--launcher_verbose"
 
+
 def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
 
     verbose = len(sys.argv) > 1 and sys.argv[1].lower() == launcher_verbose_string
