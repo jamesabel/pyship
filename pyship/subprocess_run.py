@@ -28,7 +28,9 @@ def subprocess_run(cmd: list, cwd: Path = None, capture_output: bool = True, std
         cwd = str(cwd)  # subprocess requires a string
 
     try:
-        log.info(cmd)
+        log.info(f"{cmd=}")
+        log.info(f"{cwd=}")
+        log.info(f"{capture_output=}")
         target_process = subprocess.run(cmd, cwd=cwd, capture_output=capture_output, text=True)
         if target_process.returncode != ok_return_code and target_process.returncode != restart_return_code:
             # if there's a problem, output it
@@ -37,11 +39,15 @@ def subprocess_run(cmd: list, cwd: Path = None, capture_output: bool = True, std
                     log_function(out)
         std_out = target_process.stdout
         std_err = target_process.stderr
+        log.info(f"{std_out=}")
+        log.info(f"{std_err=}")
 
         return_code = target_process.returncode
 
     except FileNotFoundError as e:
         log.error(f"{e} {cmd}")
         return_code = error_return_code
+
+    log.info(f"{return_code=}")
 
     return return_code, std_out, std_err
