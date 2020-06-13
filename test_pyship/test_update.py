@@ -39,13 +39,13 @@ def test_update():
     app_contents = [open(Path(ps.app_parent_dir, TST_APP_NAME, "app.py")).read() for ps in [py_ship, updated_pyship]]
     assert app_contents[0] == app_contents[1]
 
-    # run the 'original' version and test that it updates itself
+    # run the 'original' app version and test that it updates itself
     cmd = [original_app_dirs.launcher_exe_path]
 
     # uncomment for detailed debugging, but rote that it will fail the output assertion below (remember the launcher logs at info level without this, which is usually sufficient)
     detailed_debugging = True
     if VERBOSE and detailed_debugging:
-        cmd.append("-v")
+        cmd.append("--launcher_verbose")
 
     # run the app from it's own directory
     return_code, std_out, std_err = subprocess_run(cmd, cwd=original_app_dirs.launcher_exe_path.parent, stdout_log=pyship_print)

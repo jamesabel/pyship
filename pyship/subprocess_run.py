@@ -2,6 +2,7 @@ import subprocess
 from pathlib import Path
 from typing import Callable
 import sys
+import os
 
 from typeguard import typechecked
 
@@ -29,9 +30,10 @@ def subprocess_run(cmd: list, cwd: Path = None, mute_output: bool = True, stdout
         cwd = str(cwd)  # subprocess requires a string
 
     try:
-        log.debug(f"{cmd=}")
-        log.debug(f"{cwd=}")
-        log.debug(f"{mute_output=}")
+        log.info(f"{cmd=}")
+        log.info(f"{cwd=}")
+        log.info(f"{mute_output=}")
+        log.info(f"{os.getcwd()=}")
         target_process = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
         std_out = target_process.stdout
         std_err = target_process.stderr

@@ -21,10 +21,11 @@ launcher_application_name = f"{__application_name__}_launcher"
 
 log = get_logger(launcher_application_name)
 
+launcher_verbose_string = "--launcher_verbose"
 
 def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
 
-    verbose = len(sys.argv) > 1 and (sys.argv[1].lower() == "-v" or sys.argv[1].lower() == "--verbose")
+    verbose = len(sys.argv) > 1 and sys.argv[1].lower() == launcher_verbose_string
 
     pyship_log = PyshipLog(launcher_application_name, __author__, gui=is_gui, verbose=verbose)
 
@@ -149,6 +150,9 @@ def launch() -> int:
 
             while return_code is None or return_code == restart_return_code:
 
+                if return_code == restart_return_code:
+                    log.info("restarting ...")
+
                 # locate the python interpreter executable
                 python_exe_path = Path(pyship_parent, f"{target_app_name}_{latest_version}", python_interpreter_exes[is_gui])
 
@@ -156,10 +160,12 @@ def launch() -> int:
                 if python_exe_path.exists():
                     cmd = [python_exe_path, "-m", target_app_name]
                     if len(sys.argv) > 1:
-                        cmd.extend(sys.argv[1:])  # pass along any arguments to the target application
+                        for arg in sys.argv[1:]:
+                            if arg != launcher_verbose_string:
+                                cmd.append(arg)  # pass along any arguments to the target application
                     log.info(f"{cmd}")
                     try:
-                        return_code, _, _ = subprocess_run(cmd, mute_output=is_gui)  # if app returns "restart_value" then it wants to be restarted
+                        return_code, _, _ = subprocess_run(cmd, cwd=python_exe_path.parent, mute_output=is_gui)  # if app returns "restart_value" then it wants to be restarted
                     except FileNotFoundError as e:
                         log.error(f"{e} {cmd}")
                         return_code = error_return_code
