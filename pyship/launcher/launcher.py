@@ -4,6 +4,7 @@ from semver import VersionInfo
 import json
 import appdirs
 import re
+import time
 
 from ismain import is_main
 import requests
@@ -149,10 +150,20 @@ def launch() -> int:
 
         if latest_version is not None:
 
-            while return_code is None or return_code == restart_return_code:
+            # todo: ALL THIS THIS NEEDS TO BE REFACTORED
+            max_restart_periods = 3
+            restart_timestamps = []
+            restart_periods = []
 
+            while (return_code is None or return_code == restart_return_code) and len(restart_periods) < max_restart_periods or any([p > 60.0 for p in restart_periods]):
+
+                # todo: ALL THIS THIS NEEDS TO BE REFACTORED
+                # if we have several rapid restarts then there's a problem and we need to exit
                 if return_code == restart_return_code:
-                    log.info("restarting ...")
+                    restart_timestamps.append(time.time())
+                    if len(restart_timestamps) > max_restart_periods:
+                        restart_timestamps.pop()
+                    restart_periods = [restart_timestamps[i] - restart_timestamps[i-1] for i in range(1, len(restart_timestamps))]
 
                 # locate the python interpreter executable
                 python_exe_path = Path(pyship_parent, f"{target_app_name}_{latest_version}", python_interpreter_exes[is_gui])

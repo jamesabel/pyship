@@ -78,9 +78,21 @@ def install_target_app(module_name: str, python_env_dir: Path, target_app_packag
             log.error(f"unexpected {pth_glob_list=} found at {python_env_dir=}")
 
     # install the target module (and its dependencies)
-    cmd = [str(Path(python_env_dir, "python.exe")), "-m", "pip", "install", "-U", module_name, "--no-warn-script-location", "-f", str(target_app_package_dist_dir.absolute())]
-    if find_links is not None:
-        for find_link in find_links:
-            cmd.extend(["-f", str(find_link)])
+    cmd = [str(Path(python_env_dir, "python.exe")), "-m", "pip", "install", "-U", module_name, "--no-warn-script-location"]
+
+    if find_links is None:
+        find_links = []
+
+    find_links.append(str(target_app_package_dist_dir.absolute()))
+
+    # for testing, to keep up off the main pypi
+    pypi_local = os.getenv("PYPILOCAL")
+    if pypi_local is not None and len(pypi_local) > 0:
+        cmd.append("--no-index")  # stay off pypi
+        find_links.append(pypi_local)
+
+    for find_link in find_links:
+        cmd.extend(["-f", str(find_link)])
+
     pyship_print(str(cmd))
     subprocess_run(cmd, cwd=python_env_dir, mute_output=False)
