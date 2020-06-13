@@ -29,20 +29,21 @@ def subprocess_run(cmd: list, cwd: Path = None, mute_output: bool = True, stdout
         cwd = str(cwd)  # subprocess requires a string
 
     try:
-        log.info(f"{cmd=}")
-        log.info(f"{cwd=}")
-        log.info(f"{mute_output=}")
+        log.debug(f"{cmd=}")
+        log.debug(f"{cwd=}")
+        log.debug(f"{mute_output=}")
         target_process = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
         std_out = target_process.stdout
         std_err = target_process.stderr
         if (std_err is not None and len(std_err.strip()) > 0) or (target_process.returncode != ok_return_code and target_process.returncode != restart_return_code):
-            # if there's a problem, output it
+            # if there's a problem, output it with what the caller provides
             for out, log_function in [(std_out, stdout_log), (std_err, stderr_log)]:
                 if out is not None and len(out.strip()) > 0:
                     log_function(out)
-        log.info(f"{std_out=}")
-        log.info(f"{std_err=}")
+        log.debug(f"{std_out=}")
+        log.debug(f"{std_err=}")
         if not mute_output:
+            # output stdout, stderr that came from the process
             for s, f in [(std_out, sys.stdout), (std_err, sys.stderr)]:
                 if s is not None and len(s.strip()) > 0:
                     print(s, file=f)
