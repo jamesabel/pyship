@@ -85,7 +85,7 @@ def install_target_app(module_name: str, python_env_dir: Path, target_app_packag
 
     find_links.append(str(target_app_package_dist_dir.absolute()))
 
-    # for testing, to keep up off the main pypi
+    # for testing, to keep off the main pypi
     pypi_local = os.getenv("PYPILOCAL")
     if pypi_local is not None and len(pypi_local) > 0:
         cmd.append("--no-index")  # stay off pypi
