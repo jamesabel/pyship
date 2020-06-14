@@ -51,8 +51,11 @@ def test_update():
     pyship_print(str(cmd))
     pyship_print(std_out)
     pyship_print(std_err)
-    # we'll get multiple version JSON strings (one per line), but we're only interested in the final one
-    app_run_dict = json.loads([ln.strip() for ln in std_out.splitlines() if len(ln.strip()) > 0][-1])
-    run_version_string = app_run_dict.get("version")
-    run_version = VersionInfo.parse(run_version_string)
-    assert run_version == updated_version
+
+    # we'll get multiple version JSON strings (one per line)
+    lines = [ln.strip() for ln in std_out.splitlines() if len(ln.strip()) > 0]
+    for i, version_string in enumerate(["0.0.1", "0.0.2"]):
+        app_run_dict = json.loads(lines[i])
+        run_version_string = app_run_dict.get("version")
+        run_version = VersionInfo.parse(run_version_string)
+        assert run_version == VersionInfo.parse(version_string)
