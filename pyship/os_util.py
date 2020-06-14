@@ -41,9 +41,8 @@ def _remove_readonly_onerror(func, path, excinfo):
 
 
 @typechecked(always=True)
-def rmdir(p: Path, failure_function: Callable = None) -> (bool, bool):
-    retry_count = 0
-    retry_limit = 5
+def rmdir(p: Path, failure_function: Callable = None, try_limit: int = 5) -> (bool, bool):
+    try_count = 0
     delete_ok = False
     delay = 1.0
 
@@ -51,30 +50,30 @@ def rmdir(p: Path, failure_function: Callable = None) -> (bool, bool):
     lowest_log_function = log.debug
     mid_log_function = log.info
 
-    while p.exists() and retry_count < retry_limit:
-        try:
-            shutil.rmtree(p, onerror=_remove_readonly_onerror)
-        except FileNotFoundError as e:
-            lowest_log_function(str(e))  # this can happen when first doing the shutil.rmtree()
+    while p.exists() and try_count < try_limit:
+
+        if p.exists():
+            try:
+                shutil.rmtree(p, onerror=_remove_readonly_onerror)
+            except FileNotFoundError as e:
+                lowest_log_function(str(e))  # this can happen when first doing the shutil.rmtree()
+            except PermissionError as e:
+                mid_log_function(str(e))
+            except OSError as e:
+                mid_log_function(str(e))
+
+        if p.exists():
             time.sleep(delay)
-        except PermissionError as e:
-            mid_log_function(str(e))
-            time.sleep(delay)
-        except OSError as e:
-            mid_log_function(str(e))
-            time.sleep(delay)
-        time.sleep(0.1)
-        if p.exists:
-            time.sleep(delay)
-        retry_count += 1
-        delay *= 2.0
 
         # up the log level 2nd time around
         lowest_log_function = log.info
         mid_log_function = log.warning
 
+        try_count += 1
+        delay *= 2.0
+
     if p.exists():
-        problem_message = f'could not remove "{p}" ({retry_count=})'
+        problem_message = f'could not remove "{p}" ({try_count=})'
         log.error(problem_message, stack_info=True)
         if failure_function is not None:
             failure_function(problem_message)
