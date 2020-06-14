@@ -42,9 +42,8 @@ def test_update():
     # run the 'original' app version and test that it updates itself
     cmd = [original_app_dirs.launcher_exe_path]
 
-    # uncomment for detailed debugging, but rote that it will fail the output assertion below (remember the launcher logs at info level without this, which is usually sufficient)
-    detailed_debugging = True
-    if VERBOSE and detailed_debugging:
+    # uncomment for detailed debugging
+    if VERBOSE:
         cmd.append("--launcher_verbose")
 
     # run the app from it's own directory
@@ -55,5 +54,4 @@ def test_update():
     app_run_dict = json.loads(std_out)
     run_version_string = app_run_dict.get("version")
     run_version = VersionInfo.parse(run_version_string)
-    if not detailed_debugging:
-        assert run_version == updated_version
+    assert run_version == updated_version

@@ -4,11 +4,11 @@ from semver import VersionInfo
 import json
 import appdirs
 import re
-import time
+import logging
 
 from ismain import is_main
+from balsa import HandlerType
 import requests
-
 import sentry_sdk
 
 
@@ -57,6 +57,10 @@ def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
             sentry_sdk.init(sentry_dsn, default_integrations=False)
 
     pyship_log.init_logger()
+    # UI log at a high level since the user will not see launcher output (unless something goes terribly wrong)
+    for ht in [HandlerType.DialogBox, HandlerType.Console]:
+        if ht in pyship_log.handlers:
+            pyship_log.handlers[ht].setlevel(logging.FATAL)
 
     if exception_string is not None:
         log.info(exception_string)  # don't present these to the user unless verbose selected
