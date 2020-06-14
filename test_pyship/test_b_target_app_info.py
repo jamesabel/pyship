@@ -3,12 +3,14 @@ from semver import VersionInfo
 
 from pyship import TargetAppInfo
 from pyship import __author__ as pyship_author
-from test_pyship import TST_APP_PROJECT_DIR, TST_APP_NAME_0_0_1
+from test_pyship import TST_APP_NAME, TstAppDirs
 
 
 def test_pyproject():
-    target_app_info = TargetAppInfo(Path(TST_APP_PROJECT_DIR))
-    assert(target_app_info.name == TST_APP_NAME_0_0_1)
+    version = VersionInfo.parse("0.0.1")
+    tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
+    target_app_info = TargetAppInfo(tst_app_dirs.app_dir)
+    assert(target_app_info.name == TST_APP_NAME)
     assert(target_app_info.author == pyship_author)
     assert(target_app_info.is_gui is not None)
     assert(target_app_info.target_app_project_dir.exists())

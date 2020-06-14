@@ -1,7 +1,10 @@
+from semver import VersionInfo
+
 from pyship import ModuleInfo
-from test_pyship import TST_APP_NAME_0_0_1, TST_APP_PROJECT_DIR
+from test_pyship import TST_APP_NAME, TstAppDirs
 
 
 def test_module_info():
-    module_info = ModuleInfo(TST_APP_NAME_0_0_1, TST_APP_PROJECT_DIR)
+    tst_app_dirs = TstAppDirs(TST_APP_NAME, VersionInfo.parse("0.0.1"))
+    module_info = ModuleInfo(TST_APP_NAME, tst_app_dirs.app_dir)
     print(module_info)
