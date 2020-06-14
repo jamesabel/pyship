@@ -11,8 +11,8 @@ from test_pyship import TST_APP_NAME, TstAppDirs
 
 
 def test_launcher():
-    rmdir(Path("test_pyship", "tstpyshipapp_0.0.1", "app", "tstpyshipapp", "tstpyshipapp_0.0.2"))  # prior runs can write this, but this test is expected to
     tst_app_dirs = TstAppDirs(TST_APP_NAME, VersionInfo.parse("0.0.1"))
+    rmdir(Path(tst_app_dirs.app_dir, "tstpyshipapp_0.0.2"))  # prior tests can write this, so make sure it doesn't exist
     assert launch(tst_app_dirs.app_dir, tst_app_dirs.app_dir) == ok_return_code
 
 

@@ -115,60 +115,54 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
         # 1) find the latest <application_name>_<version>
         # 2) execute it via python -m <application_name>
         # 3) inside the program, it has option to call pyship module's upgrade() function.  If an upgrade happens, upgrade() will return True
-        #    and the program has the option to call pyship's request_restart() and then exit (it will automatically get restarted).
-        # 4) look in Program Data for a restart request (that was set via upgrade() ) - if so, do this all over again
+        #    and the program has the option to request a restart by returning the restart_return_code exit code.
 
-        # the pyship program executes out of data space
-        # program_dir = os.path.join(appdirs.user_data_dir(target_app_name, launcher_author))
+        glob_string = f"{target_app_name}_*"  # pyshipy directories will be of this form
 
-        # get latest version of the app to be launched
-        glob_string = f"{target_app_name}_*"
+        restart_monitor = RestartMonitor()
 
-        # get app versions in the parent directory of the launcher
-        parent_glob_list = [p for p in app_dir.glob(glob_string)]
-        log.info(f"{parent_glob_list=}")
+        while (return_code is None or return_code == restart_return_code) and not restart_monitor.excessive():
 
-        user_data_dir = Path(appdirs.user_data_dir(target_app_name, target_app_author))
-        user_data_glob_list = [p for p in user_data_dir.glob(glob_string)]
-        log.info(f"{user_data_glob_list=}")
+            restart_monitor.add()
 
-        total_glob_list = parent_glob_list + user_data_glob_list
 
-        if additional_path is not None:
-            total_glob_list.extend([p for p in additional_path.glob(glob_string)])
+            # todo: put finding the most recent app version in a function - I'll pretty sure this is done other places.  Also, it allows a unit test to be written for it.
+            # find the most recent app version
 
-        latest_version = None
-        versions = {}
-        for candidate_dir in total_glob_list:
-            if candidate_dir.is_dir():
-                matches = re.match(pyshipy_regex, candidate_dir.name)
-                if matches is not None:
-                    version = matches.group(2)
-                    try:
-                        semver = VersionInfo.parse(version)
-                    except ValueError:
-                        semver = None
-                    if semver is not None:
-                        versions[semver] = candidate_dir
-                    else:
-                        log.error(f"could not get version out of {candidate_dir}")
+            parent_glob_list = [p for p in app_dir.glob(glob_string)]  # where executed from
+            log.info(f"{parent_glob_list=}")
 
-        if len(versions) > 0:
-            latest_version = sorted(versions.keys())[-1]
-            log.info(f"{latest_version=}")
-        else:
-            log.error(f'could not find any expected application version in {total_glob_list} (looked in "{app_dir}", "{user_data_dir}" and "{additional_path}")')
+            user_data_dir = Path(appdirs.user_data_dir(target_app_name, target_app_author))  # updates can write here
+            user_data_glob_list = [p for p in user_data_dir.glob(glob_string)]
+            log.info(f"{user_data_glob_list=}")
 
-        if latest_version is not None:
+            total_glob_list = parent_glob_list + user_data_glob_list
 
-            restart_monitor = RestartMonitor()
+            if additional_path is not None:
+                # mainly for testing
+                total_glob_list.extend([p for p in additional_path.glob(glob_string)])
 
-            while (return_code is None or return_code == restart_return_code) and not restart_monitor.excessive():
+            versions = {}
+            for candidate_dir in total_glob_list:
+                if candidate_dir.is_dir():
+                    matches = re.match(pyshipy_regex, candidate_dir.name)
+                    if matches is not None:
+                        version = matches.group(2)
+                        try:
+                            semver = VersionInfo.parse(version)
+                        except ValueError:
+                            semver = None
+                        if semver is not None:
+                            versions[semver] = candidate_dir
+                        else:
+                            log.error(f"could not get version out of {candidate_dir}")
 
-                restart_monitor.add()
+            if len(versions) > 0:
+                latest_version = sorted(versions.keys())[-1]
+                log.info(f"{latest_version=}")
 
                 # locate the python interpreter executable
-                python_exe_path = Path(app_dir, f"{target_app_name}_{latest_version}", python_interpreter_exes[is_gui])
+                python_exe_path = Path(versions[latest_version], python_interpreter_exes[is_gui])
 
                 # run the target app using the python interpreter we just found
                 if python_exe_path.exists():
@@ -187,8 +181,11 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
                     log.error(f"python exe not found at {python_exe_path}")
                     return_code = can_not_find_file_return_code
 
-            if restart_monitor.excessive():
-                log.error(f"excessive restarts {restart_monitor.restarts=}")
+            else:
+                log.error(f'could not find any expected application version in {total_glob_list} (looked in "{app_dir}", "{user_data_dir}" and "{additional_path}")')
+
+        if restart_monitor.excessive():
+            log.error(f"excessive restarts {restart_monitor.restarts=}")
 
     if return_code is None:
         return_code = error_return_code
