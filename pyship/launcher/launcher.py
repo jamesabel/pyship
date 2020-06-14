@@ -16,6 +16,7 @@ from pyship import __application_name__, __author__
 from pyship import __version__ as pyship_version
 from pyship import restart_return_code, error_return_code, can_not_find_file_return_code, subprocess_run, python_interpreter_exes
 from pyship import PyshipLog, get_logger
+from pyship.launcher import RestartMonitor
 
 # Just for the launcher, not the user's app that pyship is launching
 launcher_application_name = f"{__application_name__}_launcher"
@@ -150,20 +151,11 @@ def launch() -> int:
 
         if latest_version is not None:
 
-            # todo: ALL THIS THIS NEEDS TO BE REFACTORED
-            max_restart_periods = 3
-            restart_timestamps = []
-            restart_periods = []
+            restart_monitor = RestartMonitor()
 
-            while (return_code is None or return_code == restart_return_code) and len(restart_periods) < max_restart_periods or any([p > 60.0 for p in restart_periods]):
+            while (return_code is None or return_code == restart_return_code) and not restart_monitor.excessive():
 
-                # todo: ALL THIS THIS NEEDS TO BE REFACTORED
-                # if we have several rapid restarts then there's a problem and we need to exit
-                if return_code == restart_return_code:
-                    restart_timestamps.append(time.time())
-                    if len(restart_timestamps) > max_restart_periods:
-                        restart_timestamps.pop()
-                    restart_periods = [restart_timestamps[i] - restart_timestamps[i-1] for i in range(1, len(restart_timestamps))]
+                restart_monitor.add()
 
                 # locate the python interpreter executable
                 python_exe_path = Path(pyship_parent, f"{target_app_name}_{latest_version}", python_interpreter_exes[is_gui])
@@ -184,6 +176,9 @@ def launch() -> int:
                 else:
                     log.error(f"python exe not found at {python_exe_path}")
                     return_code = can_not_find_file_return_code
+
+            if restart_monitor.excessive():
+                log.error(f"excessive restarts {restart_monitor.restarts=}")
 
     if return_code is None:
         return_code = error_return_code
