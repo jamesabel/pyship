@@ -60,7 +60,7 @@ def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
     # UI log at a high level since the user will not see launcher output (unless something goes terribly wrong)
     for ht in [HandlerType.DialogBox, HandlerType.Console]:
         if ht in pyship_log.handlers:
-            pyship_log.handlers[ht].setlevel(logging.ERROR)
+            pyship_log.handlers[ht].setLevel(logging.ERROR)
 
     if exception_string is not None:
         log.info(exception_string)  # don't present these to the user unless verbose selected
@@ -71,9 +71,11 @@ def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
     return verbose
 
 
-def launch() -> int:
+def launch(additional_path: Path = None, app_dir: Path = None) -> int:
     """
     launch the pyship app
+    :param additional_path - additional search path for app (mainly for testing)
+    :param app_dir - override app dir (mainly for testing)
     :return: 0 if no error, non-zero on error (like Windows apps)
     """
 
@@ -83,7 +85,8 @@ def launch() -> int:
     pyshipy_regex_string = "([_a-z0-9]*)_([.0-9]+)"
     pyshipy_regex = re.compile(pyshipy_regex_string, flags=re.IGNORECASE)  # simple format that accepts common semver (but not all semver)
 
-    pyship_parent = Path(sys.executable).parent.parent.resolve().absolute()  # up one dir from where the python interpreter is
+    if app_dir is None:
+        app_dir = Path(sys.executable).parent.parent.resolve().absolute()  # up one dir from where the python interpreter is
 
     # these should be set below, but in case there's no metadata file set them to something to allow the logging to be set up
     is_gui = False
@@ -91,7 +94,7 @@ def launch() -> int:
     target_app_name = __application_name__
     target_app_author = __author__
 
-    for metadata_file_path in pyship_parent.glob("*_metadata.json"):
+    for metadata_file_path in app_dir.glob("*_metadata.json"):
         with metadata_file_path.open() as f:
             metadata = json.load(f)
             target_app_name = metadata.get("app")
@@ -101,10 +104,10 @@ def launch() -> int:
 
     setup_logging(is_gui, report_exceptions)
 
-    log.info(f"{pyship_parent=}")
+    log.info(f"{app_dir=}")
 
     if target_app_name is None:
-        log.error(f'could not derive target app name in {pyship_parent}")')
+        log.error(f'could not derive target app name in {app_dir}")')
     else:
 
         log.info(f"{target_app_name=}")
@@ -122,7 +125,7 @@ def launch() -> int:
         glob_string = f"{target_app_name}_*"
 
         # get app versions in the parent directory of the launcher
-        parent_glob_list = [p for p in pyship_parent.glob(glob_string)]
+        parent_glob_list = [p for p in app_dir.glob(glob_string)]
         log.info(f"{parent_glob_list=}")
 
         user_data_dir = Path(appdirs.user_data_dir(target_app_name, target_app_author))
@@ -130,6 +133,9 @@ def launch() -> int:
         log.info(f"{user_data_glob_list=}")
 
         total_glob_list = parent_glob_list + user_data_glob_list
+
+        if additional_path is not None:
+            total_glob_list.extend([p for p in additional_path.glob(glob_string)])
 
         latest_version = None
         versions = {}
@@ -151,7 +157,7 @@ def launch() -> int:
             latest_version = sorted(versions.keys())[-1]
             log.info(f"{latest_version=}")
         else:
-            log.error(f'could not find any expected application version in {total_glob_list} (looked in "{pyship_parent}" and "{user_data_dir}")')
+            log.error(f'could not find any expected application version in {total_glob_list} (looked in "{app_dir}", "{user_data_dir}" and "{additional_path}")')
 
         if latest_version is not None:
 
@@ -162,7 +168,7 @@ def launch() -> int:
                 restart_monitor.add()
 
                 # locate the python interpreter executable
-                python_exe_path = Path(pyship_parent, f"{target_app_name}_{latest_version}", python_interpreter_exes[is_gui])
+                python_exe_path = Path(app_dir, f"{target_app_name}_{latest_version}", python_interpreter_exes[is_gui])
 
                 # run the target app using the python interpreter we just found
                 if python_exe_path.exists():
