@@ -60,7 +60,7 @@ def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
     # UI log at a high level since the user will not see launcher output (unless something goes terribly wrong)
     for ht in [HandlerType.DialogBox, HandlerType.Console]:
         if ht in pyship_log.handlers:
-            pyship_log.handlers[ht].setlevel(logging.FATAL)
+            pyship_log.handlers[ht].setlevel(logging.ERROR)
 
     if exception_string is not None:
         log.info(exception_string)  # don't present these to the user unless verbose selected
