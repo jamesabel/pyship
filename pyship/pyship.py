@@ -16,7 +16,7 @@ log = get_logger(pyship_application_name)
 @attrs()
 class PyShip:
 
-    app_parent_dir = attrib(default=Path())  # target app parent dir.  If None, current working directory is used.
+    project_dir = attrib(default=Path())  # target app project dir.  If None, current working directory is used.
     dist_dir = attrib(default="dist")  # filt, etc. use "dist" as the package destination directory
     find_links = attrib(default=None)  # extra dirs for pip to use for code not yet on PyPI (e.g. under local development)
     cache_dir = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))
@@ -29,10 +29,10 @@ class PyShip:
         """
         pyship_print(f"{pyship_application_name} starting")
 
-        self.target_app_info = TargetAppInfo(self.app_parent_dir)
+        self.target_app_info = TargetAppInfo(self.project_dir)
         if self.target_app_info.is_complete():
 
-            self.app_dir = Path(self.app_parent_dir, APP_DIR_NAME, self.target_app_info.name).absolute()
+            self.app_dir = Path(self.project_dir, APP_DIR_NAME, self.target_app_info.name).absolute()
 
             mkdirs(self.app_dir, remove_first=True)
 
@@ -40,10 +40,10 @@ class PyShip:
 
             pyshipy_dir = create_base_pyshipy(self.target_app_info, self.app_dir, self.cache_dir)  # create the base pyshipy
 
-            install_target_app(self.target_app_info.name, pyshipy_dir, Path(self.app_parent_dir, self.dist_dir), True, self.find_links)
+            install_target_app(self.target_app_info.name, pyshipy_dir, Path(self.project_dir, self.dist_dir), True, self.find_links)
 
             icon_file_name = f"{self.target_app_info.name}.ico"
-            shutil.copy2(Path(self.app_parent_dir, icon_file_name), self.app_dir)  # temporarily for nsis
+            shutil.copy2(Path(self.project_dir, icon_file_name), self.app_dir)  # temporarily for nsis
             run_nsis(self.target_app_info, self.target_app_info.version, self.app_dir)
             os.unlink(Path(self.app_dir, icon_file_name))
 

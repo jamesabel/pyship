@@ -9,7 +9,7 @@ from test_pyship import TST_APP_NAME, TstAppDirs
 def test_pyship():
     version = VersionInfo.parse("0.0.1")
     tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
-    py_ship = PyShip(app_parent_dir=tst_app_dirs.app_dir)
+    py_ship = PyShip(tst_app_dirs.project_dir)
     py_ship.ship()
 
 
