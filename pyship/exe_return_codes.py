@@ -1,4 +1,3 @@
-
 # http://www.trytoprogram.com/batch-file-return-code/
 ok_return_code = 0  # OK
 error_return_code = 1  # error

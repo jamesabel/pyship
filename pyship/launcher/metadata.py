@@ -9,11 +9,7 @@ from typeguard import typechecked
 
 @typechecked(always=True)
 def calculate_launcher_metadata(target_app_name: str, target_app_author: str, launcher_source_dir: Path, icon_path: Path, is_gui: bool) -> dict:
-    launcher_metadata = {"app": target_app_name,
-                         "author": target_app_author,
-                         "pyship_version": pyship_version,
-                         "icon_sha256": get_file_sha256(icon_path),
-                         "is_gui": is_gui}
+    launcher_metadata = {"app": target_app_name, "author": target_app_author, "pyship_version": pyship_version, "icon_sha256": get_file_sha256(icon_path), "is_gui": is_gui}
     for p in launcher_source_dir.glob("*.py"):
         launcher_metadata[f"{p.name}_sha256"] = get_file_sha256(p)
     return launcher_metadata
@@ -38,5 +34,5 @@ def load_launcher_metadata(launcher_dir: Path, launcher_filename: str) -> (dict,
 @typechecked(always=True)
 def store_launcher_metadata(launcher_dir: Path, launcher_filename: str, metadata: dict):
     launcher_dir.mkdir(exist_ok=True)
-    with get_launcher_metadata_file_path(launcher_dir, launcher_filename).open('w') as f:
+    with get_launcher_metadata_file_path(launcher_dir, launcher_filename).open("w") as f:
         json.dump(metadata, f, indent=4)

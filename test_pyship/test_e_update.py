@@ -4,7 +4,7 @@ from pathlib import Path
 from semver import VersionInfo
 
 from pyship import PyShip, subprocess_run, get_logger, __application_name__, pyship_print
-from test_pyship import TST_APP_NAME, tst_app_flit_build, TstAppDirs, VERBOSE
+from test_pyship import TST_APP_NAME, tst_app_flit_build, TstAppDirs
 
 log = get_logger(__application_name__)
 
@@ -43,14 +43,10 @@ def test_update():
     cmd = [original_app_dirs.launcher_exe_path]
 
     # uncomment for detailed debugging
-    if VERBOSE:
-        cmd.append("--launcher_verbose")
+    cmd.append("--launcher_verbose")
 
     # run the app from it's own directory
     return_code, std_out, std_err = subprocess_run(cmd, cwd=original_app_dirs.launcher_exe_path.parent, stdout_log=pyship_print)
-    pyship_print(str(cmd))
-    pyship_print(std_out)
-    pyship_print(std_err)
 
     # we'll get multiple version JSON strings (one per line)
     lines = [ln.strip() for ln in std_out.splitlines() if len(ln.strip()) > 0]

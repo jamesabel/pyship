@@ -10,8 +10,6 @@ from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
 from pyship import __version__ as pyship_version
 
-from test_pyship import VERBOSE
-
 
 class TestPyshipLoggingHandler(logging.Handler):
     def emit(self, record):
@@ -22,7 +20,7 @@ class TestPyshipLoggingHandler(logging.Handler):
 @pytest.fixture(scope="session", autouse=True)
 def session_fixture():
 
-    balsa = Balsa(pyship_application_name, pyship_author, log_directory=Path("log", "pytest"), delete_existing_log_files=True, verbose=VERBOSE)
+    balsa = Balsa(pyship_application_name, pyship_author, log_directory=Path("log", "pytest"), delete_existing_log_files=True, verbose=False)
 
     # add handler that will throw an assert on ERROR or greater
     test_handler = TestPyshipLoggingHandler()

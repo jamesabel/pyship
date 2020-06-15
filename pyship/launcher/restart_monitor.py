@@ -5,6 +5,7 @@ class RestartMonitor:
     """
     Monitor application restarts and detect issues or anomalies
     """
+
     def __init__(self):
         self.restarts = []
         self.max_samples = 4

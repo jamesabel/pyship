@@ -84,9 +84,9 @@ class UpdaterAwsS3(Updater):
             # create the S3 bucket if it doesn't exist
             if not _s3_bucket_exists(s3_bucket):
                 if self.is_public_readable:
-                    acl = 'public-read'
+                    acl = "public-read"
                 else:
-                    acl = 'authenticated-read'
+                    acl = "authenticated-read"
                 s3_bucket.create(ACL=acl)
 
             # upload the pyshipy zip

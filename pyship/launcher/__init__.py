@@ -1,4 +1,3 @@
-
 from .restart_monitor import RestartMonitor
 from .launcher import launch
 from .hash import get_file_sha256

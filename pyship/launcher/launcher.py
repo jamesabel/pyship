@@ -125,7 +125,6 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
 
             restart_monitor.add()
 
-
             # todo: put finding the most recent app version in a function - I'll pretty sure this is done other places.  Also, it allows a unit test to be written for it.
             # find the most recent app version
 

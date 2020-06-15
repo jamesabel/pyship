@@ -82,7 +82,7 @@ def create_launcher(target_app_info: TargetAppInfo, app_path_output: Path):
         launcher_metadata = calculate_launcher_metadata(target_app_info.name, target_app_info.author, Path(launcher_module_dir), icon_path, target_app_info.is_gui)
         if not launcher_exe_path.exists() or launcher_metadata != load_launcher_metadata(app_path_output, launcher_metadata_filename):
 
-            pyship_print(f"building launcher ({launcher_exe_path})", )
+            pyship_print(f"building launcher ({launcher_exe_path})",)
             pyship_print(f"{command_line}")
             process_return_code, std_out, std_err = subprocess_run(command_line, cwd=launcher_module_dir, mute_output=True)
             # metadata is in the app parent dir

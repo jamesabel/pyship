@@ -28,10 +28,10 @@ def version_from_pyshipy_zip(target_app_name: str, candidate_pyshipy_zip: str) -
     """
     version = None
     if candidate_pyshipy_zip.startswith(target_app_name):
-        version_string = candidate_pyshipy_zip[len(target_app_name):]
+        version_string = candidate_pyshipy_zip[len(target_app_name) :]
         for extension in [".zip", ".7z"]:
             if version is None and version_string.endswith(extension):
-                version_string = version_string[:-len(extension)]  # remove extension
+                version_string = version_string[: -len(extension)]  # remove extension
                 if version_string.startswith("_"):
                     try:
                         version = VersionInfo.parse(version_string[1:])  # pass over the "_"
