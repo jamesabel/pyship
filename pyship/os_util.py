@@ -62,7 +62,13 @@ def rmdir(p: Path, failure_function: Callable = None, try_limit: int = 5) -> (bo
             except OSError as e:
                 mid_log_function(str(e))
 
-        if p.exists():
+        try:
+            exists = p.exists()
+        except PermissionError:
+            exists = True
+
+        if exists:
+            log.debug(f"sleeping for {delay}")
             time.sleep(delay)
 
         # up the log level 2nd time around

@@ -24,9 +24,7 @@ class UpdaterLocal(Updater):
             available_versions = {}
             for app_dir in self.app_dirs:
                 glob_string = f"{self.target_app_name}_*"
-                glob_dirs = [p for p in app_dir.glob(glob_string) if p.is_dir()]
-                if len(glob_dirs) == 1:
-                    pyshipy_dir = glob_dirs[0]
+                for pyshipy_dir in [p for p in app_dir.glob(glob_string) if p.is_dir()]:
                     if pyshipy_dir.name.startswith(self.target_app_name):
                         version_string = pyshipy_dir.name.replace(f"{self.target_app_name}", "")[1:]  # pyshipy has a character (underscore) between the target app name and the version
                         try:
@@ -36,9 +34,6 @@ class UpdaterLocal(Updater):
                             log.warning(f'version string format error "{version_string}"')
                     else:
                         log.warning(f'"{str(pyshipy_dir)}" does not start with {self.target_app_name}')
-                else:
-                    log.warning(f'glob {app_dir} {glob_string} yielded {len(glob_dirs)} results, expected exactly 1')
-                    log.warning(glob_dirs)
 
             log.info(f"{available_versions=}")
         return available_versions
