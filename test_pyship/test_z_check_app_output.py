@@ -12,7 +12,7 @@ from test_pyship import TST_APP_NAME
 
 def test_check_app_output():
 
-    version = VersionInfo.parse("0.0.2")
+    version = VersionInfo.parse("0.0.2")  # must be run after other tests that create the test app with this version
 
     @typechecked(always=True)
     def check_output(check_process: subprocess.CompletedProcess):
