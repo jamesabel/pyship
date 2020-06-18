@@ -4,11 +4,10 @@ import shutil
 
 import appdirs
 from attr import attrs, attrib
-from typeguard import typechecked
 
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
-from pyship import TargetAppInfo, get_logger, run_nsis, create_base_pyshipy, create_launcher, pyship_print, subprocess_run, mkdirs, APP_DIR_NAME
+from pyship import TargetAppInfo, get_logger, run_nsis, create_pyshipy, create_launcher, pyship_print, mkdirs, APP_DIR_NAME
 
 log = get_logger(pyship_application_name)
 
@@ -16,16 +15,16 @@ log = get_logger(pyship_application_name)
 @attrs()
 class PyShip:
 
-    project_dir = attrib(default=Path())  # target app project dir.  If None, current working directory is used.
+    project_dir = attrib(default=Path())  # target app project dir, e.g. the "home" directory of the project.  If None, current working directory is used.
     dist_dir = attrib(default="dist")  # filt, etc. use "dist" as the package destination directory
-    find_links = attrib(default=None)  # extra dirs for pip to use for code not yet on PyPI (e.g. under local development)
-    cache_dir = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))
+    find_links = attrib(default=None)  # extra dirs for pip to use for packages not yet on PyPI (e.g. under local development)
+    cache_dir = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))  # used to cache things like the embedded Python zip (to keep us off the python.org servers)
     target_app_info = None
-    app_dir = None
+    app_dir = None  # where the full, frozen application will be built
 
-    def ship(self):
+    def ship_app(self):
         """
-        perform all the steps to ship the app, including creating the installer
+        Perform all the steps to ship the app, including creating the installer.
         """
         pyship_print(f"{pyship_application_name} starting")
 
@@ -38,64 +37,23 @@ class PyShip:
 
             create_launcher(self.target_app_info, self.app_dir)  # create the OS specific launcher executable
 
-            pyshipy_dir = create_base_pyshipy(self.target_app_info, self.app_dir, self.cache_dir)  # create the base pyshipy
+            create_pyshipy(self.target_app_info, self.app_dir, True, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)
 
-            install_target_app(self.target_app_info.name, pyshipy_dir, Path(self.project_dir, self.dist_dir), True, self.find_links)
-
+            # run nsis
             icon_file_name = f"{self.target_app_info.name}.ico"
             shutil.copy2(Path(self.project_dir, icon_file_name), self.app_dir)  # temporarily for nsis
             run_nsis(self.target_app_info, self.target_app_info.version, self.app_dir)
             os.unlink(Path(self.app_dir, icon_file_name))
 
+            # todo: upload the installer somewhere
+
             pyship_print(f"{pyship_application_name} done")
         else:
             log.error(f"insufficient app info in {self.target_app_info.pyproject_toml_file_path} to create application")
 
-
-@typechecked(always=True)
-def install_target_app(module_name: str, python_env_dir: Path, target_app_package_dist_dir: Path, remove_pth: bool, find_links: (None, list)):
-    """
-    install target app as a module (and its dependencies) into pyshipy
-    :param module_name: module name
-    :param python_env_dir: venv or pyshipy dir
-    :param target_app_package_dist_dir: target app module dist dir (as a package)
-    :param remove_pth: remove remove python*._pth files as a workaround (see bug URL below)
-    :param find_links: a list of "find links" to add to pip invocation
-    """
-
-    # install this local app in the embedded python dir
-    pyship_print(f"installing {module_name} into {python_env_dir}")
-
-    if remove_pth:
-        # remove python*._pth
-        # https://github.com/PythonCharmers/python-future/issues/411
-        pth_glob_list = [p for p in Path(python_env_dir).glob("python*._pth")]
-        if len(pth_glob_list) == 1:
-            pth_path = str(pth_glob_list[0])
-            pth_save_path = pth_path.replace("._pth", "._future_bug_pth")
-            shutil.move(pth_path, pth_save_path)
-        else:
-            log.error(f"unexpected {pth_glob_list=} found at {python_env_dir=}")
-
-    # install the target module (and its dependencies)
-    cmd = [str(Path(python_env_dir, "python.exe")), "-m", "pip", "install", "-U", module_name, "--no-warn-script-location"]
-
-    if find_links is None:
-        find_links = []
-
-    find_links.append(str(target_app_package_dist_dir.absolute()))
-
-    # for testing, to keep off the main pypi
-    pypi_local = os.getenv("PYPILOCAL")
-    if pypi_local is not None and len(pypi_local) > 0:
-
-        # todo: investigate while this doesn't work - can't find all the modules
-        # cmd.append("--no-index")  # stay off pypi
-
-        find_links.append(pypi_local)
-
-    for find_link in find_links:
-        cmd.extend(["-f", str(find_link)])
-
-    pyship_print(str(cmd))
-    subprocess_run(cmd, cwd=python_env_dir, mute_output=False)
+    def ship_update(self):
+        """
+        Create and upload an update of this target app.  The update is a zip of a pyshipy directory, with the extension .shpy.
+        """
+        # todo: code this
+        pass

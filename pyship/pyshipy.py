@@ -12,36 +12,26 @@ from semver import VersionInfo
 from typeguard import typechecked
 
 import pyship
-from pyship import TargetAppInfo, file_download, pyship_print, extract, get_logger, __application_name__, is_windows, mkdirs, copy_tree
+from pyship import TargetAppInfo, file_download, pyship_print, extract, get_logger, __application_name__, is_windows, mkdirs, copy_tree, subprocess_run
+
 
 log = get_logger(__application_name__)
 
 
 @typechecked(always=True)
-def version_from_pyshipy_zip(target_app_name: str, candidate_pyshipy_zip: str) -> (VersionInfo, None):
+def create_pyshipy(target_app_info: TargetAppInfo, app_dir: Path, remove_pth: bool, target_app_package_dist_dir: Path, cache_dir: Path, find_links: (None, list)):
     """
-    Tests if a string is a pyshipy zip string.  If so, extract the version from a pyshipy zip string.  If the string is not a valid pyshipy zip string, return None.
-    Example: a pyshipy zip string of "abc_1.2.3.zip" for app "abc" returns VersionInfo of 1.2.3.
-    :param target_app_name: target app name
-    :param candidate_pyshipy_zip: candidate pyshipy app zip string to try to get the version from
-    :return: version or None if not a successful parse for a pyshipy zip string
+    create pyshipy
+    pyshipy is a stand-alone, relocatable directory that contains the entire python environment needed to execute the target application
+    :param target_app_info: target app info
+    :param app_dir: app gets built here (i.e. the output of this function)
+    :param remove_pth: remove remove python*._pth files as a workaround (see bug URL below)
+    :param target_app_package_dist_dir: target app module dist dir (as a package)
+    :param cache_dir: cache dir
+    :param find_links: a list of "find links" to add to pip invocation
     """
-    version = None
-    if candidate_pyshipy_zip.startswith(target_app_name):
-        version_string = candidate_pyshipy_zip[len(target_app_name) :]
-        for extension in [".zip", ".7z"]:
-            if version is None and version_string.endswith(extension):
-                version_string = version_string[: -len(extension)]  # remove extension
-                if version_string.startswith("_"):
-                    try:
-                        version = VersionInfo.parse(version_string[1:])  # pass over the "_"
-                    except IndexError as e:
-                        pass
-                    except TypeError as e:
-                        pass
-                    except ValueError as e:
-                        pass
-    return version
+    pyshipy_dir = create_base_pyshipy(target_app_info, app_dir, cache_dir)
+    install_target_app(target_app_info.name, pyshipy_dir, target_app_package_dist_dir, remove_pth, find_links)
 
 
 @typechecked(always=True)
@@ -116,3 +106,79 @@ def create_base_pyshipy(target_app_info: TargetAppInfo, app_dir: Path, cache_dir
         log.fatal(f"Unsupported OS: {system()}")
 
     return pyshipy_dir
+
+
+@typechecked(always=True)
+def install_target_app(module_name: str, python_env_dir: Path, target_app_package_dist_dir: Path, remove_pth: bool, find_links: (None, list)):
+    """
+    install target app as a module (and its dependencies) into pyshipy
+    :param module_name: module name
+    :param python_env_dir: venv or pyshipy dir
+    :param target_app_package_dist_dir: target app module dist dir (as a package)
+    :param remove_pth: remove remove python*._pth files as a workaround (see bug URL below)
+    :param find_links: a list of "find links" to add to pip invocation
+    """
+
+    # install this local app in the embedded python dir
+    pyship_print(f"installing {module_name} into {python_env_dir}")
+
+    if remove_pth:
+        # remove python*._pth
+        # https://github.com/PythonCharmers/python-future/issues/411
+        pth_glob_list = [p for p in Path(python_env_dir).glob("python*._pth")]
+        if len(pth_glob_list) == 1:
+            pth_path = str(pth_glob_list[0])
+            pth_save_path = pth_path.replace("._pth", "._future_bug_pth")
+            shutil.move(pth_path, pth_save_path)
+        else:
+            log.error(f"unexpected {pth_glob_list=} found at {python_env_dir=}")
+
+    # install the target module (and its dependencies)
+    cmd = [str(Path(python_env_dir, "python.exe")), "-m", "pip", "install", "-U", module_name, "--no-warn-script-location"]
+
+    if find_links is None:
+        find_links = []
+
+    find_links.append(str(target_app_package_dist_dir.absolute()))
+
+    # for testing, to keep off the main pypi
+    pypi_local = os.getenv("PYPILOCAL")
+    if pypi_local is not None and len(pypi_local) > 0:
+
+        # todo: investigate while this doesn't work - can't find all the modules
+        # cmd.append("--no-index")  # stay off pypi
+
+        find_links.append(pypi_local)
+
+    for find_link in find_links:
+        cmd.extend(["-f", str(find_link)])
+
+    pyship_print(str(cmd))
+    subprocess_run(cmd, cwd=python_env_dir, mute_output=False)
+
+
+@typechecked(always=True)
+def version_from_pyshipy_zip(target_app_name: str, candidate_pyshipy_zip: str) -> (VersionInfo, None):
+    """
+    Tests if a string is a pyshipy zip string.  If so, extract the version from a pyshipy zip string.  If the string is not a valid pyshipy zip string, return None.
+    Example: a pyshipy zip string of "abc_1.2.3.zip" for app "abc" returns VersionInfo of 1.2.3.
+    :param target_app_name: target app name
+    :param candidate_pyshipy_zip: candidate pyshipy app zip string to try to get the version from
+    :return: version or None if not a successful parse for a pyshipy zip string
+    """
+    version = None
+    if candidate_pyshipy_zip.startswith(target_app_name):
+        version_string = candidate_pyshipy_zip[len(target_app_name) :]
+        for extension in [".zip", ".7z"]:
+            if version is None and version_string.endswith(extension):
+                version_string = version_string[: -len(extension)]  # remove extension
+                if version_string.startswith("_"):
+                    try:
+                        version = VersionInfo.parse(version_string[1:])  # pass over the "_"
+                    except IndexError as e:
+                        pass
+                    except TypeError as e:
+                        pass
+                    except ValueError as e:
+                        pass
+    return version

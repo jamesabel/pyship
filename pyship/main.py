@@ -20,4 +20,4 @@ def main():
         pyship_log.init_logger_from_args(args)
 
         pyship = PyShip()
-        pyship.ship()
+        pyship.ship_app()
