@@ -22,7 +22,7 @@ log = get_logger(__application_name__)
 def create_pyshipy(target_app_info: TargetAppInfo, app_dir: Path, remove_pth: bool, target_app_package_dist_dir: Path, cache_dir: Path, find_links: (None, list)):
     """
     create pyshipy
-    pyshipy is a stand-alone, relocatable directory that contains the entire python environment needed to execute the target application
+    pyshipy is a stand-alone, relocatable directory that contains the entire python environment (including all libraries and the target app) needed to execute the target python application
     :param target_app_info: target app info
     :param app_dir: app gets built here (i.e. the output of this function)
     :param remove_pth: remove remove python*._pth files as a workaround (see bug URL below)
