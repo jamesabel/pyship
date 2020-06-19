@@ -22,6 +22,7 @@ class PreReleaseTypes(Enum):
 class Updater(ABC):
     """
     pyship updater
+    Updates a pyship app to its latest released version.  Instantiated and called by a running pyship app.
     """
 
     target_app_name: str
