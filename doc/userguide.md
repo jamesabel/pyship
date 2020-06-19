@@ -1,5 +1,16 @@
 # pyship User Guide
 
+## Goals
+
+- Ship any Python application
+- Enable application updates
+
+### Non-Goals
+
+- Compact installer size
+- A variety of OSs (just Windows for now)
+- 32 bit OS
+
 ## Terminology
 
 - Target application - the application you want to ship 
