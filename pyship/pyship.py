@@ -22,7 +22,7 @@ class PyShip:
     target_app_info = None
     app_dir = None  # where the full, frozen application will be built
 
-    def ship_app(self):
+    def ship_installer(self):
         """
         Perform all the steps to ship the app, including creating the installer.
         """

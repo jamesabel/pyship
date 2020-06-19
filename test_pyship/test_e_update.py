@@ -20,7 +20,7 @@ def test_update():
         pyship_print(f"{tst_app_dirs.target_app_version=}")
         tst_app_flit_build(tst_app_dirs)
         ps = PyShip(tst_app_dirs.project_dir, find_links=[pyship_dist_dir])  # uses pyship under development (what's in "dist", not what's in PyPI)
-        ps.ship_app()
+        ps.ship_installer()
         return ps
 
     # create the version we're going to upgrade *to* and put it in a separate dir

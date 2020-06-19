@@ -1,5 +1,0 @@
-# pyship
-
-# Architecture
-
-TBD
