@@ -5,6 +5,7 @@ __application_name__ = "pyship"
 python_interpreter_exes = {True: "pythonw.exe", False: "python.exe"}  # True is GUI, False is CLI
 
 APP_DIR_NAME = "app"  # analogous to a "Program Files" or "Applications" directory
+PYSHIPY_EXT = "shpy"  # pyshipy zip file extension
 
 from .__version__ import __version__, __author__
 from .logging import PyshipLog, get_logger, log_process_output

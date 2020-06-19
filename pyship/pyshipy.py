@@ -12,7 +12,7 @@ from semver import VersionInfo
 from typeguard import typechecked
 
 import pyship
-from pyship import TargetAppInfo, file_download, pyship_print, extract, get_logger, __application_name__, is_windows, mkdirs, copy_tree, subprocess_run
+from pyship import TargetAppInfo, file_download, pyship_print, extract, get_logger, __application_name__, is_windows, copy_tree, subprocess_run, PYSHIPY_EXT
 
 
 log = get_logger(__application_name__)
@@ -30,8 +30,14 @@ def create_pyshipy(target_app_info: TargetAppInfo, app_dir: Path, remove_pth: bo
     :param cache_dir: cache dir
     :param find_links: a list of "find links" to add to pip invocation
     """
+
+    # create the pyshipy dir
     pyshipy_dir = create_base_pyshipy(target_app_info, app_dir, cache_dir)
     install_target_app(target_app_info.name, pyshipy_dir, target_app_package_dist_dir, remove_pth, find_links)
+
+    pyshipy_dir_string = str(pyshipy_dir)
+    archive_name = shutil.make_archive(pyshipy_dir_string, "zip", pyshipy_dir_string)  # create a "zip" file of the pyshipy dir
+    Path(pyshipy_dir, archive_name).rename(Path(pyshipy_dir, f"{archive_name[:-3]}{PYSHIPY_EXT}"))  # make_archive creates a .zip, but we want a .shpy
 
 
 @typechecked(always=True)
