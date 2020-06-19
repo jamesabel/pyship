@@ -3,7 +3,7 @@
 Enables shipping a python application to end users.
 
 # Quick Start
-*(see [tbd](tbd) for detailed documentation)*
+*(see [pyship documentation](doc/pyship.md) for details)*
 
 ## Terminology
 
