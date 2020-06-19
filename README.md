@@ -11,7 +11,7 @@ Enables shipping a python application to end users.
 
 1) Create a target application as a Python package that runs as main using the `python -m <module>` argument.
 2) Install pyship via pip, e.g. `python -m pip install pyship`
-3) Create a `pyproject.toml` file (see [pyproject.toml](pyproject.toml))
+3) Create a `pyproject.toml` file (see [pyproject.toml](#pyproject.toml))
 
 # Application Requirements
 
