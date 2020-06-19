@@ -15,10 +15,10 @@ Enables shipping a python application to end users.
 
 # Application Requirements
 
-- Is a Python package (e.g. is in a directory and has a `__init__.py` )
-- Has a `__main__.py` file (so it can be run as `python -m <module>` )
-- Has a `__version__` string at the package top level
-- Has a `pyproject.toml` file
+- The application must be a Python package (e.g. is in a directory and has a `__init__.py` )
+- Have a `__main__.py` file (so it can be run as `python -m <module>` )
+- Have a `__version__` string at the package top level
+- Have a `pyproject.toml` file
  
 ## pyproject.toml 
 
