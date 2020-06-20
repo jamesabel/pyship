@@ -46,7 +46,7 @@ def test_update():
     cmd = [original_app_dirs.launcher_exe_path]
 
     # uncomment for detailed debugging
-    cmd.append("--launcher_verbose")
+    # cmd.append("--launcher_verbose")
 
     # run the app from it's own directory
     return_code, std_out, std_err = subprocess_run(cmd, cwd=original_app_dirs.launcher_exe_path.parent, stdout_log=pyship_print)
