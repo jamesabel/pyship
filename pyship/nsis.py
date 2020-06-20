@@ -14,6 +14,11 @@ log = get_logger(__application_name__)
 
 @typechecked(always=True)
 def get_folder_size(folder_path: Path) -> int:
+    """
+    calculate folder size in bytes
+    :param folder_path: folder path
+    :return: folder size in bytes
+    """
     total_size = 0
     for d, _, fns in os.walk(str(folder_path)):
         for f in fns:
@@ -73,7 +78,7 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, ap
         nsis_lines.append(f"!define UPDATEURL {target_app_info.url}")  # "Product Updates" link
         nsis_lines.append(f"!define ABOUTURL {target_app_info.url}")  # "Publisher" link
 
-        installed_size = get_folder_size(app_dir)
+        installed_size = get_folder_size(app_dir)/1024  # EstimatedSize is in KB
         nsis_lines.append(f"!define INSTALLSIZE {installed_size}")
 
         nsis_lines.append("")
