@@ -18,7 +18,7 @@ from .target_app_info import TargetAppInfo
 from .nsis import run_nsis
 from .file_download import file_download, extract
 from .create_launcher import create_launcher
-from .pyshipy import create_base_pyshipy, version_from_pyshipy_zip, install_target_app, create_pyshipy
+from .pyshipy import create_base_pyshipy, version_from_pyshipy_zip, install_target_app, create_pyshipy, create_shpy
 from .pyship import PyShip
 from .updater.updater import Updater
 from .updater.aws import UpdaterAwsS3

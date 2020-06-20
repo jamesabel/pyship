@@ -8,7 +8,7 @@ from typeguard import typechecked
 
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
-from pyship import TargetAppInfo, get_logger, run_nsis, create_pyshipy, create_launcher, pyship_print, mkdirs, APP_DIR_NAME
+from pyship import TargetAppInfo, get_logger, run_nsis, create_pyshipy, create_launcher, pyship_print, mkdirs, APP_DIR_NAME, create_shpy
 
 log = get_logger(pyship_application_name)
 
@@ -39,7 +39,7 @@ class PyShip:
 
             create_launcher(target_app_info, app_dir)  # create the OS specific launcher executable
 
-            create_pyshipy(target_app_info, app_dir, True, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)
+            pyshipy_dir = create_pyshipy(target_app_info, app_dir, True, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)
 
             # run nsis
             icon_file_name = f"{target_app_info.name}.ico"
@@ -48,6 +48,8 @@ class PyShip:
             os.unlink(Path(app_dir, icon_file_name))
 
             # todo: upload the installer somewhere
+
+            create_shpy(pyshipy_dir)  # create shpy file after installer run
 
             pyship_print(f"{pyship_application_name} done")
         else:

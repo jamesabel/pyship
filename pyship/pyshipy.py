@@ -29,13 +29,21 @@ def create_pyshipy(target_app_info: TargetAppInfo, app_dir: Path, remove_pth: bo
     :param target_app_package_dist_dir: target app module dist dir (as a package)
     :param cache_dir: cache dir
     :param find_links: a list of "find links" to add to pip invocation
-    :return: path to the pyshipy file
+    :return: path to the pyshipy dir
     """
 
     # create the pyshipy dir
     pyshipy_dir = create_base_pyshipy(target_app_info, app_dir, cache_dir)
     install_target_app(target_app_info.name, pyshipy_dir, target_app_package_dist_dir, remove_pth, find_links)
+    return pyshipy_dir
 
+
+def create_shpy(pyshipy_dir: Path) -> Path:
+    """
+    create shpy file from pyshipy dir
+    :param pyshipy_dir:
+    :return: path to the shpy file
+    """
     pyshipy_dir_string = str(pyshipy_dir)
     archive_name = shutil.make_archive(pyshipy_dir_string, "zip", pyshipy_dir_string)  # create a "zip" file of the pyshipy dir
     return Path(pyshipy_dir, archive_name).rename(Path(pyshipy_dir, f"{archive_name[:-3]}{PYSHIPY_EXT}"))  # make_archive creates a .zip, but we want a .shpy
