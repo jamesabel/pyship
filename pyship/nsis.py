@@ -22,12 +22,20 @@ def get_folder_size(folder_path: Path) -> int:
 
 
 @typechecked(always=True)
-def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, app_dir: Path):
+def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, app_dir: Path) -> (Path, None):
+    """
+    run nsis
+    :param target_app_info: target app info
+    :param target_app_version: target app version
+    :param app_dir: application dir
+    :return: path to installer exe, or None if could not be created
+    """
 
     # basic format is from:
     # http://nsis.sourceforge.net/A_simple_installer_with_start_menu_shortcut_and_uninstaller
 
     license_file_name = "LICENSE"
+    installer_exe_path = None
 
     if Path(target_app_info.target_app_project_dir, license_file_name).exists():
 
@@ -37,6 +45,7 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, ap
         exe_name = f"{target_app_info.name}.exe"
         installers_folder = "installers"
         mkdirs(Path(target_app_info.target_app_project_dir, installers_folder), remove_first=True)
+        installer_exe_path = Path(installers_folder, f"{target_app_info.name}_installer_{get_target_os()}.exe")
 
         nsis_lines = []
         nsis_lines.append("")
@@ -77,7 +86,7 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, ap
         nsis_lines.append(r"# This will be in the installer/uninstaller's title bar")
         nsis_lines.append('Name "${COMPANYNAME} - ${APPNAME}"')
         nsis_lines.append('Icon "${APPNAME}.ico"')
-        nsis_lines.append('outFile "' + installers_folder + "\\" + '${APPNAME}_installer_${OSSPEC}.exe"')
+        nsis_lines.append(f'outFile "{installer_exe_path}"')
         nsis_lines.append("")
         nsis_lines.append("!include LogicLib.nsh")
 
@@ -177,7 +186,7 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, ap
 
         nsis_lines.append("  # Try to remove the install directory - this will only happen if it is empty")
         nsis_lines.append("  rmDir $INSTDIR")
-        nsis_lines.append('  rmDir "$PROGRAMFILES\${COMPANYNAME}"')
+        nsis_lines.append('  rmDir "$PROGRAMFILES\\${COMPANYNAME}"')
 
         nsis_lines.append("  # Remove uninstaller information from the registry")
         nsis_lines.append('  DeleteRegKey HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}"')
@@ -201,3 +210,9 @@ def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, ap
 
     else:
         log.error(f"{license_file_name} file does not exist at {target_app_info.target_app_project_dir}")
+
+    # return the actual path to the installer (we cd'd to target_app_project_dir when we ran nsis)
+    if installer_exe_path is not None:
+        installer_exe_path = Path(target_app_info.target_app_project_dir, installer_exe_path)
+
+    return installer_exe_path

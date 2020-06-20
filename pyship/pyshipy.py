@@ -19,7 +19,7 @@ log = get_logger(__application_name__)
 
 
 @typechecked(always=True)
-def create_pyshipy(target_app_info: TargetAppInfo, app_dir: Path, remove_pth: bool, target_app_package_dist_dir: Path, cache_dir: Path, find_links: (None, list)):
+def create_pyshipy(target_app_info: TargetAppInfo, app_dir: Path, remove_pth: bool, target_app_package_dist_dir: Path, cache_dir: Path, find_links: (None, list)) -> Path:
     """
     create pyshipy
     pyshipy is a stand-alone, relocatable directory that contains the entire python environment (including all libraries and the target app) needed to execute the target python application
@@ -29,6 +29,7 @@ def create_pyshipy(target_app_info: TargetAppInfo, app_dir: Path, remove_pth: bo
     :param target_app_package_dist_dir: target app module dist dir (as a package)
     :param cache_dir: cache dir
     :param find_links: a list of "find links" to add to pip invocation
+    :return: path to the pyshipy file
     """
 
     # create the pyshipy dir
@@ -37,7 +38,7 @@ def create_pyshipy(target_app_info: TargetAppInfo, app_dir: Path, remove_pth: bo
 
     pyshipy_dir_string = str(pyshipy_dir)
     archive_name = shutil.make_archive(pyshipy_dir_string, "zip", pyshipy_dir_string)  # create a "zip" file of the pyshipy dir
-    Path(pyshipy_dir, archive_name).rename(Path(pyshipy_dir, f"{archive_name[:-3]}{PYSHIPY_EXT}"))  # make_archive creates a .zip, but we want a .shpy
+    return Path(pyshipy_dir, archive_name).rename(Path(pyshipy_dir, f"{archive_name[:-3]}{PYSHIPY_EXT}"))  # make_archive creates a .zip, but we want a .shpy
 
 
 @typechecked(always=True)
