@@ -1,6 +1,6 @@
 from semver import VersionInfo
 
-from pyship import UpdaterLocal
+from pyship.updater import UpdaterLocal
 
 from test_pyship import TST_APP_NAME, TstAppDirs
 

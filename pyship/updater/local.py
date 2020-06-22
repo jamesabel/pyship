@@ -4,7 +4,8 @@ local pyship updater (good for testing)
 from pathlib import Path
 from semver import VersionInfo
 
-from pyship import Updater, copy_tree, get_logger, __application_name__
+from pyship import copy_tree, get_logger, __application_name__
+from pyship.updater import Updater
 
 log = get_logger(__application_name__)
 
