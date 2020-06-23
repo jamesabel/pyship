@@ -23,7 +23,7 @@ class TestPyshipLoggingHandler(logging.Handler):
 @pytest.fixture(scope="session", autouse=True)
 def session_fixture():
 
-    balsa = Balsa(pyship_application_name, pyship_author, log_directory=Path("log", "pytest"), delete_existing_log_files=True, verbose=False)
+    balsa = Balsa(pyship_application_name, pyship_author, log_directory=Path("log", "pytest"), delete_existing_log_files=True, verbose=True)
 
     # add handler that will throw an assert on ERROR or greater
     test_handler = TestPyshipLoggingHandler()
