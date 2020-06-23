@@ -42,13 +42,13 @@ def subprocess_run(cmd: list, cwd: Path = None, mute_output: bool = True, stdout
             for out, log_function in [(std_out, stdout_log), (std_err, stderr_log)]:
                 if out is not None and len(out.strip()) > 0:
                     log_function(out)
-        log.debug(f"{std_out=}")
-        log.debug(f"{std_err=}")
-        if not mute_output:
-            # output stdout, stderr that came from the process
-            for s, f in [(std_out, sys.stdout), (std_err, sys.stderr)]:
-                if s is not None and len(s.strip()) > 0:
-                    print(s, file=f)
+        # output stdout, stderr that came from the process
+        for n, s, f in [("stdout", std_out, sys.stdout), ("stderr", std_err, sys.stderr)]:
+            if s is not None and len(s.strip()) > 0:
+                ln = f"{n}:{s}"
+                log.debug(ln)
+                if not mute_output:
+                    print(ln, file=f)
 
         return_code = target_process.returncode
 
