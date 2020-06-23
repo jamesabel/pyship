@@ -46,7 +46,7 @@ def subprocess_run(cmd: list, cwd: Path = None, mute_output: bool = True, stdout
         for n, s, f in [("stdout", std_out, sys.stdout), ("stderr", std_err, sys.stderr)]:
             if s is not None and len(s.strip()) > 0:
                 ln = f"{n}:{s}"
-                log.debug(ln)
+                log.info(ln)
                 if not mute_output:
                     print(ln, file=f)
 
