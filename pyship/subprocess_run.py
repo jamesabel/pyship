@@ -49,11 +49,11 @@ def subprocess_run(cmd: list, cwd: Path = None, mute_output: bool = True, stdout
                 for so_line in so.splitlines():
                     so_line_strip = so_line.strip()
                     if len(so_line_strip) > 0:
-                        header_sl_line = f"{n}:{so_line_strip}"
+                        header_sl_line = f"{n}:{so_line_strip}"  # when logging, start with the name of the output string (stdout, stderr)
                         log.info(header_sl_line)
-                        if not mute_output:
-                            # output stdout, stderr that came from the process
-                            print(header_sl_line, file=f)
+                if not mute_output:
+                    # output stdout, stderr that came from the process
+                    print(so, file=f)
 
         return_code = target_process.returncode
 

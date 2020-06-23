@@ -1,4 +1,5 @@
 import json
+from json.decoder import JSONDecodeError
 from pathlib import Path
 
 from semver import VersionInfo
@@ -53,8 +54,15 @@ def test_update():
 
     # we'll get multiple version JSON strings (one per line)
     lines = [ln.strip() for ln in std_out.splitlines() if len(ln.strip()) > 0]
+    log.info(f"{lines=}")
     for i, version_string in enumerate(["0.0.1", "0.0.2"]):
-        app_run_dict = json.loads(lines[i])
-        run_version_string = app_run_dict.get("version")
-        run_version = VersionInfo.parse(run_version_string)
+        one_line = lines[i]
+        log.info(one_line)
+        try:
+            app_run_dict = json.loads(one_line)
+            run_version_string = app_run_dict.get("version")
+            run_version = VersionInfo.parse(run_version_string)
+        except JSONDecodeError as e:
+            log.warning(f"{one_line},{e}")  # just output (a log.error() does an assert, and we're doing the assert below)
+            run_version = None
         assert run_version == VersionInfo.parse(version_string)
