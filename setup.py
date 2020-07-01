@@ -1,4 +1,3 @@
-from pprint import pprint
 from setuptools import setup, find_packages
 
 from pyship import __application_name__, __author__, __version__
@@ -13,7 +12,7 @@ setup(
     packages=find_packages(exclude=["test_*"]),
 
     package_data={
-        "": ["pyship.ico"],
+        "": ["*.ico"],
     },
 
     install_requires=requirements
