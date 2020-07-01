@@ -9,7 +9,7 @@ toml
 boto3
 #
 # pypi
-flit
+twine
 keyring
 #
 # development

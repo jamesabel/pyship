@@ -1,7 +1,5 @@
+rmdir /S /Q dist
 call venv\scripts\activate.bat
-REM
-REM one or the other
-flit publish
-REM flit publish --repository testpypi
-REM
+python setup.py bdist_wheel
+REM twine upload -r testpypi dist\*
 deactivate
