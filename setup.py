@@ -5,20 +5,15 @@ from pyship import __application_name__, __author__, __version__
 
 requirements = ["setuptools", "wheel", "ismain", "balsa", "requests", "attrs", "typeguard", "toml", "pyinstaller", "semver"]
 
-packages = find_packages(where=__application_name__)
-
-pprint(f"{packages=}")
-
 setup(
     name=__application_name__,
     version=__version__,
     author=__author__,
 
-    package_dir={'': __application_name__},
-    packages=packages,
+    packages=find_packages(exclude=["test_*"]),
 
     package_data={
-        "": ["pyship.ico"],  # does not work todo: fix it
+        "": ["pyship.ico"],
     },
 
     install_requires=requirements
