@@ -39,9 +39,10 @@ def session_fixture():
         rmdir(tst_app_dirs.app_dir)
         rmdir(tst_app_dirs.dist_dir)
 
-    # use flit to build pyship into a distributable package in the "dist" directory
+    # build pyship into a distributable package in the "dist" directory
+    # setup.py bdist_wheel
     mkdirs(Path("dist"), remove_first=True)
-    subprocess_run([str(Path("venv", "Scripts", "flit.exe")), "build"], mute_output=True, stderr_log=logging.info)  # flit writes output to stderr, not sure why
+    subprocess_run([str(Path("venv", "Scripts", "python.exe")), "setup.py", "bdist_wheel"], mute_output=True, stderr_log=logging.info)  # flit writes output to stderr, not sure why
     pyship_print(f"{pyship_application_name=} {pyship_version=} {pyship_author=}")
 
     if pyship_application_name not in sys.path:
