@@ -8,7 +8,7 @@ from semver import VersionInfo
 from typeguard import typechecked
 from wheel_inspect import inspect_wheel
 
-from pyship import __application_name__ as pyship_application_name, get_logger, ModuleInfo, DEFAULT_DIST_DIR_NAME, pyship_print
+from pyship import __application_name__ as pyship_application_name, get_logger, DEFAULT_DIST_DIR_NAME, pyship_print
 
 log = get_logger(pyship_application_name)
 

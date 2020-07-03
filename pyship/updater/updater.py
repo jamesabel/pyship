@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from semver import VersionInfo
 from typeguard import typechecked
 
-from pyship import get_logger, __application_name__, ModuleInfo
+from pyship import get_logger, __application_name__
 
 log = get_logger(__application_name__)
 
