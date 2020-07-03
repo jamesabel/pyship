@@ -40,7 +40,7 @@ def create_pyshipy(target_app_info: TargetAppInfo, app_dir: Path, remove_pth: bo
 
 def create_shpy(pyshipy_dir: Path) -> Path:
     """
-    create shpy file from pyshipy dir
+    create shpy file (the zipped update for the target application) from pyshipy dir
     :param pyshipy_dir:
     :return: path to the shpy file
     """
