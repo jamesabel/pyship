@@ -36,12 +36,12 @@ class Updater(ABC):
         ...
 
     @abstractmethod
-    def install_pyshipy(self, version, destination_dir: Path) -> bool:
+    def install_lip(self, version, destination_dir: Path) -> bool:
         """
-        put a pyshipy into a destination dir
-        :param version: version of pyshipy to get
-        :param destination_dir: dir to put the pyshipy
-        :return: True if were able to get the pyshipy, False otherwise
+        put a lip into a destination dir
+        :param version: version of lip to get
+        :param destination_dir: dir to put the lip
+        :return: True if were able to get the lip, False otherwise
         """
         ...
 
@@ -63,7 +63,7 @@ class Updater(ABC):
     @typechecked(always=True)
     def update(self, current_version: (str, VersionInfo), app_dir: Path = Path("..")) -> bool:
         """
-        update this (the target) application (pyshipy dir)
+        update this (the target) application (lip dir)
         :param current_version: current version of the running app
         :param app_dir: application directory.  Normally this is just one level "up" from the execution directory, but this can be provided mainly for testing purposes.
         """
@@ -75,5 +75,5 @@ class Updater(ABC):
         log.info(f"{greatest_version=}")
         if greatest_version is not None:
             if greatest_version > current_version:
-                did_update = self.install_pyshipy(greatest_version, app_dir)
+                did_update = self.install_lip(greatest_version, app_dir)
         return did_update

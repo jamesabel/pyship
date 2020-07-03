@@ -59,18 +59,18 @@ class UpdaterAwsS3(AWSS3Bucket, Updater):
         return available_versions
 
     @typechecked(always=True)
-    def push(self, pyshipy_dir: Path) -> bool:
+    def push(self, lip_dir: Path) -> bool:
         """
-        push a pyshipy dir up to S3
-        :param pyshipy_dir: pyshipy dir (name is <app>_<version>)
+        push a lip dir up to S3
+        :param lip_dir: lip dir (name is <app>_<version>)
         :return: True on success, False otherwise
         """
 
         success = False
 
-        # zip the pyshipy dir
+        # zip the lip dir
         temp_dir = mkdtemp()
-        pyshipy_zip_file_path = shutil.make_archive(Path(temp_dir, pyshipy_dir.name), "zip", str(pyshipy_dir))
+        lip_zip_file_path = shutil.make_archive(Path(temp_dir, lip_dir.name), "zip", str(lip_dir))
 
         try:
             s3_bucket = self._get_s3_bucket()
@@ -83,12 +83,12 @@ class UpdaterAwsS3(AWSS3Bucket, Updater):
                     acl = "authenticated-read"
                 s3_bucket.create(ACL=acl)
 
-            # upload the pyshipy zip
-            s3_bucket.upload_file(pyshipy_zip_file_path, pyshipy_zip_file_path.name)
+            # upload the lip zip
+            s3_bucket.upload_file(lip_zip_file_path, lip_zip_file_path.name)
             success = True
 
         except boto3.exceptions.Boto3Error as e:
-            log.warning(f"{pyshipy_dir=} {e}")
+            log.warning(f"{lip_dir=} {e}")
 
         rmdir(temp_dir)
 

@@ -81,9 +81,9 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
 
     return_code = None
 
-    # derive the target app name based on the pyshipy dir(s) that exist
-    pyshipy_regex_string = "([_a-z0-9]*)_([.0-9]+)"
-    pyshipy_regex = re.compile(pyshipy_regex_string, flags=re.IGNORECASE)  # simple format that accepts common semver (but not all semver)
+    # derive the target app name based on the lip dir(s) that exist
+    lip_regex_string = "([_a-z0-9]*)_([.0-9]+)"
+    lip_regex = re.compile(lip_regex_string, flags=re.IGNORECASE)  # simple format that accepts common semver (but not all semver)
 
     if app_dir is None:
         app_dir = Path(sys.executable).parent.parent.resolve().absolute()  # up one dir from where the python interpreter is
@@ -117,7 +117,7 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
         # 3) inside the program, it has option to call pyship module's upgrade() function.  If an upgrade happens, upgrade() will return True
         #    and the program has the option to request a restart by returning the restart_return_code exit code.
 
-        glob_string = f"{target_app_name}_*"  # pyshipy directories will be of this form
+        glob_string = f"{target_app_name}_*"  # lip directories will be of this form
 
         restart_monitor = RestartMonitor()
 
@@ -144,7 +144,7 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
             versions = {}
             for candidate_dir in total_glob_list:
                 if candidate_dir.is_dir():
-                    matches = re.match(pyshipy_regex, candidate_dir.name)
+                    matches = re.match(lip_regex, candidate_dir.name)
                     if matches is not None:
                         version = matches.group(2)
                         try:

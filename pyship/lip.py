@@ -12,52 +12,52 @@ from semver import VersionInfo
 from typeguard import typechecked
 
 import pyship
-from pyship import TargetAppInfo, file_download, pyship_print, extract, get_logger, __application_name__, is_windows, copy_tree, subprocess_run, PYSHIPY_EXT
+from pyship import TargetAppInfo, file_download, pyship_print, extract, get_logger, __application_name__, is_windows, copy_tree, subprocess_run, LIP_EXT
 
 
 log = get_logger(__application_name__)
 
 
 @typechecked(always=True)
-def create_pyshipy(target_app_info: TargetAppInfo, app_dir: Path, remove_pth: bool, target_app_package_dist_dir: Path, cache_dir: Path, find_links: (None, list)) -> Path:
+def create_lip(target_app_info: TargetAppInfo, app_dir: Path, remove_pth: bool, target_app_package_dist_dir: Path, cache_dir: Path, find_links: (None, list)) -> Path:
     """
-    create pyshipy
-    pyshipy is a stand-alone, relocatable directory that contains the entire python environment (including all libraries and the target app) needed to execute the target python application
+    create lip (Location Independent Python) environment
+    lip is a stand-alone, relocatable directory that contains the entire python environment (including all libraries and the target app) needed to execute the target python application
     :param target_app_info: target app info
     :param app_dir: app gets built here (i.e. the output of this function)
     :param remove_pth: remove remove python*._pth files as a workaround (see bug URL below)
     :param target_app_package_dist_dir: target app module dist dir (as a package)
     :param cache_dir: cache dir
     :param find_links: a list of "find links" to add to pip invocation
-    :return: path to the pyshipy dir
+    :return: path to the lip dir
     """
 
-    # create the pyshipy dir
-    pyshipy_dir = create_base_pyshipy(target_app_info, app_dir, cache_dir)
-    install_target_app(target_app_info.name, pyshipy_dir, target_app_package_dist_dir, remove_pth, find_links)
-    return pyshipy_dir
+    # create the lip dir
+    lip_dir = create_base_lip(target_app_info, app_dir, cache_dir)
+    install_target_app(target_app_info.name, lip_dir, target_app_package_dist_dir, remove_pth, find_links)
+    return lip_dir
 
 
-def create_shpy(pyshipy_dir: Path) -> Path:
+def create_lib_file(lip_dir: Path) -> Path:
     """
-    create shpy file (the zipped update for the target application) from pyshipy dir
-    :param pyshipy_dir:
+    create lip file (the zipped update for the target application) from lip dir
+    :param lip_dir:
     :return: path to the shpy file
     """
-    pyshipy_dir_string = str(pyshipy_dir)
-    archive_name = shutil.make_archive(pyshipy_dir_string, "zip", pyshipy_dir_string)  # create a "zip" file of the pyshipy dir
-    return Path(pyshipy_dir, archive_name).rename(Path(pyshipy_dir, f"{archive_name[:-3]}{PYSHIPY_EXT}"))  # make_archive creates a .zip, but we want a .shpy
+    lip_dir_string = str(lip_dir)
+    archive_name = shutil.make_archive(lip_dir_string, "zip", lip_dir_string)  # create a "zip" file of the lip dir
+    return Path(lip_dir, archive_name).rename(Path(lip_dir, f"{archive_name[:-3]}{LIP_EXT}"))  # make_archive creates a .zip, but we want a .lip
 
 
 @typechecked(always=True)
-def create_base_pyshipy(target_app_info: TargetAppInfo, app_dir: Path, cache_dir: Path) -> (Path, None):
+def create_base_lip(target_app_info: TargetAppInfo, app_dir: Path, cache_dir: Path) -> (Path, None):
     """
-    create pyship python environment called pyshipy
+    create pyship python environment called lip
 
     :param target_app_info: target app info
     :param app_dir: app gets built here (i.e. the output of this function)
     :param cache_dir: cache dir
-    :return absolute path to created pyshipy
+    :return absolute path to created lip
     """
 
     # use project's Python (in this venv) to determine target Python version
@@ -71,15 +71,15 @@ def create_base_pyshipy(target_app_info: TargetAppInfo, app_dir: Path, cache_dir
     zip_file = Path(f"python-{python_ver_str}-embed-amd64.zip")
     zip_url = f"https://www.python.org/ftp/python/{ver_base_str}/{zip_file}"
     file_download(zip_url, cache_dir, zip_file)
-    pyshipy_dir_name = f"{target_app_info.name}_{str(target_app_info.version)}"
-    pyshipy_dir = Path(app_dir, pyshipy_dir_name).absolute()
-    pyship_print(f"creating application {pyshipy_dir_name} ({pyshipy_dir})")
-    extract(cache_dir, zip_file, pyshipy_dir)
+    lip_dir_name = f"{target_app_info.name}_{str(target_app_info.version)}"
+    lip_dir = Path(app_dir, lip_dir_name).absolute()
+    pyship_print(f"creating application {lip_dir_name} ({lip_dir})")
+    extract(cache_dir, zip_file, lip_dir)
 
     # Programmatically edit ._pth file, e.g. python38._pth
     # see https://github.com/pypa/pip/issues/4207
     # todo: refactor to use Path
-    glob_path = os.path.abspath(os.path.join(pyshipy_dir, "python*._pth"))
+    glob_path = os.path.abspath(os.path.join(lip_dir, "python*._pth"))
     pth_glob = glob.glob(glob_path)
     if pth_glob is None or len(pth_glob) != 1:
         log.critical("could not find '._pth' file at %s" % glob_path)
@@ -101,34 +101,34 @@ def create_base_pyshipy(target_app_info: TargetAppInfo, app_dir: Path, cache_dir
     get_pip_path = os.path.join(os.path.dirname(pyship.__file__), get_pip_file)
     log.info(f"{get_pip_path}")
     cmd = ["python.exe", os.path.abspath(get_pip_path), "--no-warn-script-location"]
-    log.info(f"{cmd} (cwd={pyshipy_dir})")
-    subprocess.run(cmd, cwd=pyshipy_dir, shell=True)  # todo: use subprocess_run
+    log.info(f"{cmd} (cwd={lip_dir})")
+    subprocess.run(cmd, cwd=lip_dir, shell=True)  # todo: use subprocess_run
 
     # upgrade pip
     cmd = ["python.exe", "-m", "pip", "install", "--no-deps", "--upgrade", "pip"]
-    subprocess.run(cmd, cwd=pyshipy_dir, shell=True)  # todo: use subprocess_run
+    subprocess.run(cmd, cwd=lip_dir, shell=True)  # todo: use subprocess_run
 
-    # the embedded Python doesn't ship with tkinter, so add it to pyshipy
+    # the embedded Python doesn't ship with tkinter, so add it to lip
     # https://stackoverflow.com/questions/37710205/python-embeddable-zip-install-tkinter
     if is_windows():
         python_base_install_dir = Path(tkinter.__file__).parent.parent.parent
-        copy_tree(Path(python_base_install_dir), pyshipy_dir, "tcl")  # tcl dir
-        copy_tree(Path(python_base_install_dir, "Lib"), Path(pyshipy_dir, "Lib", "site-packages"), "tkinter")  # tkinter dir
+        copy_tree(Path(python_base_install_dir), lip_dir, "tcl")  # tcl dir
+        copy_tree(Path(python_base_install_dir, "Lib"), Path(lip_dir, "Lib", "site-packages"), "tkinter")  # tkinter dir
         # dlls
         for file_name in ["_tkinter.pyd", "tcl86t.dll", "tk86t.dll"]:
-            shutil.copy2(str(Path(python_base_install_dir, "DLLs", file_name)), str(pyshipy_dir))
+            shutil.copy2(str(Path(python_base_install_dir, "DLLs", file_name)), str(lip_dir))
     else:
         log.fatal(f"Unsupported OS: {system()}")
 
-    return pyshipy_dir
+    return lip_dir
 
 
 @typechecked(always=True)
 def install_target_app(module_name: str, python_env_dir: Path, target_app_package_dist_dir: Path, remove_pth: bool, find_links: (None, list)):
     """
-    install target app as a module (and its dependencies) into pyshipy
+    install target app as a module (and its dependencies) into lip
     :param module_name: module name
-    :param python_env_dir: venv or pyshipy dir
+    :param python_env_dir: venv or lip dir
     :param target_app_package_dist_dir: target app module dist dir (as a package)
     :param remove_pth: remove remove python*._pth files as a workaround (see bug URL below)
     :param find_links: a list of "find links" to add to pip invocation
@@ -173,17 +173,17 @@ def install_target_app(module_name: str, python_env_dir: Path, target_app_packag
 
 
 @typechecked(always=True)
-def version_from_pyshipy_zip(target_app_name: str, candidate_pyshipy_zip: str) -> (VersionInfo, None):
+def version_from_lip_zip(target_app_name: str, candidate_lip_zip: str) -> (VersionInfo, None):
     """
-    Tests if a string is a pyshipy zip string.  If so, extract the version from a pyshipy zip string.  If the string is not a valid pyshipy zip string, return None.
-    Example: a pyshipy zip string of "abc_1.2.3.zip" for app "abc" returns VersionInfo of 1.2.3.
+    Tests if a string is a lip zip string.  If so, extract the version from a lip zip string.  If the string is not a valid lip zip string, return None.
+    Example: a lip zip string of "abc_1.2.3.zip" for app "abc" returns VersionInfo of 1.2.3.
     :param target_app_name: target app name
-    :param candidate_pyshipy_zip: candidate pyshipy app zip string to try to get the version from
-    :return: version or None if not a successful parse for a pyshipy zip string
+    :param candidate_lip_zip: candidate lip app zip string to try to get the version from
+    :return: version or None if not a successful parse for a lip zip string
     """
     version = None
-    if candidate_pyshipy_zip.startswith(target_app_name):
-        version_string = candidate_pyshipy_zip[len(target_app_name) :]
+    if candidate_lip_zip.startswith(target_app_name):
+        version_string = candidate_lip_zip[len(target_app_name) :]
         for extension in [".zip", ".7z"]:
             if version is None and version_string.endswith(extension):
                 version_string = version_string[: -len(extension)]  # remove extension
