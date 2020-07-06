@@ -2,6 +2,8 @@ from pathlib import Path
 import sys
 from importlib import import_module, reload, invalidate_caches
 from pprint import pprint
+from dataclasses import dataclass, fields
+from abc import abstractmethod
 
 import toml
 from semver import VersionInfo
@@ -13,40 +15,31 @@ from pyship import __application_name__ as pyship_application_name, get_logger, 
 log = get_logger(pyship_application_name)
 
 
-class TargetAppInfo:
-    """
-    get target app info
-    """
+@dataclass
+class AppInfo:
+    name: str = None
+    author: str = None
+    version: VersionInfo = None
+    is_gui: bool = None
+    url: str = None
+    description: str = None
+    run_on_startup: bool = None
 
-    @typechecked(always=True)
-    def __init__(self, target_app_project_dir: Path = Path(), target_app_dist_dir: Path = Path(DEFAULT_DIST_DIR_NAME)):
-        """
-        get target app info
-        :param target_app_project_dir: path to target module package (directory with a __init__.py) or omit to use the current directory
-        """
+    @abstractmethod
+    def load(self):
+        ...
 
+
+class AppInfoPyProject(AppInfo):
+
+    def load(self, target_app_project_dir: Path = None):
         pyproject_toml_file_name = "pyproject.toml"
-
-        self.name = None
-        self.author = None
-        self.version = None
-        self.is_gui = False
-        self.url = ""
-        self.description = ""
-        self.run_on_startup = False
-        self.target_app_project_dir = target_app_project_dir
-        self.target_app_dist_dir = target_app_dist_dir
-        self.pyproject_toml_file_path = Path(self.target_app_project_dir, pyproject_toml_file_name)
-
-        # try first to get target app info from its wheel, but failing that try the package source
-        got_wheel_info = self.get_wheel_info(self.target_app_dist_dir)
-        if not got_wheel_info:
-            self.get_module_info(self.target_app_project_dir)
+        pyproject_toml_file_path = Path(target_app_project_dir, pyproject_toml_file_name)
 
         # info from pyproject.toml overrides everything else
-        log.info(f"loading {self.pyproject_toml_file_path} ({self.pyproject_toml_file_path.absolute()})")
-        if self.pyproject_toml_file_path.exists():
-            with self.pyproject_toml_file_path.open() as f:
+        log.info(f"loading {pyproject_toml_file_path} ({pyproject_toml_file_path.absolute()})")
+        if pyproject_toml_file_path.exists():
+            with pyproject_toml_file_path.open() as f:
                 pyproject = toml.load(f)
                 project_section = pyproject.get("project")
                 if project_section is not None:
@@ -63,17 +56,10 @@ class TargetAppInfo:
                             self.is_gui = pyship_app_info.get("is_gui", self.is_gui)  # False if CLI
                             self.run_on_startup = pyship_app_info.get("run_on_startup", self.run_on_startup)
 
-    @typechecked(always=True)
-    def get_module_info(self, module_path: (Path, None)):
-        """
-        get as much info as we can from the module itself
-        :param module_path:
-        :return: True if info found
-        """
 
-        log.debug(f"{module_path=}")
-        got_info = False
+class AppInfoModule(AppInfo):
 
+    def load(self, module_path: Path = None):
         if module_path is not None and module_path.exists():
             # only temporarily put this module in the path if it's not there already
             if appended_path := module_path is not None and str(module_path) not in sys.path:
@@ -97,7 +83,6 @@ class TargetAppInfo:
                     self.description = self.description.strip()
 
                 log.info(f"got app info from {module_path}")
-                got_info = True
 
             except ModuleNotFoundError:
                 log.info(f"{sys.path=}")
@@ -106,21 +91,77 @@ class TargetAppInfo:
             if appended_path:
                 sys.path.remove(str(module_path))
 
-        return got_info
 
-    @typechecked(always=True)
-    def get_wheel_info(self, dist_path: (Path, None)):
-        """
-        get as much info as we can from the wheel
-        :param dist_path:
-        :return: True if info found
-        """
-        log.debug(f"{dist_path=}")
-        got_info = False
+class AppInfoWheel(AppInfo):
+
+    def load(self, dist_path: Path = None):
         if dist_path is not None and dist_path.exists():
             wheel_info = inspect_wheel(dist_path)
             pprint(wheel_info)  # todo: STOPPED HERE
-        return got_info
 
-    def is_complete(self):
-        return all([v is not None for v in [self.name, self.author, self.version, self.description]])
+
+def get_app_info(target_app_project_dir: Path = None, target_app_dist_dir: Path = None, target_app_package_dir: Path = None) -> (AppInfo, None):
+    """
+    Get combined app info from all potential sources.
+    :param target_app_project_dir: app project dir, where a pyproject.toml may reside.
+    :param target_app_dist_dir: the "distribution" dir, where a wheel may reside
+    :param target_app_package_dir: the package dir
+    :return: an AppInfo instance
+    """
+
+    combined_app_info = AppInfo()
+    for app_info_class, param in [(AppInfoPyProject, target_app_project_dir), (AppInfoModule, target_app_package_dir), (AppInfoWheel, target_app_dist_dir)]:
+        app_info_obj = app_info_class(param)
+        for field in fields(AppInfo):
+            if value := getattr(app_info_obj, field) is not None:
+                setattr(combined_app_info, field, value)
+
+    for required_field in ["name", "author", "version"]:
+        if getattr(combined_app_info, required_field) is None:
+            log.error(f'"{required_field}" not defined for the target application')
+            combined_app_info = None  # not sufficient to create app info
+            break
+
+    return combined_app_info
+
+
+# @dataclass
+# class TargetAppInfo(AppInfo):
+#     """
+#     get target app info
+#     """
+#
+#     @typechecked(always=True)
+#     def __init__(self, target_app_project_dir: Path = Path(), target_app_dist_dir: Path = Path(DEFAULT_DIST_DIR_NAME)):
+#         """
+#         get target app info
+#         :param target_app_project_dir: path to target module package (directory with a __init__.py) or omit to use the current directory
+#         """
+#
+#     @typechecked(always=True)
+#     def get_module_info(self, module_path: (Path, None)):
+#         """
+#         get as much info as we can from the module itself
+#         :param module_path:
+#         :return: True if info found
+#         """
+#
+#         log.debug(f"{module_path=}")
+#         got_info = False
+#
+#
+#         return got_info
+#
+#     @typechecked(always=True)
+#     def get_wheel_info(self, dist_path: (Path, None)):
+#         """
+#         get as much info as we can from the wheel
+#         :param dist_path:
+#         :return: True if info found
+#         """
+#         log.debug(f"{dist_path=}")
+#
+#         return got_info
+#
+#     def is_complete(self):
+#         return all([v is not None for v in [self.name, self.author, self.version, self.description]])
