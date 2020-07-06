@@ -3,7 +3,6 @@ import sys
 from importlib import import_module, reload, invalidate_caches
 from pprint import pprint
 from dataclasses import dataclass, fields
-from abc import abstractmethod
 
 import toml
 from semver import VersionInfo
@@ -25,97 +24,98 @@ class AppInfo:
     description: str = None
     run_on_startup: bool = None
 
-    @abstractmethod
-    def load(self):
-        ...
+
+def _app_info_py_project(target_app_project_dir: Path = None) -> AppInfo:
+    app_info = AppInfo()
+    pyproject_toml_file_name = "pyproject.toml"
+    pyproject_toml_file_path = Path(target_app_project_dir, pyproject_toml_file_name)
+
+    # info from pyproject.toml overrides everything else
+    log.info(f"loading {pyproject_toml_file_path} ({pyproject_toml_file_path.absolute()})")
+    if pyproject_toml_file_path.exists():
+        with pyproject_toml_file_path.open() as f:
+            pyproject = toml.load(f)
+            project_section = pyproject.get("project")
+            if project_section is not None:
+                app_info.name = project_section.get("name")  # app name
+                app_info.author = project_section.get("author")  # app author
+
+                tool_section = pyproject.get("tool")
+                if tool_section is not None:
+
+                    # get info from pyship section
+                    # [tool.pyship]
+                    pyship_app_info = tool_section.get("pyship")
+                    if pyship_app_info is not None:
+                        app_info.is_gui = pyship_app_info.get("is_gui")  # False if CLI
+                        app_info.run_on_startup = pyship_app_info.get("run_on_startup")
+    return app_info
 
 
-class AppInfoPyProject(AppInfo):
+def _app_info_module(name: str, module_path: Path = None) -> AppInfo:
+    app_info = AppInfo()
+    if module_path is not None and module_path.exists():
+        # only temporarily put this module in the path if it's not there already
+        if appended_path := module_path is not None and str(module_path) not in sys.path:
+            sys.path.append(str(module_path))
 
-    def load(self, target_app_project_dir: Path = None):
-        pyproject_toml_file_name = "pyproject.toml"
-        pyproject_toml_file_path = Path(target_app_project_dir, pyproject_toml_file_name)
+        try:
 
-        # info from pyproject.toml overrides everything else
-        log.info(f"loading {pyproject_toml_file_path} ({pyproject_toml_file_path.absolute()})")
-        if pyproject_toml_file_path.exists():
-            with pyproject_toml_file_path.open() as f:
-                pyproject = toml.load(f)
-                project_section = pyproject.get("project")
-                if project_section is not None:
-                    self.name = project_section.get("name", self.name)  # app name
-                    self.author = project_section.get("author", self.author)  # app author
+            app_info.name = name
 
-                    tool_section = pyproject.get("tool")
-                    if tool_section is not None:
+            # Do as much as we can to ensure we can import a module already imported, since we re-load the test app module in our test cases (probably not something we'll see in normal
+            # usage though).
+            invalidate_caches()
+            app_module = import_module(app_info.name)
+            app_module = reload(app_module)  # for our test cases we need to reload a modified module (it doesn't hurt to reload an unmodified module)
+            version_string = app_module.__dict__.get("__version__")
+            pyship_print(f"{app_info.name=} {version_string=}")
 
-                        # get info from pyship section
-                        # [tool.pyship]
-                        pyship_app_info = tool_section.get("pyship")
-                        if pyship_app_info is not None:
-                            self.is_gui = pyship_app_info.get("is_gui", self.is_gui)  # False if CLI
-                            self.run_on_startup = pyship_app_info.get("run_on_startup", self.run_on_startup)
+            if version_string is not None:
+                app_info.version = VersionInfo.parse(version_string)
 
+            app_info.description = app_module.__dict__.get("__doc__")
+            if app_info.description is not None:
+                app_info.description = app_info.description.strip()
 
-class AppInfoModule(AppInfo):
+            log.info(f"got app info from {module_path}")
 
-    def load(self, module_path: Path = None):
-        if module_path is not None and module_path.exists():
-            # only temporarily put this module in the path if it's not there already
-            if appended_path := module_path is not None and str(module_path) not in sys.path:
-                sys.path.append(str(module_path))
+        except ModuleNotFoundError:
+            log.info(f"{sys.path=}")
+            log.info(f"module {app_info.name} not found")
 
-            try:
-
-                # Do as much as we can to ensure we can import a module already imported, since we re-load the test app module in our test cases (probably not something we'll see in normal
-                # usage though).
-                invalidate_caches()
-                app_module = import_module(self.name)
-                app_module = reload(app_module)  # for our test cases we need to reload a modified module (it doesn't hurt to reload an unmodified module)
-                version_string = app_module.__dict__.get("__version__")
-                pyship_print(f"{self.name=} {version_string=}")
-
-                if version_string is not None:
-                    self.version = VersionInfo.parse(version_string)
-
-                self.description = app_module.__dict__.get("__doc__")
-                if self.description is not None:
-                    self.description = self.description.strip()
-
-                log.info(f"got app info from {module_path}")
-
-            except ModuleNotFoundError:
-                log.info(f"{sys.path=}")
-                log.info(f"module {self.name} not found")
-
-            if appended_path:
-                sys.path.remove(str(module_path))
+        if appended_path:
+            sys.path.remove(str(module_path))
+    return app_info
 
 
-class AppInfoWheel(AppInfo):
+def _app_info_wheel(dist_path: Path = None) -> AppInfo:
+    app_info = AppInfo()
+    if dist_path is not None and dist_path.exists():
+        wheel_info = inspect_wheel(dist_path)
+        pprint(wheel_info)  # todo: STOPPED HERE
+    return app_info
 
-    def load(self, dist_path: Path = None):
-        if dist_path is not None and dist_path.exists():
-            wheel_info = inspect_wheel(dist_path)
-            pprint(wheel_info)  # todo: STOPPED HERE
 
-
-def get_app_info(target_app_project_dir: Path = None, target_app_dist_dir: Path = None, target_app_package_dir: Path = None) -> (AppInfo, None):
+def get_app_info(name: str = None, target_app_project_dir: Path = None, target_app_dist_dir: Path = None, target_app_package_dir: Path = None) -> (AppInfo, None):
     """
     Get combined app info from all potential sources.
+    :param name: target app name
     :param target_app_project_dir: app project dir, where a pyproject.toml may reside.
     :param target_app_dist_dir: the "distribution" dir, where a wheel may reside
     :param target_app_package_dir: the package dir
     :return: an AppInfo instance
     """
 
+    # combine the fields in the varios app infos into one
     combined_app_info = AppInfo()
-    for app_info_class, param in [(AppInfoPyProject, target_app_project_dir), (AppInfoModule, target_app_package_dir), (AppInfoWheel, target_app_dist_dir)]:
-        app_info_obj = app_info_class(param)
+    app_infos = [_app_info_py_project(target_app_project_dir), _app_info_module(name, target_app_package_dir), _app_info_wheel(target_app_dist_dir)]
+    for app_info in app_infos:
         for field in fields(AppInfo):
-            if value := getattr(app_info_obj, field) is not None:
+            if value := getattr(app_info, field) is not None:
                 setattr(combined_app_info, field, value)
 
+    # check that we have the minimum fields filled in
     for required_field in ["name", "author", "version"]:
         if getattr(combined_app_info, required_field) is None:
             log.error(f'"{required_field}" not defined for the target application')
