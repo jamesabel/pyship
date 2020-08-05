@@ -8,7 +8,7 @@ from typeguard import typechecked
 
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
-from pyship import TargetAppInfo, get_logger, run_nsis, create_lip, create_launcher, pyship_print, mkdirs, APP_DIR_NAME, create_lib_file, DEFAULT_DIST_DIR_NAME
+from pyship import AppInfo, get_logger, run_nsis, create_lip, create_launcher, pyship_print, mkdirs, APP_DIR_NAME, create_lib_file, DEFAULT_DIST_DIR_NAME
 
 log = get_logger(pyship_application_name)
 
@@ -29,10 +29,14 @@ class PyShip:
         """
         pyship_print(f"{pyship_application_name} starting")
 
-        target_app_info = TargetAppInfo(self.project_dir)
-        installer_exe_path = None
-        if target_app_info.is_complete():
+        target_app_info = AppInfo(target_app_project_dir=self.project_dir)
 
+        installer_exe_path = None
+        if self.project_dir is None:
+            log.error(f"{self.project_dir=}")
+        elif target_app_info.name is None:
+            log.error(f"{target_app_info.name=}")
+        else:
             app_dir = Path(self.project_dir, APP_DIR_NAME, target_app_info.name).absolute()
 
             mkdirs(app_dir, remove_first=True)
@@ -52,8 +56,7 @@ class PyShip:
             create_lib_file(lip_dir)  # create shpy file after installer run
 
             pyship_print(f"{pyship_application_name} done")
-        else:
-            log.error(f"insufficient app info in {target_app_info.pyproject_toml_file_path} to create application")
+
         return installer_exe_path
 
     @typechecked(always=True)
@@ -61,7 +64,7 @@ class PyShip:
         """
         Create and upload an update of this target app.  The update is a zip of a lip directory, with the extension .shpy.
         """
-        target_app_info = TargetAppInfo(self.project_dir)
+        target_app_info = AppInfo(target_app_project_dir=self.project_dir)
         app_dir = Path(self.project_dir, APP_DIR_NAME, target_app_info.name).absolute()
         # derived classes will take it from here and do what they need to to place the lip in a place the user will get it via a call to Updater.update() ...
         return create_lip(target_app_info, app_dir, True, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)
