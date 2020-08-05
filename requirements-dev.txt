@@ -1,5 +1,4 @@
 ismain
-sundry
 balsa
 requests
 attrs
