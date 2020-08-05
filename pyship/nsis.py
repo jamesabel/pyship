@@ -6,7 +6,7 @@ from semver import VersionInfo
 from typeguard import typechecked
 from balsa import get_logger
 
-from pyship import __application_name__, TargetAppInfo, mkdirs, get_target_os, subprocess_run, pyship_print
+from pyship import __application_name__, AppInfo, mkdirs, get_target_os, subprocess_run, pyship_print
 
 
 log = get_logger(__application_name__)
@@ -27,7 +27,7 @@ def get_folder_size(folder_path: Path) -> int:
 
 
 @typechecked(always=True)
-def run_nsis(target_app_info: TargetAppInfo, target_app_version: VersionInfo, app_dir: Path) -> (Path, None):
+def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir: Path) -> (Path, None):
     """
     run nsis
     :param target_app_info: target app info

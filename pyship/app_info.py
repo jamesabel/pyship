@@ -23,6 +23,7 @@ class AppInfo:
     url: str = None
     description: str = None
     run_on_startup: bool = None
+    target_app_project_dir: Path = None
 
 
 def _app_info_py_project(target_app_project_dir: Path = None) -> AppInfo:
@@ -107,8 +108,8 @@ def get_app_info(name: str = None, target_app_project_dir: Path = None, target_a
     :return: an AppInfo instance
     """
 
-    # combine the fields in the varios app infos into one
-    combined_app_info = AppInfo()
+    # combine the fields in the various app infos into one
+    combined_app_info = AppInfo(target_app_project_dir=target_app_project_dir)
     app_infos = [_app_info_py_project(target_app_project_dir), _app_info_module(name, target_app_package_dir), _app_info_wheel(target_app_dist_dir)]
     for app_info in app_infos:
         for field in fields(AppInfo):

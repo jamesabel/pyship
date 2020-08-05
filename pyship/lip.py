@@ -12,14 +12,14 @@ from semver import VersionInfo
 from typeguard import typechecked
 
 import pyship
-from pyship import TargetAppInfo, file_download, pyship_print, extract, get_logger, __application_name__, is_windows, copy_tree, subprocess_run, LIP_EXT
+from pyship import AppInfo, file_download, pyship_print, extract, get_logger, __application_name__, is_windows, copy_tree, subprocess_run, LIP_EXT
 
 
 log = get_logger(__application_name__)
 
 
 @typechecked(always=True)
-def create_lip(target_app_info: TargetAppInfo, app_dir: Path, remove_pth: bool, target_app_package_dist_dir: Path, cache_dir: Path, find_links: (None, list)) -> Path:
+def create_lip(target_app_info: AppInfo, app_dir: Path, remove_pth: bool, target_app_package_dist_dir: Path, cache_dir: Path, find_links: (None, list)) -> Path:
     """
     create lip (Location Independent Python) environment
     lip is a stand-alone, relocatable directory that contains the entire python environment (including all libraries and the target app) needed to execute the target python application
@@ -50,7 +50,7 @@ def create_lib_file(lip_dir: Path) -> Path:
 
 
 @typechecked(always=True)
-def create_base_lip(target_app_info: TargetAppInfo, app_dir: Path, cache_dir: Path) -> (Path, None):
+def create_base_lip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path) -> (Path, None):
     """
     create pyship python environment called lip
 
