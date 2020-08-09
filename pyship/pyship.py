@@ -8,7 +8,7 @@ from typeguard import typechecked
 
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
-from pyship import AppInfo, get_logger, run_nsis, create_lip, create_launcher, pyship_print, mkdirs, APP_DIR_NAME, create_lib_file, DEFAULT_DIST_DIR_NAME
+from pyship import AppInfo, get_logger, run_nsis, create_lip, create_launcher, pyship_print, mkdirs, APP_DIR_NAME, create_lib_file, DEFAULT_DIST_DIR_NAME, get_app_info
 
 log = get_logger(pyship_application_name)
 
@@ -29,11 +29,13 @@ class PyShip:
         """
         pyship_print(f"{pyship_application_name} starting")
 
-        target_app_info = AppInfo(target_app_project_dir=self.project_dir)
+        target_app_info = get_app_info(target_app_project_dir=self.project_dir)
 
         installer_exe_path = None
         if self.project_dir is None:
             log.error(f"{self.project_dir=}")
+        elif target_app_info is None:
+            log.error(f"{target_app_info=}")
         elif target_app_info.name is None:
             log.error(f"{target_app_info.name=}")
         else:

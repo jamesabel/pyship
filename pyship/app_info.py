@@ -113,8 +113,8 @@ def get_app_info(name: str = None, target_app_project_dir: Path = None, target_a
     app_infos = [_app_info_py_project(target_app_project_dir), _app_info_module(name, target_app_package_dir), _app_info_wheel(target_app_dist_dir)]
     for app_info in app_infos:
         for field in fields(AppInfo):
-            if value := getattr(app_info, field) is not None:
-                setattr(combined_app_info, field, value)
+            if value := getattr(app_info, field.name) is not None:
+                setattr(combined_app_info, field.name, value)
 
     # check that we have the minimum fields filled in
     for required_field in ["name", "author", "version"]:
