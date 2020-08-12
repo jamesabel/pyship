@@ -69,10 +69,14 @@ def _app_info_module(name: str, module_path: Path = None) -> AppInfo:
             invalidate_caches()
             app_module = import_module(app_info.name)
             app_module = reload(app_module)  # for our test cases we need to reload a modified module (it doesn't hurt to reload an unmodified module)
-            version_string = app_module.__dict__.get("__version__")
-            pyship_print(f"{app_info.name=} {version_string=}")
 
+            author_string = app_module.__dict__.get("__author__")
+            if author_string is not None:
+                pyship_print(f"author={author_string}")
+
+            version_string = app_module.__dict__.get("__version__")
             if version_string is not None:
+                pyship_print(f"version={version_string}")
                 app_info.version = VersionInfo.parse(version_string)
 
             app_info.description = app_module.__dict__.get("__doc__")
