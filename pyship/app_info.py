@@ -26,7 +26,7 @@ class AppInfo:
     target_app_project_dir: Path = None
 
 
-def _app_info_py_project(target_app_project_dir: Path = None) -> AppInfo:
+def app_info_py_project(target_app_project_dir: Path = None) -> AppInfo:
     app_info = AppInfo()
     pyproject_toml_file_name = "pyproject.toml"
     pyproject_toml_file_path = Path(target_app_project_dir, pyproject_toml_file_name)
@@ -53,16 +53,14 @@ def _app_info_py_project(target_app_project_dir: Path = None) -> AppInfo:
     return app_info
 
 
-def _app_info_module(name: str, module_path: Path = None) -> AppInfo:
-    app_info = AppInfo()
+def get_app_info_module(app_info: AppInfo, module_path: Path = None) -> AppInfo:
+
     if module_path is not None and module_path.exists():
         # only temporarily put this module in the path if it's not there already
         if appended_path := module_path is not None and str(module_path) not in sys.path:
             sys.path.append(str(module_path))
 
         try:
-
-            app_info.name = name
 
             # Do as much as we can to ensure we can import a module already imported, since we re-load the test app module in our test cases (probably not something we'll see in normal
             # usage though).
@@ -72,6 +70,7 @@ def _app_info_module(name: str, module_path: Path = None) -> AppInfo:
 
             author_string = app_module.__dict__.get("__author__")
             if author_string is not None:
+                app_info.author = author_string
                 pyship_print(f"author={author_string}")
 
             version_string = app_module.__dict__.get("__version__")
@@ -94,7 +93,7 @@ def _app_info_module(name: str, module_path: Path = None) -> AppInfo:
     return app_info
 
 
-def _app_info_wheel(dist_path: Path = None) -> AppInfo:
+def get_app_info_wheel(dist_path: Path = None) -> AppInfo:
     app_info = AppInfo()
     if dist_path is not None and dist_path.exists():
         wheel_info = inspect_wheel(dist_path)
@@ -102,10 +101,10 @@ def _app_info_wheel(dist_path: Path = None) -> AppInfo:
     return app_info
 
 
-def get_app_info(name: str = None, target_app_project_dir: Path = None, target_app_dist_dir: Path = None, target_app_package_dir: Path = None) -> (AppInfo, None):
+def get_app_info(app_info_pyproject: AppInfo, target_app_project_dir: Path = None, target_app_dist_dir: Path = None, target_app_package_dir: Path = None) -> (AppInfo, None):
     """
     Get combined app info from all potential sources.
-    :param name: target app name
+    :param app_info_pyproject: target app info from pyproject.toml
     :param target_app_project_dir: app project dir, where a pyproject.toml may reside.
     :param target_app_dist_dir: the "distribution" dir, where a wheel may reside
     :param target_app_package_dir: the package dir
@@ -113,11 +112,12 @@ def get_app_info(name: str = None, target_app_project_dir: Path = None, target_a
     """
 
     # combine the fields in the various app infos into one
-    combined_app_info = AppInfo(target_app_project_dir=target_app_project_dir)
-    app_infos = [_app_info_py_project(target_app_project_dir), _app_info_module(name, target_app_package_dir), _app_info_wheel(target_app_dist_dir)]
-    for app_info in app_infos:
+    combined_app_info = AppInfo()
+    app_info_module = get_app_info_module(app_info_pyproject, Path(target_app_package_dir, app_info_pyproject.name))
+    app_info_wheel = get_app_info_wheel(target_app_dist_dir)
+    for app_info in [app_info_pyproject, app_info_module, app_info_wheel]:
         for field in fields(AppInfo):
-            if value := getattr(app_info, field.name) is not None:
+            if (value := getattr(app_info, field.name)) is not None:
                 setattr(combined_app_info, field.name, value)
 
     # check that we have the minimum fields filled in

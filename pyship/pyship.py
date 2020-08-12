@@ -8,7 +8,7 @@ from typeguard import typechecked
 
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
-from pyship import AppInfo, get_logger, run_nsis, create_lip, create_launcher, pyship_print, mkdirs, APP_DIR_NAME, create_lib_file, DEFAULT_DIST_DIR_NAME, get_app_info
+from pyship import AppInfo, get_logger, run_nsis, create_lip, create_launcher, pyship_print, mkdirs, APP_DIR_NAME, create_lib_file, DEFAULT_DIST_DIR_NAME, get_app_info, app_info_py_project
 
 log = get_logger(pyship_application_name)
 
@@ -29,7 +29,11 @@ class PyShip:
         """
         pyship_print(f"{pyship_application_name} starting")
 
-        target_app_info = get_app_info(target_app_project_dir=self.project_dir, target_app_dist_dir=self.dist_dir)
+        target_app_info_pyproject = app_info_py_project(self.project_dir)
+        target_app_info_pyproject.target_app_project_dir = self.project_dir
+        target_app_info = get_app_info(target_app_info_pyproject, target_app_project_dir=self.project_dir, target_app_dist_dir=self.dist_dir,
+                                       target_app_package_dir=Path().absolute()  # todo: so, apparently we're in our own package dir - do we need this????
+                                       )
 
         installer_exe_path = None
         if self.project_dir is None:
