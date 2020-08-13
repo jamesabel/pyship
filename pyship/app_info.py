@@ -27,7 +27,9 @@ class AppInfo:
 
 
 @typechecked(always=True)
-def app_info_py_project(app_info: AppInfo, target_app_project_dir: Path = None) -> AppInfo:
+def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path = None) -> AppInfo:
+    app_info.target_app_project_dir = target_app_project_dir
+
     pyproject_toml_file_name = "pyproject.toml"
     pyproject_toml_file_path = Path(target_app_project_dir, pyproject_toml_file_name)
 
@@ -55,7 +57,6 @@ def app_info_py_project(app_info: AppInfo, target_app_project_dir: Path = None) 
 
 @typechecked(always=True)
 def get_app_info_module(app_info: AppInfo, module_path: Path = None) -> AppInfo:
-
     if module_path is not None and module_path.exists():
         # only temporarily put this module in the path if it's not there already
         if appended_path := module_path is not None and str(module_path) not in sys.path:
@@ -95,10 +96,14 @@ def get_app_info_module(app_info: AppInfo, module_path: Path = None) -> AppInfo:
 
 
 @typechecked(always=True)
-def get_app_info_wheel(app_info: AppInfo, dist_path: Path = None) -> AppInfo:
+def get_app_info_wheel(app_info: AppInfo, dist_path: Path) -> AppInfo:
     if dist_path is not None and dist_path.exists():
         wheel_info = inspect_wheel(dist_path)
-        pprint(wheel_info)  # todo: STOPPED HERE
+        metadata = wheel_info["dist_info"]["metadata"]
+        app_info.name = metadata.get("name")
+        app_info.version = metadata.get("version")
+        app_info.author = metadata.get("author")
+        app_info.description = metadata.get("description")
     return app_info
 
 
@@ -112,17 +117,22 @@ def get_app_info(name: str = None, target_app_project_dir: Path = None, target_a
     :return: an AppInfo instance
     """
 
-    # combine the fields in the various app infos into one
-    combined_app_info = AppInfo(name, target_app_project_dir=target_app_project_dir)
-    app_info_py_project(combined_app_info, target_app_project_dir)
-    get_app_info_module(combined_app_info, target_app_project_dir)
-    get_app_info_wheel(combined_app_info, target_app_dist_dir)
+    combined_app_info = AppInfo()
+    get_app_info_py_project(combined_app_info, target_app_project_dir)
 
-    # check that we have the minimum fields filled in
-    for required_field in ["name", "author", "version"]:
-        if getattr(combined_app_info, required_field) is None:
-            log.error(f'"{required_field}" not defined for the target application')
-            combined_app_info = None  # not sufficient to create app info
-            break
+    wheel_list = list(target_app_dist_dir.glob("*.whl"))
+    if len(wheel_list) == 0:
+        log.error(f"no wheel at {target_app_dist_dir}")
+    elif len(wheel_list) > 1:
+        log.error(f"multiple wheels at {target_app_dist_dir} : {wheel_list}")
+    else:
+        combined_app_info = get_app_info_wheel(wheel_list[0])
+
+        # check that we have the minimum fields filled in
+        for required_field in ["name", "author", "version"]:
+            if getattr(combined_app_info, required_field) is None:
+                log.error(f'"{required_field}" not defined for the target application')
+                combined_app_info = None  # not sufficient to create app info
+                break
 
     return combined_app_info
