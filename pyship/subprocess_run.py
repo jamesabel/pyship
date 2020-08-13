@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Callable
 import sys
 import os
+from copy import deepcopy
 
 from typeguard import typechecked
 
@@ -29,12 +30,21 @@ def subprocess_run(cmd: list, cwd: Path = None, mute_output: bool = True, stdout
     if cwd is not None:
         cwd = str(cwd)  # subprocess requires a string
 
+    # remove PATHs that will interfere with running this command
+    run_env = deepcopy(os.environ)
+    del run_env["PATH"]
+    del run_env["PYTHONPATH"]
+
+    log.info(f"{cmd=}")
+    log.info(f"{cwd=}")
+    log.info(f"{mute_output=}")
+    log.info(f"{os.getcwd()=}")
+    for k, v in run_env.items():
+        log.info(f"{k}={v}")
+
     try:
-        log.info(f"{cmd=}")
-        log.info(f"{cwd=}")
-        log.info(f"{mute_output=}")
-        log.info(f"{os.getcwd()=}")
-        target_process = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+
+        target_process = subprocess.run(cmd, cwd=cwd, env=run_env, capture_output=True, text=True)
         std_out = target_process.stdout
         std_err = target_process.stderr
         if (std_err is not None and len(std_err.strip()) > 0) or (target_process.returncode != ok_return_code and target_process.returncode != restart_return_code):
