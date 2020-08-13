@@ -101,7 +101,7 @@ def get_app_info_wheel(app_info: AppInfo, dist_path: Path) -> AppInfo:
         wheel_info = inspect_wheel(dist_path)
         metadata = wheel_info["dist_info"]["metadata"]
         app_info.name = metadata.get("name")
-        app_info.version = metadata.get("version")
+        app_info.version = VersionInfo.parse(metadata.get("version"))
         app_info.author = metadata.get("author")
         app_info.description = metadata.get("description")
     return app_info
