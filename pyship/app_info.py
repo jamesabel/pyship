@@ -26,8 +26,7 @@ class AppInfo:
     target_app_project_dir: Path = None
 
 
-def app_info_py_project(target_app_project_dir: Path = None) -> AppInfo:
-    app_info = AppInfo()
+def app_info_py_project(app_info: AppInfo, target_app_project_dir: Path = None) -> AppInfo:
     pyproject_toml_file_name = "pyproject.toml"
     pyproject_toml_file_path = Path(target_app_project_dir, pyproject_toml_file_name)
 
@@ -93,32 +92,27 @@ def get_app_info_module(app_info: AppInfo, module_path: Path = None) -> AppInfo:
     return app_info
 
 
-def get_app_info_wheel(dist_path: Path = None) -> AppInfo:
-    app_info = AppInfo()
+def get_app_info_wheel(app_info: AppInfo, dist_path: Path = None) -> AppInfo:
     if dist_path is not None and dist_path.exists():
         wheel_info = inspect_wheel(dist_path)
         pprint(wheel_info)  # todo: STOPPED HERE
     return app_info
 
 
-def get_app_info(app_info_pyproject: AppInfo, target_app_project_dir: Path = None, target_app_dist_dir: Path = None, target_app_package_dir: Path = None) -> (AppInfo, None):
+def get_app_info(name: str = None, target_app_project_dir: Path = None, target_app_dist_dir: Path = None) -> (AppInfo, None):
     """
     Get combined app info from all potential sources.
-    :param app_info_pyproject: target app info from pyproject.toml
-    :param target_app_project_dir: app project dir, where a pyproject.toml may reside.
-    :param target_app_dist_dir: the "distribution" dir, where a wheel may reside
-    :param target_app_package_dir: the package dir
+    :param name: target application name (optional)
+    :param target_app_project_dir: app project dir, e.g. where a pyproject.toml may reside. (optional)
+    :param target_app_dist_dir: the "distribution" dir, e.g. where a wheel may reside (optional)
     :return: an AppInfo instance
     """
 
     # combine the fields in the various app infos into one
-    combined_app_info = AppInfo()
-    app_info_module = get_app_info_module(app_info_pyproject, Path(target_app_package_dir, app_info_pyproject.name))
-    app_info_wheel = get_app_info_wheel(target_app_dist_dir)
-    for app_info in [app_info_pyproject, app_info_module, app_info_wheel]:
-        for field in fields(AppInfo):
-            if (value := getattr(app_info, field.name)) is not None:
-                setattr(combined_app_info, field.name, value)
+    combined_app_info = AppInfo(name, target_app_project_dir=target_app_project_dir)
+    app_info_py_project(combined_app_info, target_app_project_dir)
+    get_app_info_module(combined_app_info, target_app_project_dir)
+    get_app_info_wheel(combined_app_info, target_app_dist_dir)
 
     # check that we have the minimum fields filled in
     for required_field in ["name", "author", "version"]:

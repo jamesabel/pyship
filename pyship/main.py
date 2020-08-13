@@ -1,7 +1,3 @@
-import argparse
-
-from balsa import verbose_arg_string, log_dir_arg_string, delete_existing_arg_string
-
 from pyship import PyShip, __application_name__, __version__, PyshipLog, arguments
 
 
@@ -13,4 +9,6 @@ def main():
     pyship_log.init_logger_from_args(args)
 
     pyship = PyShip()
+    if args.name is not None:
+        pyship.name = args.name  # optionally get the target application name from the command line
     pyship.ship_installer()

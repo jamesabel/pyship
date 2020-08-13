@@ -16,6 +16,7 @@ log = get_logger(pyship_application_name)
 @attrs()
 class PyShip:
 
+    name = None
     project_dir = attrib(default=Path())  # target app project dir, e.g. the "home" directory of the project.  If None, current working directory is used.
     dist_dir = attrib(default=Path(DEFAULT_DIST_DIR_NAME))  # filt, etc. use "dist" as the package destination directory
     find_links = attrib(default=None)  # extra dirs for pip to use for packages not yet on PyPI (e.g. under local development)
@@ -29,11 +30,7 @@ class PyShip:
         """
         pyship_print(f"{pyship_application_name} starting")
 
-        target_app_info_pyproject = app_info_py_project(self.project_dir)
-        target_app_info_pyproject.target_app_project_dir = self.project_dir
-        target_app_info = get_app_info(target_app_info_pyproject, target_app_project_dir=self.project_dir, target_app_dist_dir=self.dist_dir,
-                                       target_app_package_dir=Path().absolute()  # todo: so, apparently we're in our own package dir - do we need this????
-                                       )
+        target_app_info = get_app_info(self.name, self.project_dir, self.dist_dir)
 
         installer_exe_path = None
         if self.project_dir is None:
