@@ -135,6 +135,6 @@ def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path) -> (Ap
                 combined_app_info = None  # not sufficient to create app info
                 break
             else:
-                print(f"{required_field}={attribute_value}")
+                pyship_print(f"{required_field}={attribute_value}")
 
     return combined_app_info
