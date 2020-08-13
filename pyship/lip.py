@@ -135,7 +135,7 @@ def install_target_app(module_name: str, python_env_dir: Path, target_app_packag
     """
 
     # install this local app in the embedded python dir
-    pyship_print(f"installing {module_name} into {python_env_dir}")
+    pyship_print(f"installing {module_name}")
 
     if remove_pth:
         # remove python*._pth
@@ -156,19 +156,11 @@ def install_target_app(module_name: str, python_env_dir: Path, target_app_packag
 
     find_links.append(str(target_app_package_dist_dir.absolute()))
 
-    # for testing, to keep off the main pypi
-    pypi_local = os.getenv("PYPILOCAL")
-    if pypi_local is not None and len(pypi_local) > 0:
-
-        # todo: investigate while this doesn't work - can't find all the modules
-        # cmd.append("--no-index")  # stay off pypi
-
-        find_links.append(pypi_local)
-
     for find_link in find_links:
         cmd.extend(["-f", str(find_link)])
 
-    pyship_print(str(cmd))
+    pyship_print(f"{python_env_dir}")
+    pyship_print(f"{cmd}")
     subprocess_run(cmd, cwd=python_env_dir, mute_output=False)
 
 
