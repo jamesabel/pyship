@@ -2,14 +2,14 @@ from pathlib import Path
 import sys
 from importlib import import_module, reload, invalidate_caches
 from pprint import pprint
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 
 import toml
 from semver import VersionInfo
 from typeguard import typechecked
 from wheel_inspect import inspect_wheel
 
-from pyship import __application_name__ as pyship_application_name, get_logger, DEFAULT_DIST_DIR_NAME, pyship_print
+from pyship import __application_name__ as pyship_application_name, get_logger, pyship_print
 
 log = get_logger(pyship_application_name)
 
@@ -26,6 +26,7 @@ class AppInfo:
     target_app_project_dir: Path = None
 
 
+@typechecked(always=True)
 def app_info_py_project(app_info: AppInfo, target_app_project_dir: Path = None) -> AppInfo:
     pyproject_toml_file_name = "pyproject.toml"
     pyproject_toml_file_path = Path(target_app_project_dir, pyproject_toml_file_name)
@@ -52,6 +53,7 @@ def app_info_py_project(app_info: AppInfo, target_app_project_dir: Path = None) 
     return app_info
 
 
+@typechecked(always=True)
 def get_app_info_module(app_info: AppInfo, module_path: Path = None) -> AppInfo:
 
     if module_path is not None and module_path.exists():
@@ -92,6 +94,7 @@ def get_app_info_module(app_info: AppInfo, module_path: Path = None) -> AppInfo:
     return app_info
 
 
+@typechecked(always=True)
 def get_app_info_wheel(app_info: AppInfo, dist_path: Path = None) -> AppInfo:
     if dist_path is not None and dist_path.exists():
         wheel_info = inspect_wheel(dist_path)
@@ -99,6 +102,7 @@ def get_app_info_wheel(app_info: AppInfo, dist_path: Path = None) -> AppInfo:
     return app_info
 
 
+@typechecked(always=True)
 def get_app_info(name: str = None, target_app_project_dir: Path = None, target_app_dist_dir: Path = None) -> (AppInfo, None):
     """
     Get combined app info from all potential sources.
@@ -122,45 +126,3 @@ def get_app_info(name: str = None, target_app_project_dir: Path = None, target_a
             break
 
     return combined_app_info
-
-
-# @dataclass
-# class TargetAppInfo(AppInfo):
-#     """
-#     get target app info
-#     """
-#
-#     @typechecked(always=True)
-#     def __init__(self, target_app_project_dir: Path = Path(), target_app_dist_dir: Path = Path(DEFAULT_DIST_DIR_NAME)):
-#         """
-#         get target app info
-#         :param target_app_project_dir: path to target module package (directory with a __init__.py) or omit to use the current directory
-#         """
-#
-#     @typechecked(always=True)
-#     def get_module_info(self, module_path: (Path, None)):
-#         """
-#         get as much info as we can from the module itself
-#         :param module_path:
-#         :return: True if info found
-#         """
-#
-#         log.debug(f"{module_path=}")
-#         got_info = False
-#
-#
-#         return got_info
-#
-#     @typechecked(always=True)
-#     def get_wheel_info(self, dist_path: (Path, None)):
-#         """
-#         get as much info as we can from the wheel
-#         :param dist_path:
-#         :return: True if info found
-#         """
-#         log.debug(f"{dist_path=}")
-#
-#         return got_info
-#
-#     def is_complete(self):
-#         return all([v is not None for v in [self.name, self.author, self.version, self.description]])
