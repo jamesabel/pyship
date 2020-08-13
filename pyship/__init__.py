@@ -16,7 +16,7 @@ from .pyship_print import pyship_print
 from .arguments import arguments
 from .os_util import is_windows, mkdirs, rmdir, copy_tree, get_target_os
 from .subprocess_run import subprocess_run
-from .app_info import AppInfo, get_app_info, app_info_py_project
+from .app_info import AppInfo, get_app_info, get_app_info_py_project
 from .nsis import run_nsis
 from .file_download import file_download, extract
 from .create_launcher import create_launcher

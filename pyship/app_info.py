@@ -55,44 +55,44 @@ def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path = No
     return app_info
 
 
-@typechecked(always=True)
-def get_app_info_module(app_info: AppInfo, module_path: Path = None) -> AppInfo:
-    if module_path is not None and module_path.exists():
-        # only temporarily put this module in the path if it's not there already
-        if appended_path := module_path is not None and str(module_path) not in sys.path:
-            sys.path.append(str(module_path))
-
-        try:
-
-            # Do as much as we can to ensure we can import a module already imported, since we re-load the test app module in our test cases (probably not something we'll see in normal
-            # usage though).
-            invalidate_caches()
-            app_module = import_module(app_info.name)
-            app_module = reload(app_module)  # for our test cases we need to reload a modified module (it doesn't hurt to reload an unmodified module)
-
-            author_string = app_module.__dict__.get("__author__")
-            if author_string is not None:
-                app_info.author = author_string
-                pyship_print(f"author={author_string}")
-
-            version_string = app_module.__dict__.get("__version__")
-            if version_string is not None:
-                pyship_print(f"version={version_string}")
-                app_info.version = VersionInfo.parse(version_string)
-
-            app_info.description = app_module.__dict__.get("__doc__")
-            if app_info.description is not None:
-                app_info.description = app_info.description.strip()
-
-            log.info(f"got app info from {module_path}")
-
-        except ModuleNotFoundError:
-            log.info(f"{sys.path=}")
-            log.info(f"module {app_info.name} not found")
-
-        if appended_path:
-            sys.path.remove(str(module_path))
-    return app_info
+# @typechecked(always=True)
+# def get_app_info_module(app_info: AppInfo, module_path: Path = None) -> AppInfo:
+#     if module_path is not None and module_path.exists():
+#         # only temporarily put this module in the path if it's not there already
+#         if appended_path := module_path is not None and str(module_path) not in sys.path:
+#             sys.path.append(str(module_path))
+#
+#         try:
+#
+#             # Do as much as we can to ensure we can import a module already imported, since we re-load the test app module in our test cases (probably not something we'll see in normal
+#             # usage though).
+#             invalidate_caches()
+#             app_module = import_module(app_info.name)
+#             app_module = reload(app_module)  # for our test cases we need to reload a modified module (it doesn't hurt to reload an unmodified module)
+#
+#             author_string = app_module.__dict__.get("__author__")
+#             if author_string is not None:
+#                 app_info.author = author_string
+#                 pyship_print(f"author={author_string}")
+#
+#             version_string = app_module.__dict__.get("__version__")
+#             if version_string is not None:
+#                 pyship_print(f"version={version_string}")
+#                 app_info.version = VersionInfo.parse(version_string)
+#
+#             app_info.description = app_module.__dict__.get("__doc__")
+#             if app_info.description is not None:
+#                 app_info.description = app_info.description.strip()
+#
+#             log.info(f"got app info from {module_path}")
+#
+#         except ModuleNotFoundError:
+#             log.info(f"{sys.path=}")
+#             log.info(f"module {app_info.name} not found")
+#
+#         if appended_path:
+#             sys.path.remove(str(module_path))
+#     return app_info
 
 
 @typechecked(always=True)
@@ -108,7 +108,7 @@ def get_app_info_wheel(app_info: AppInfo, dist_path: Path) -> AppInfo:
 
 
 @typechecked(always=True)
-def get_app_info(name: str = None, target_app_project_dir: Path = None, target_app_dist_dir: Path = None) -> (AppInfo, None):
+def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path) -> (AppInfo, None):
     """
     Get combined app info from all potential sources.
     :param name: target application name (optional)
@@ -120,19 +120,21 @@ def get_app_info(name: str = None, target_app_project_dir: Path = None, target_a
     combined_app_info = AppInfo()
     get_app_info_py_project(combined_app_info, target_app_project_dir)
 
-    wheel_list = list(target_app_dist_dir.glob("*.whl"))
+    wheel_list = list(target_app_dist_dir.glob(f"{combined_app_info.name}*.whl"))
     if len(wheel_list) == 0:
         log.error(f"no wheel at {target_app_dist_dir}")
     elif len(wheel_list) > 1:
         log.error(f"multiple wheels at {target_app_dist_dir} : {wheel_list}")
     else:
-        combined_app_info = get_app_info_wheel(wheel_list[0])
+        combined_app_info = get_app_info_wheel(combined_app_info, wheel_list[0])
 
         # check that we have the minimum fields filled in
         for required_field in ["name", "author", "version"]:
-            if getattr(combined_app_info, required_field) is None:
+            if (attribute_value := getattr(combined_app_info, required_field)) is None:
                 log.error(f'"{required_field}" not defined for the target application')
                 combined_app_info = None  # not sufficient to create app info
                 break
+            else:
+                print(f"{required_field}={attribute_value}")
 
     return combined_app_info

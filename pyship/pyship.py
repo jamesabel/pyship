@@ -8,7 +8,7 @@ from typeguard import typechecked
 
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
-from pyship import AppInfo, get_logger, run_nsis, create_lip, create_launcher, pyship_print, mkdirs, APP_DIR_NAME, create_lib_file, DEFAULT_DIST_DIR_NAME, get_app_info, app_info_py_project
+from pyship import AppInfo, get_logger, run_nsis, create_lip, create_launcher, pyship_print, mkdirs, APP_DIR_NAME, create_lib_file, DEFAULT_DIST_DIR_NAME, get_app_info
 
 log = get_logger(pyship_application_name)
 
@@ -16,7 +16,6 @@ log = get_logger(pyship_application_name)
 @attrs()
 class PyShip:
 
-    name = None
     project_dir = attrib(default=Path())  # target app project dir, e.g. the "home" directory of the project.  If None, current working directory is used.
     dist_dir = attrib(default=Path(DEFAULT_DIST_DIR_NAME))  # filt, etc. use "dist" as the package destination directory
     find_links = attrib(default=None)  # extra dirs for pip to use for packages not yet on PyPI (e.g. under local development)
@@ -30,7 +29,7 @@ class PyShip:
         """
         pyship_print(f"{pyship_application_name} starting")
 
-        target_app_info = get_app_info(self.name, self.project_dir, self.dist_dir)
+        target_app_info = get_app_info(self.project_dir, self.dist_dir)
 
         installer_exe_path = None
         if self.project_dir is None:
