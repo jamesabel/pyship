@@ -128,6 +128,13 @@ def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path) -> (Ap
     else:
         combined_app_info = get_app_info_wheel(combined_app_info, wheel_list[0])
 
+        if combined_app_info.is_gui is None:
+            # todo: automatically guess if the app is a GUI app by looking for PyQt, etc.
+            is_gui_guess = False
+
+            log.warning(f"is_gui has not been set by the user (e.g. in pyproject.toml) - assuming {is_gui_guess}")
+            combined_app_info.is_gui = is_gui_guess
+
         # check that we have the minimum fields filled in
         for required_field in ["name", "author", "version"]:
             if (attribute_value := getattr(combined_app_info, required_field)) is None:

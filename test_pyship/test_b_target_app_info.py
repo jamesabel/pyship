@@ -1,7 +1,6 @@
-from pathlib import Path
 from semver import VersionInfo
 
-from pyship import TargetAppInfo
+from pyship import AppInfo, get_app_info
 from pyship import __author__ as pyship_author
 from test_pyship import TST_APP_NAME, TstAppDirs
 
@@ -9,7 +8,7 @@ from test_pyship import TST_APP_NAME, TstAppDirs
 def test_pyproject():
     version = VersionInfo.parse("0.0.1")
     tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
-    target_app_info = TargetAppInfo(tst_app_dirs.project_dir)
+    target_app_info = get_app_info(tst_app_dirs.project_dir, tst_app_dirs.dist_dir)
     assert(target_app_info.name == TST_APP_NAME)
     assert(target_app_info.author == pyship_author)
     assert(target_app_info.is_gui is not None)
