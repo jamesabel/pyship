@@ -58,14 +58,16 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
 
         mkdirs(app_path_output)
 
-        explicit_modules_to_import = ["ismain", "sentry_sdk", "typeguard", "sentry_sdk.integrations.stdlib"]  # todo: remove ones that are not needed
+        explicit_modules_to_import = ["ismain", "sentry_sdk", "typeguard", "sentry_sdk.integrations.stdlib",
+                                      "pyship"  # pyship is needed since launcher calls other routines in pyship
+                                      ]
 
         pyinstaller_exe_path = Path(Path(sys.executable).parent, "pyinstaller.exe")  # pyinstaller executable is in the same directory as the python interpreter
         if not pyinstaller_exe_path.exists():
             raise FileNotFoundError(str(pyinstaller_exe_path))
         command_line = [str(pyinstaller_exe_path), "--clean", "-i", str(icon_path), "-n", target_app_info.name, "--distpath", str(app_path_output.absolute())]
         for explicit_module_to_import in explicit_modules_to_import:
-            # modules pyinstalled doesn't seem to be able to find on its own
+            # modules pyinstaller doesn't seem to be able to find on its own
             command_line.extend(["--hiddenimport", explicit_module_to_import])
 
         # "-F" or "--onefile" is too slow of a start up - was measured at 15 sec for the launch app (experiment with just a print as the app was still 2 sec startup).  --onedir is ~1 sec.
@@ -76,6 +78,7 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
 
         if target_app_info.is_gui:
             command_line.append("--noconsole")
+        # command_line.extend(["--debug", "all"])  # todo: remove once we get the launcher working again
         command_line.append(launcher_source_file_name)
 
         # avoid re-building launcher if its functionality wouldn't change
@@ -83,7 +86,7 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
         if not launcher_exe_path.exists() or launcher_metadata != load_launcher_metadata(app_path_output, launcher_metadata_filename):
 
             pyship_print(f"building launcher ({launcher_exe_path})",)
-            pyship_print(f"{command_line}")
+            pyship_print(" ".join(command_line))
             process_return_code, std_out, std_err = subprocess_run(command_line, cwd=launcher_module_dir, mute_output=True)
             # metadata is in the app parent dir
             store_launcher_metadata(app_path_output, launcher_metadata_filename, launcher_metadata)
