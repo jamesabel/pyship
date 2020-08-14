@@ -1,6 +1,7 @@
 """ An app used to test pyship """
 
 __application_name__ = "tstpyshipapp"
+__author__ = "abel"
 
 # normally we'd use
 #    from .__version__ import __version__
