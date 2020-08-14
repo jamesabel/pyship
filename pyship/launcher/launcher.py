@@ -5,12 +5,12 @@ import json
 import appdirs
 import re
 import logging
+import subprocess
 
 from ismain import is_main
 from balsa import HandlerType
 import requests
 import sentry_sdk
-
 
 from pyship import __application_name__, __author__
 from pyship import __version__ as pyship_version
@@ -172,7 +172,16 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
                                 cmd.append(arg)  # pass along any arguments to the target application
                     log.info(f"{cmd}")
                     try:
-                        return_code, _, _ = subprocess_run(cmd, cwd=python_exe_path.parent, mute_output=is_gui)  # if app returns "restart_value" then it wants to be restarted
+
+                        # todo: this should work with PyInstaller, but it doesn't and I don't know why:
+                        # return_code, _, _ = subprocess_run(cmd, cwd=python_exe_path.parent, mute_output=is_gui)  # if app returns "restart_value" then it wants to be restarted
+
+                        # todo: so do this instead:
+                        target_process = subprocess.run(cmd, cwd=python_exe_path.parent, capture_output=True, text=True)
+                        return_code = target_process.returncode
+
+                        log.info(f"{return_code=}")
+
                     except FileNotFoundError as e:
                         log.error(f"{e} {cmd}")
                         return_code = error_return_code
@@ -188,6 +197,8 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
 
     if return_code is None:
         return_code = error_return_code
+
+    log.info(f"returning : {return_code=}")
 
     return return_code
 
