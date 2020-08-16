@@ -8,6 +8,8 @@ TST_APP_NAME = "tstpyshipapp"
 
 log = get_logger(__application_name__)
 
+PYSHIP_DIST_DIR = Path("dist").absolute()
+
 
 class TstAppDirs:
     def __init__(self, target_app_name: str, version: VersionInfo):
@@ -16,7 +18,7 @@ class TstAppDirs:
         self.target_app_version = version
 
         self.project_subdir = f"{self.target_app_name}_{str(self.target_app_version)}"
-        self.project_dir = Path("test_pyship", self.project_subdir)
+        self.project_dir = Path("test_pyship", self.project_subdir).absolute()
         self.app_dir = Path(self.project_dir, APP_DIR_NAME, self.target_app_name)
         self.cache = Path(self.project_dir, "cache")
         self.venv_dir = Path(self.project_dir, "venv")
@@ -24,18 +26,18 @@ class TstAppDirs:
         self.launcher_exe_path = Path(self.app_dir, self.target_app_name, f"{TST_APP_NAME}.exe")
 
 
-def tst_app_flit_build(tst_app_dirs: TstAppDirs):
-    """
-    build the test app as a package
-    :param tst_app_dirs: instance of a test app dirs
-    """
-    mkdirs(tst_app_dirs.dist_dir, remove_first=True)
-    flit_exe_path = Path("venv", "Scripts", "flit.exe")
-    pyproject_path = Path(tst_app_dirs.project_dir, "pyproject.toml")
-    if not flit_exe_path.exists():
-        log.error(f"{flit_exe_path} does not exist")
-    elif not pyproject_path.exists():
-        log.error(f"{pyproject_path} does not exist")
-    else:
-        # use flit to build the target app into a distributable package in the "dist" directory
-        subprocess_run([str(flit_exe_path), "-f", str(pyproject_path), "build"], stdout_log=print)
+# def tst_app_flit_build(tst_app_dirs: TstAppDirs):
+#     """
+#     build the test app as a package
+#     :param tst_app_dirs: instance of a test app dirs
+#     """
+#     mkdirs(tst_app_dirs.dist_dir, remove_first=True)
+#     flit_exe_path = Path("venv", "Scripts", "flit.exe")
+#     pyproject_path = Path(tst_app_dirs.project_dir, "pyproject.toml")
+#     if not flit_exe_path.exists():
+#         log.error(f"{flit_exe_path} does not exist")
+#     elif not pyproject_path.exists():
+#         log.error(f"{pyproject_path} does not exist")
+#     else:
+#         # use flit to build the target app into a distributable package in the "dist" directory
+#         subprocess_run([str(flit_exe_path), "-f", str(pyproject_path), "build"], stdout_log=print)

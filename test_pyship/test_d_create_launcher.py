@@ -13,7 +13,7 @@ def test_create_launcher():
     version = VersionInfo.parse("0.0.1")
     tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
 
-    target_app_info = AppInfo(TST_APP_NAME, __author__, version, False, target_app_project_dir=tst_app_dirs.project_dir)
+    target_app_info = AppInfo(TST_APP_NAME, __author__, version, False, project_dir=tst_app_dirs.project_dir)
     test_app_icon_path = Path(tst_app_dirs.project_dir, f"{TST_APP_NAME}.ico")
 
     try:

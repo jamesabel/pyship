@@ -42,14 +42,14 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
     license_file_name = "LICENSE"
     installer_exe_path = None
 
-    if Path(target_app_info.target_app_project_dir, license_file_name).exists():
+    if Path(target_app_info.project_dir, license_file_name).exists():
 
-        nsis_file_path = Path(target_app_info.target_app_project_dir, f"{target_app_info.name}.nsi").absolute()
+        nsis_file_path = Path(target_app_info.project_dir, f"{target_app_info.name}.nsi").absolute()
         log.info(f"making {nsis_file_path}")
 
         exe_name = f"{target_app_info.name}.exe"
         installers_folder = "installers"
-        mkdirs(Path(target_app_info.target_app_project_dir, installers_folder), remove_first=True)
+        mkdirs(Path(target_app_info.project_dir, installers_folder), remove_first=True)
         installer_exe_path = Path(installers_folder, f"{target_app_info.name}_installer_{get_target_os()}.exe")
 
         nsis_lines = []
@@ -208,16 +208,16 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         if os.path.exists(make_nsis_path):
             cmd = [make_nsis_path, nsis_file_path]
             pyship_print(str(cmd))
-            subprocess_run(cmd, target_app_info.target_app_project_dir, mute_output=True)
+            subprocess_run(cmd, target_app_info.project_dir, mute_output=True)
         else:
             log.fatal(f"{make_nsis_path} not found - see http://nsis.sourceforge.net to get NSIS (Nullsoft Scriptable Install System)")
             raise FileNotFoundError(make_nsis_path)
 
     else:
-        log.error(f"{license_file_name} file does not exist at {target_app_info.target_app_project_dir}")
+        log.error(f"{license_file_name} file does not exist at {target_app_info.project_dir}")
 
     # return the actual path to the installer (we cd'd to target_app_project_dir when we ran nsis)
     if installer_exe_path is not None:
-        installer_exe_path = Path(target_app_info.target_app_project_dir, installer_exe_path)
+        installer_exe_path = Path(target_app_info.project_dir, installer_exe_path)
 
     return installer_exe_path

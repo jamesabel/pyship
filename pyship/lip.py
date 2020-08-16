@@ -161,6 +161,7 @@ def install_target_app(module_name: str, python_env_dir: Path, target_app_packag
 
     pyship_print(f"{python_env_dir}")
     pyship_print(f"{cmd}")
+    Path(python_env_dir, "install_target.bat").open("w").write(" ".join(cmd))  # for convenience, debug, etc.
     subprocess_run(cmd, cwd=python_env_dir, mute_output=False)
 
 

@@ -1,8 +1,5 @@
 
-- create launcher test seems to run pyinstaller twice - why?
-
-- create a "weekly" pytest capability, where it deletes the temp\test dir every day.  Note the timestamp on the temp\test dir, and if it's older than 1 week, delete it in conftest.py .
-  Make it clear that it's doing so, so if pytest fails re-delete the dir.  This tests the ability to start from scratch, but don't clog up the python servers downloading
-  the embedded Python and other stuff all the time.
+- run PyInstaller directly from Python (instead of doing a sunprocess.run() )
+  https://pyinstaller.readthedocs.io/en/stable/usage.html#running-pyinstaller-from-python-code
 
 - this is actually a sundry todo, but extract the required parts of sundry into a new package since sundry brings in too many things for this tool

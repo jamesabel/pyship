@@ -35,9 +35,6 @@ def session_fixture():
 
     # create app environments
 
-    # even though the environments rarely change, recreate the environment only if it's older than this just to make sure we still can
-    env_timeout_sec = timedelta(hours=1).total_seconds()
-
     subprocess.run(["build.bat"], shell=True)  # update pyship wheel to the latest
 
     for version_string in ["0.0.1", "0.0.2"]:
@@ -45,9 +42,9 @@ def session_fixture():
 
         rmdir(tst_app_dirs.app_dir)
 
-        if os.path.getmtime(str(tst_app_dirs.venv_dir)) + env_timeout_sec < time.time():
-            rmdir(tst_app_dirs.dist_dir)
-            rmdir(tst_app_dirs.venv_dir)
+        # only recreate the venv infrequently since it's slow and shouldn't have an effect anyway
+        if not tst_app_dirs.venv_dir.exists() or os.path.getmtime(str(tst_app_dirs.venv_dir)) + timedelta(days=1).total_seconds() < time.time():
+            subprocess.run(["make_venv.bat"], cwd=tst_app_dirs.project_dir, shell=True)  # create the venv for the test app
 
-            subprocess.run(["make_venv.bat"], cwd=tst_app_dirs.project_dir, shell=True)  # create the venv
-            subprocess.run(["build.bat"], cwd=tst_app_dirs.project_dir, shell=True)  # make the dist (wheel)
+        rmdir(tst_app_dirs.dist_dir)
+        subprocess.run(["build.bat"], cwd=tst_app_dirs.project_dir, shell=True)  # make the dist (wheel) for the test app

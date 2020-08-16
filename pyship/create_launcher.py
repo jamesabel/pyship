@@ -39,11 +39,10 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
             log.warning(f"not length of 1: {pyship_path_list}")
         pyship_path = pyship_path_list[0]  # parent dir of launcher source
         launcher_module_dir = Path(pyship_path, launcher_application_name)
-        launcher_source_file_name = f"launcher.py"
 
         launcher_exe_filename = f"{target_app_info.name}.exe"
         launcher_exe_path = Path(app_path_output, target_app_info.name, launcher_exe_filename)
-        icon_path = Path(target_app_info.target_app_project_dir, f"{target_app_info.name}.ico").absolute()
+        icon_path = Path(target_app_info.project_dir, f"{target_app_info.name}.ico").absolute()
 
         if not icon_path.exists():
             # use pyship's icon if the target app doesn't have one
@@ -66,7 +65,7 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
                                           "pyship"  # pyship is needed since launcher calls other routines in pyship
                                           ]
 
-            pyinstaller_exe_path = Path(Path(sys.executable).parent, "pyinstaller.exe")  # pyinstaller executable is in the same directory as the python interpreter
+            pyinstaller_exe_path = Path(target_app_info.project_dir, "venv", "Scripts", "pyinstaller.exe")
             if not pyinstaller_exe_path.exists():
                 raise FileNotFoundError(str(pyinstaller_exe_path))
             command_line = [str(pyinstaller_exe_path), "--clean", "-i", str(icon_path), "-n", target_app_info.name, "--distpath", str(app_path_output.absolute())]
@@ -83,15 +82,18 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
             if target_app_info.is_gui:
                 command_line.append("--noconsole")
             # command_line.extend(["--debug", "all"])  # todo: remove once we get the launcher working again
-            command_line.append(launcher_source_file_name)
+            command_line.append(str(Path(launcher_application_name, f"{launcher_application_name}.py")))
 
             # avoid re-building launcher if its functionality wouldn't change
             launcher_metadata = calculate_launcher_metadata(target_app_info.name, target_app_info.author, Path(launcher_module_dir), icon_path, target_app_info.is_gui)
             if not launcher_exe_path.exists() or launcher_metadata != load_launcher_metadata(app_path_output, launcher_metadata_filename):
 
-                pyship_print(f"building launcher ({launcher_exe_path})",)
-                pyship_print(" ".join(command_line))
-                process_return_code, std_out, std_err = subprocess_run(command_line, cwd=launcher_module_dir, mute_output=True)
+                pyship_print(f"building launcher ({launcher_exe_path})")
+                cmd_string = " ".join(command_line)
+                pyship_print(str(target_app_info.project_dir))
+                pyship_print(cmd_string)
+                Path(target_app_info.project_dir, "make_launcher.bat").open("w").write(cmd_string)  # for convenience, debug, etc.
+                process_return_code, std_out, std_err = subprocess_run(command_line, cwd=target_app_info.project_dir, mute_output=True)
                 # metadata is in the app parent dir
                 store_launcher_metadata(app_path_output, launcher_metadata_filename, launcher_metadata)
 

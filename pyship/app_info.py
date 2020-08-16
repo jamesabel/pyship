@@ -9,7 +9,8 @@ from semver import VersionInfo
 from typeguard import typechecked
 from wheel_inspect import inspect_wheel
 
-from pyship import __application_name__ as pyship_application_name, get_logger, pyship_print
+from pyship import __application_name__ as pyship_application_name
+from pyship import get_logger, pyship_print
 
 log = get_logger(pyship_application_name)
 
@@ -23,13 +24,21 @@ class AppInfo:
     url: str = None
     description: str = None
     run_on_startup: bool = None
-    target_app_project_dir: Path = None
+    project_dir: Path = None
+    python_exe_path: Path = None
+    pyship_installed_package_dir: Path = None
+
+    def setup_paths(self, target_app_project_dir: Path):
+        assert self.name is not None
+        assert self.author is not None
+        assert self.version is not None
+        self.project_dir = target_app_project_dir
+        self.python_exe_path = Path(self.project_dir, "venv", "Scripts", "python.exe")
+        self.pyship_installed_package_dir = Path(self.project_dir, "venv", "Lib", "site-packages", pyship_application_name)
 
 
 @typechecked(always=True)
 def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path = None) -> AppInfo:
-    app_info.target_app_project_dir = target_app_project_dir
-
     pyproject_toml_file_name = "pyproject.toml"
     pyproject_toml_file_path = Path(target_app_project_dir, pyproject_toml_file_name)
 
@@ -103,7 +112,7 @@ def get_app_info_wheel(app_info: AppInfo, dist_path: Path) -> AppInfo:
         app_info.name = metadata.get("name")
         app_info.version = VersionInfo.parse(metadata.get("version"))
         app_info.author = metadata.get("author")
-        app_info.description = metadata.get("description")
+        app_info.description = metadata.get("summary", "")  # called description in setup.py
     return app_info
 
 
@@ -117,31 +126,33 @@ def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path) -> (Ap
     :return: an AppInfo instance
     """
 
-    combined_app_info = AppInfo()
-    get_app_info_py_project(combined_app_info, target_app_project_dir)
+    app_info = AppInfo()
+    app_info.setup_paths(target_app_project_dir)
 
-    wheel_list = list(target_app_dist_dir.glob(f"{combined_app_info.name}*.whl"))
+    get_app_info_py_project(app_info, target_app_project_dir)
+
+    wheel_list = list(target_app_dist_dir.glob(f"{app_info.name}*.whl"))
     if len(wheel_list) == 0:
         log.error(f"no wheel at {target_app_dist_dir}")
     elif len(wheel_list) > 1:
         log.error(f"multiple wheels at {target_app_dist_dir} : {wheel_list}")
     else:
-        combined_app_info = get_app_info_wheel(combined_app_info, wheel_list[0])
+        app_info = get_app_info_wheel(app_info, wheel_list[0])
 
-        if combined_app_info.is_gui is None:
+        if app_info.is_gui is None:
             # todo: automatically guess if the app is a GUI app by looking for PyQt, etc.
             is_gui_guess = False
 
             log.warning(f"is_gui has not been set by the user (e.g. in pyproject.toml) - assuming {is_gui_guess}")
-            combined_app_info.is_gui = is_gui_guess
+            app_info.is_gui = is_gui_guess
 
         # check that we have the minimum fields filled in
         for required_field in ["name", "author", "version"]:
-            if (attribute_value := getattr(combined_app_info, required_field)) is None:
+            if (attribute_value := getattr(app_info, required_field)) is None:
                 log.error(f'"{required_field}" not defined for the target application')
-                combined_app_info = None  # not sufficient to create app info
+                app_info = None  # not sufficient to create app info
                 break
             else:
                 pyship_print(f"{required_field}={attribute_value}")
 
-    return combined_app_info
+    return app_info
