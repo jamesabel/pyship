@@ -1,3 +1,4 @@
+from ismain import is_main
 from semver import VersionInfo
 
 from pyship import get_app_info
@@ -5,7 +6,7 @@ from pyship import __author__ as pyship_author
 from test_pyship import TST_APP_NAME, TstAppDirs
 
 
-def test_pyproject():
+def test_target_app_info():
     version = VersionInfo.parse("0.0.1")
     tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
     target_app_info = get_app_info(tst_app_dirs.project_dir, tst_app_dirs.dist_dir)
@@ -17,3 +18,7 @@ def test_pyproject():
     assert(len(target_app_info.description) > 1)
     assert(target_app_info.version is not None)
     assert(target_app_info.version > VersionInfo.parse("0.0.0"))
+
+
+if is_main():
+    test_target_app_info()

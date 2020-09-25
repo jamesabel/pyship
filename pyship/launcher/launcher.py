@@ -128,7 +128,7 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
             # todo: put finding the most recent app version in a function - I'll pretty sure this is done other places.  Also, it allows a unit test to be written for it.
             # find the most recent app version
 
-            search_dirs = [app_dir, Path(appdirs.user_data_dir())]
+            search_dirs = [app_dir, Path(appdirs.user_data_dir(target_app_name, target_app_author))]
             if additional_path is not None:
                 search_dirs.append(additional_path)
 
@@ -186,7 +186,7 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
                     return_code = can_not_find_file_return_code
 
             else:
-                log.error(f'could not find any expected application version in {search_dirs})')
+                log.error(f'could not find any expected application version in {search_dirs} ({glob_string=}))')
 
         if restart_monitor.excessive():
             log.error(f"excessive restarts {restart_monitor.restarts=}")

@@ -43,12 +43,15 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
         launcher_exe_filename = f"{target_app_info.name}.exe"
         launcher_exe_path = Path(app_path_output, target_app_info.name, launcher_exe_filename)
 
-        icon_path = None
-        icon_path_candidates = [Path(target_app_info.project_dir, f"{target_app_info.name}.ico").absolute(),
-                                Path(target_app_info.project_dir, target_app_info.name, f"{target_app_info.name}.ico").absolute()]
+        icon_file_name = f"{target_app_info.name}.ico"
+        icon_path = Path(target_app_info.project_dir, icon_file_name).absolute()  # default
+        icon_path_candidates = [icon_path,
+                                Path(target_app_info.project_dir, target_app_info.name, icon_file_name).absolute()  # alternate
+                                ]
         for icon_path_candidate in icon_path_candidates:
             if icon_path_candidate.exists():
                 icon_path = icon_path_candidate
+                break
 
         if not icon_path.exists():
             # use pyship's icon if the target app doesn't have one

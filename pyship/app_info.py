@@ -29,9 +29,6 @@ class AppInfo:
     pyship_installed_package_dir: Path = None
 
     def setup_paths(self, target_app_project_dir: Path):
-        assert self.name is not None
-        assert self.author is not None
-        assert self.version is not None
         self.project_dir = target_app_project_dir
         self.python_exe_path = Path(self.project_dir, "venv", "Scripts", "python.exe")
         self.pyship_installed_package_dir = Path(self.project_dir, "venv", "Lib", "site-packages", pyship_application_name)
