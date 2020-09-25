@@ -19,7 +19,7 @@ log = get_logger(__application_name__)
 
 
 @typechecked(always=True)
-def create_lip(target_app_info: AppInfo, app_dir: Path, remove_pth: bool, target_app_package_dist_dir: Path, cache_dir: Path, find_links: (None, list)) -> Path:
+def create_lip(target_app_info: AppInfo, app_dir: Path, remove_pth: bool, target_app_package_dist_dir: Path, cache_dir: Path, find_links: list) -> Path:
     """
     create lip (Location Independent Python) environment
     lip is a stand-alone, relocatable directory that contains the entire python environment (including all libraries and the target app) needed to execute the target python application
@@ -28,7 +28,7 @@ def create_lip(target_app_info: AppInfo, app_dir: Path, remove_pth: bool, target
     :param remove_pth: remove remove python*._pth files as a workaround (see bug URL below)
     :param target_app_package_dist_dir: target app module dist dir (as a package)
     :param cache_dir: cache dir
-    :param find_links: a list of "find links" to add to pip invocation
+    :param find_links: a (potentially empty) list of "find links" to add to pip invocation
     :return: path to the lip dir
     """
 
@@ -38,7 +38,7 @@ def create_lip(target_app_info: AppInfo, app_dir: Path, remove_pth: bool, target
     return lip_dir
 
 
-def create_lib_file(lip_dir: Path) -> Path:
+def create_lip_file(lip_dir: Path) -> Path:
     """
     create lip file (the zipped update for the target application) from lip dir
     :param lip_dir:
@@ -124,7 +124,7 @@ def create_base_lip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path) ->
 
 
 @typechecked(always=True)
-def install_target_app(module_name: str, python_env_dir: Path, target_app_package_dist_dir: Path, remove_pth: bool, find_links: (None, list)):
+def install_target_app(module_name: str, python_env_dir: Path, target_app_package_dist_dir: Path, remove_pth: bool, find_links: list):
     """
     install target app as a module (and its dependencies) into lip
     :param module_name: module name
@@ -150,9 +150,6 @@ def install_target_app(module_name: str, python_env_dir: Path, target_app_packag
 
     # install the target module (and its dependencies)
     cmd = [str(Path(python_env_dir, "python.exe")), "-m", "pip", "install", "-U", module_name, "--no-warn-script-location"]
-
-    if find_links is None:
-        find_links = []
 
     find_links.append(str(target_app_package_dist_dir.absolute()))
 

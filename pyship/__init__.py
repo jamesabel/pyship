@@ -21,6 +21,7 @@ from .app_info import AppInfo, get_app_info, get_app_info_py_project
 from .nsis import run_nsis
 from .file_download import file_download, extract
 from .create_launcher import create_launcher
-from .lip import create_base_lip, version_from_lip_zip, install_target_app, create_lip, create_lib_file
+from .lip import create_base_lip, version_from_lip_zip, install_target_app, create_lip, create_lip_file
+from .cloud import PyShipCloud, PyShipAWS
 from .pyship import PyShip
 from .main import main

@@ -3,12 +3,12 @@ from pathlib import Path
 import shutil
 
 import appdirs
-from attr import attrs, attrib
+from attr import attrs
 from typeguard import typechecked
 
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
-from pyship import AppInfo, get_logger, run_nsis, create_lip, create_launcher, pyship_print, mkdirs, APP_DIR_NAME, create_lib_file, DEFAULT_DIST_DIR_NAME, get_app_info
+from pyship import AppInfo, get_logger, run_nsis, create_lip, create_launcher, pyship_print, mkdirs, APP_DIR_NAME, create_lip_file, DEFAULT_DIST_DIR_NAME, get_app_info, PyShipCloud
 
 log = get_logger(pyship_application_name)
 
@@ -16,10 +16,11 @@ log = get_logger(pyship_application_name)
 @attrs()
 class PyShip:
 
-    project_dir = attrib(default=Path())  # target app project dir, e.g. the "home" directory of the project.  If None, current working directory is used.
-    dist_dir = attrib(default=Path(DEFAULT_DIST_DIR_NAME))  # filt, etc. use "dist" as the package destination directory
-    find_links = attrib(default=None)  # extra dirs for pip to use for packages not yet on PyPI (e.g. under local development)
-    cache_dir = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))  # used to cache things like the embedded Python zip (to keep us off the python.org servers)
+    project_dir: Path = Path()  # target app project dir, e.g. the "home" directory of the project.  If None, current working directory is used.
+    dist_dir: Path = Path(DEFAULT_DIST_DIR_NAME)  # many packaging tools (e.g filt, etc.) use "dist" as the package destination directory
+    find_links: list = []  # extra dirs for pip to use for packages not yet on PyPI (e.g. under local development)
+    cache_dir: Path = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))  # used to cache things like the embedded Python zip (to keep us off the python.org servers)
+    cloud_access: PyShipCloud = None
 
     @typechecked(always=True)
     def ship_installer(self) -> (Path, None):
@@ -55,7 +56,7 @@ class PyShip:
 
             # todo: upload the installer somewhere
 
-            create_lib_file(lip_dir)  # create shpy file after installer run
+            create_lip_file(lip_dir)  # create shpy file after installer run
 
             pyship_print(f"{pyship_application_name} done")
 
