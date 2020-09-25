@@ -128,33 +128,29 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
             # todo: put finding the most recent app version in a function - I'll pretty sure this is done other places.  Also, it allows a unit test to be written for it.
             # find the most recent app version
 
-            parent_glob_list = [p for p in app_dir.glob(glob_string)]  # where executed from
-            log.info(f"{parent_glob_list=}")
-
-            user_data_dir = Path(appdirs.user_data_dir(target_app_name, target_app_author))  # updates can write here
-            user_data_glob_list = [p for p in user_data_dir.glob(glob_string)]
-            log.info(f"{user_data_glob_list=}")
-
-            total_glob_list = parent_glob_list + user_data_glob_list
-
+            search_dirs = [app_dir, Path(appdirs.user_data_dir())]
             if additional_path is not None:
-                # mainly for testing
-                total_glob_list.extend([p for p in additional_path.glob(glob_string)])
+                search_dirs.append(additional_path)
+
+            candidate_dirs = []
+            for search_dir in search_dirs:
+                for d in search_dir.glob(glob_string):
+                    if d.is_dir():
+                        candidate_dirs.append(d)
 
             versions = {}
-            for candidate_dir in total_glob_list:
-                if candidate_dir.is_dir():
-                    matches = re.match(lip_regex, candidate_dir.name)
-                    if matches is not None:
-                        version = matches.group(2)
-                        try:
-                            semver = VersionInfo.parse(version)
-                        except ValueError:
-                            semver = None
-                        if semver is not None:
-                            versions[semver] = candidate_dir
-                        else:
-                            log.error(f"could not get version out of {candidate_dir}")
+            for candidate_dir in candidate_dirs:
+                matches = re.match(lip_regex, candidate_dir.name)
+                if matches is not None:
+                    version = matches.group(2)
+                    try:
+                        semver = VersionInfo.parse(version)
+                    except ValueError:
+                        semver = None
+                    if semver is not None:
+                        versions[semver] = candidate_dir
+                    else:
+                        log.error(f"could not get version out of {candidate_dir}")
 
             if len(versions) > 0:
                 latest_version = sorted(versions.keys())[-1]
@@ -190,7 +186,7 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
                     return_code = can_not_find_file_return_code
 
             else:
-                log.error(f'could not find any expected application version in {total_glob_list} (looked in "{app_dir}", "{user_data_dir}" and "{additional_path}")')
+                log.error(f'could not find any expected application version in {search_dirs})')
 
         if restart_monitor.excessive():
             log.error(f"excessive restarts {restart_monitor.restarts=}")

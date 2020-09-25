@@ -42,12 +42,19 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
 
         launcher_exe_filename = f"{target_app_info.name}.exe"
         launcher_exe_path = Path(app_path_output, target_app_info.name, launcher_exe_filename)
-        icon_path = Path(target_app_info.project_dir, f"{target_app_info.name}.ico").absolute()
+
+        icon_path = None
+        icon_path_candidates = [Path(target_app_info.project_dir, f"{target_app_info.name}.ico").absolute(),
+                                Path(target_app_info.project_dir, target_app_info.name, f"{target_app_info.name}.ico").absolute()]
+        for icon_path_candidate in icon_path_candidates:
+            if icon_path_candidate.exists():
+                icon_path = icon_path_candidate
 
         if not icon_path.exists():
             # use pyship's icon if the target app doesn't have one
             pyship_icon_path = Path(Path(pyship.__file__).parent, f"{pyship_application_name}.ico").absolute()
             log.warning(f"{target_app_info.name} does not include its own icon - using {pyship_application_name} icon ({pyship_icon_path})")
+            log.info(f"{icon_path_candidates=}")
             if pyship_icon_path.exists():
                 log.info(f"copying {pyship_icon_path} to {icon_path}")
                 shutil.copy2(pyship_icon_path, icon_path)
@@ -65,7 +72,8 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
                                           "pyship"  # pyship is needed since launcher calls other routines in pyship
                                           ]
 
-            pyinstaller_exe_path = Path(target_app_info.project_dir, "venv", "Scripts", "pyinstaller.exe")
+            venv_dir = Path(target_app_info.project_dir, "venv")  # venv for the target app
+            pyinstaller_exe_path = Path(venv_dir, "Scripts", "pyinstaller.exe")
             if not pyinstaller_exe_path.exists():
                 raise FileNotFoundError(str(pyinstaller_exe_path))
             command_line = [str(pyinstaller_exe_path), "--clean", "-i", str(icon_path), "-n", target_app_info.name, "--distpath", str(app_path_output.absolute())]
@@ -82,7 +90,10 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
             if target_app_info.is_gui:
                 command_line.append("--noconsole")
             # command_line.extend(["--debug", "all"])  # todo: remove once we get the launcher working again
-            command_line.append(str(Path(launcher_application_name, f"{launcher_application_name}.py")))
+            site_packages_dir = Path(venv_dir, "Lib", "site-packages")
+            launcher_path = Path(site_packages_dir, pyship_application_name, launcher_application_name, f"{launcher_application_name}.py")
+            assert launcher_path.exists()
+            command_line.append(str(launcher_path))
 
             # avoid re-building launcher if its functionality wouldn't change
             launcher_metadata = calculate_launcher_metadata(target_app_info.name, target_app_info.author, Path(launcher_module_dir), icon_path, target_app_info.is_gui)
@@ -90,7 +101,7 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
 
                 pyship_print(f"building launcher ({launcher_exe_path})")
                 cmd_string = " ".join(command_line)
-                pyship_print(str(target_app_info.project_dir))
+                pyship_print(f"project_dir={str(target_app_info.project_dir)}")
                 pyship_print(cmd_string)
                 Path(target_app_info.project_dir, "make_launcher.bat").open("w").write(cmd_string)  # for convenience, debug, etc.
                 process_return_code, std_out, std_err = subprocess_run(command_line, cwd=target_app_info.project_dir, mute_output=True)

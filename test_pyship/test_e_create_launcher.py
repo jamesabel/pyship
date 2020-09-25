@@ -10,6 +10,8 @@ from test_pyship import TST_APP_NAME, TstAppDirs
 
 def test_create_launcher():
 
+    # create launcher for a target app
+
     version = VersionInfo.parse("0.0.1")
     tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
 

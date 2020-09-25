@@ -1,6 +1,6 @@
 from semver import VersionInfo
 
-from pyship import AppInfo, get_app_info
+from pyship import get_app_info
 from pyship import __author__ as pyship_author
 from test_pyship import TST_APP_NAME, TstAppDirs
 

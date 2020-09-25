@@ -1,1 +1,1 @@
-pubapp_dist_root = "pubapp_dist"
+dist_dir = "dist"

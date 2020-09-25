@@ -6,6 +6,7 @@ typeguard
 sentry-sdk
 toml
 boto3
+awsimple
 #
 # pypi
 twine
