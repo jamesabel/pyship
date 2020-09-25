@@ -10,7 +10,8 @@ def test_a_create_launcher_for_pyship():
 
     project_dir = Path().absolute()
     print(f"{project_dir=}")
-    subprocess.run("local_install.bat", cwd=project_dir)
+
+    # subprocess.run("local_install.bat", cwd=project_dir)
 
     # create a launcher for pyship itself
     target_app_info = AppInfo(__application_name__, __author__, __version__, False, project_dir=project_dir)

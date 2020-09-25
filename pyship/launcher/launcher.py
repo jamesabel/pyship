@@ -14,7 +14,7 @@ import sentry_sdk
 
 from pyship import __application_name__, __author__
 from pyship import __version__ as pyship_version
-from pyship import restart_return_code, error_return_code, can_not_find_file_return_code, subprocess_run, python_interpreter_exes
+from pyship import restart_return_code, error_return_code, can_not_find_file_return_code, python_interpreter_exes, ok_return_code
 from pyship import PyshipLog, get_logger
 from pyship.launcher import RestartMonitor
 
@@ -31,6 +31,9 @@ def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
     verbose = len(sys.argv) > 1 and sys.argv[1].lower() == launcher_verbose_string
 
     pyship_log = PyshipLog(launcher_application_name, __author__, gui=is_gui, verbose=verbose)
+
+    if verbose:
+        print(f"{pyship_log.log_path=}")
 
     exception_string = None  # store exception strings here until logging gets set up
 
@@ -174,7 +177,27 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
 
                         # todo: so do this instead:
                         target_process = subprocess.run(cmd, cwd=python_exe_path.parent, capture_output=True, text=True)
-                        return_code = target_process.returncode
+                        return_code = target_process.returncode  # if app returns "restart_value" then it wants to be restarted
+
+                        std_out = target_process.stdout
+                        std_err = target_process.stderr
+
+                        if (std_err is not None and len(std_err.strip()) > 0) or (target_process.returncode != ok_return_code and target_process.returncode != restart_return_code):
+                            # if there's a problem, log it with what the caller provides
+                            for out, log_function in [(std_out, log.warning), (std_err, log.error)]:
+                                if out is not None and len(out.strip()) > 0:
+                                    log_function(out)
+
+                        # log, and possibly print, each line of output from the process
+                        for name, std_x, f in [("stdout", std_out, sys.stdout), ("stderr", std_err, sys.stderr)]:
+                            if std_x is not None and len(std_x.strip()) > 0:
+                                for so_line in std_x.splitlines():
+                                    so_line_strip = so_line.strip()
+                                    if len(so_line_strip) > 0:
+                                        log.info(f"{name}:{so_line_strip}")  # when logging, start with the name of the output string (stdout, stderr)
+
+                                # output stdout, stderr that came (directly) from the process
+                                print(std_x, file=f)
 
                         log.info(f"{return_code=}")
 

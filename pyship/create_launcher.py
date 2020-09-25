@@ -94,8 +94,9 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
                 command_line.append("--noconsole")
             # command_line.extend(["--debug", "all"])  # todo: remove once we get the launcher working again
             site_packages_dir = Path(venv_dir, "Lib", "site-packages")
-            launcher_path = Path(site_packages_dir, pyship_application_name, launcher_application_name, f"{launcher_application_name}.py")
-            assert launcher_path.exists()
+            launcher_path = Path(site_packages_dir, pyship_application_name, launcher_application_name, f"{launcher_application_name}.py").absolute()
+            if not launcher_path.exists():
+                log.error("{launcher_path} does not exist")
             command_line.append(str(launcher_path))
 
             # avoid re-building launcher if its functionality wouldn't change

@@ -34,17 +34,17 @@ def session_fixture():
     balsa.init_logger()
 
     # create app environments
-
-    subprocess.run(["build.bat"], shell=True)  # update pyship wheel to the latest
-
-    for version_string in ["0.0.1", "0.0.2"]:
-        tst_app_dirs = TstAppDirs(TST_APP_NAME, VersionInfo.parse(version_string))
-
-        rmdir(tst_app_dirs.app_dir)
-
-        # only recreate the venv infrequently since it's slow and shouldn't have an effect anyway
-        if not tst_app_dirs.venv_dir.exists() or os.path.getmtime(str(tst_app_dirs.venv_dir)) + timedelta(days=1).total_seconds() < time.time():
-            subprocess.run(["make_venv.bat"], cwd=tst_app_dirs.project_dir, shell=True)  # create the venv for the test app
-
-        rmdir(tst_app_dirs.dist_dir)
-        subprocess.run(["build.bat"], cwd=tst_app_dirs.project_dir, shell=True)  # make the dist (wheel) for the test app
+    #
+    # subprocess.run(["build.bat"], shell=True)  # update pyship wheel to the latest
+    #
+    # for version_string in ["0.0.1", "0.0.2"]:
+    #     tst_app_dirs = TstAppDirs(TST_APP_NAME, VersionInfo.parse(version_string))
+    #
+    #     rmdir(tst_app_dirs.app_dir)
+    #
+    #     # only recreate the venv infrequently since it's slow and shouldn't have an effect anyway
+    #     #if not tst_app_dirs.venv_dir.exists() or os.path.getmtime(str(tst_app_dirs.venv_dir)) + timedelta(days=1).total_seconds() < time.time():
+    #     # subprocess.run(["make_venv.bat"], cwd=tst_app_dirs.project_dir, shell=True)  # create the venv for the test app
+    #
+    #     rmdir(tst_app_dirs.dist_dir)
+    #     subprocess.run(["build.bat"], cwd=tst_app_dirs.project_dir, shell=True)  # make the dist (wheel) for the test app

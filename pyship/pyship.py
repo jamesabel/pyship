@@ -66,7 +66,8 @@ class PyShip:
         """
         Create and upload an update of this target app.  The update is a zip of a lip directory, with the extension .shpy.
         """
-        target_app_info = AppInfo(target_app_project_dir=self.project_dir)
+        target_app_info = AppInfo()
+        target_app_info.setup_paths(self.project_dir)
         app_dir = Path(self.project_dir, APP_DIR_NAME, target_app_info.name).absolute()
         # derived classes will take it from here and do what they need to to place the lip in a place the user will get it via a call to Updater.update() ...
         return create_lip(target_app_info, app_dir, True, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)
