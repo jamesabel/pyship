@@ -179,6 +179,8 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
                         target_process = subprocess.run(cmd, cwd=python_exe_path.parent, capture_output=True, text=True)
                         return_code = target_process.returncode  # if app returns "restart_value" then it wants to be restarted
 
+                        # Treatment of the output from the subprocess run in launcher is similar - but not exactly - the same as is in pyship/subprocess_run.py, so keep them separate for now.
+                        # Maybe eventually we'll have just one shared routine once enough tests are in place.
                         std_out = target_process.stdout
                         std_err = target_process.stderr
 
