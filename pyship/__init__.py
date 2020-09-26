@@ -1,14 +1,12 @@
 """ pyship - ship python apps """
 
-__application_name__ = "pyship"
-
 python_interpreter_exes = {True: "pythonw.exe", False: "python.exe"}  # True is GUI, False is CLI
 
 APP_DIR_NAME = "app"  # analogous to a "Program Files" or "Applications" directory
 LIP_EXT = "lip"  # zipped lip file extension
 DEFAULT_DIST_DIR_NAME = "dist"
 
-from .__version__ import __version__, __author__
+from .__version__ import __version__, __author__, __application_name__, __title__, __description__, __url__, __author_email__, __download_url__
 from .constants import dist_dir
 from .date_time import local_time_string, utc_time_string
 from .exe_return_codes import restart_return_code, can_not_find_file_return_code, ok_return_code, error_return_code
