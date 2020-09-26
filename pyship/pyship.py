@@ -50,15 +50,19 @@ class PyShip:
 
             # run nsis
             icon_file_name = f"{target_app_info.name}.ico"
-            shutil.copy2(Path(self.project_dir, icon_file_name), app_dir)  # temporarily for nsis
-            installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)
-            os.unlink(Path(app_dir, icon_file_name))
+            icon_file_path = Path(self.project_dir, icon_file_name)
+            if icon_file_path.exists():
+                shutil.copy2(icon_file_path, app_dir)  # temporarily for nsis
+                installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)
+                os.unlink(Path(app_dir, icon_file_name))
 
-            # todo: upload the installer somewhere
+                # todo: upload the installer somewhere
 
-            create_lip_file(lip_dir)  # create shpy file after installer run
+                create_lip_file(lip_dir)  # create shpy file after installer run
 
-            pyship_print(f"{pyship_application_name} done")
+                pyship_print(f"{pyship_application_name} done")
+            else:
+                log.error(f'{icon_file_path} does not exist ("{icon_file_path.absolute()}")')
 
         return installer_exe_path
 
