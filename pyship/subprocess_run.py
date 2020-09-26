@@ -30,10 +30,13 @@ def subprocess_run(cmd: list, cwd: Path = None, mute_output: bool = True, stdout
     if cwd is not None:
         cwd = str(cwd)  # subprocess requires a string
 
-    # remove PATHs that will interfere with running this command
+    # remove PATHs that (if they exist) will interfere with running this command
     run_env = deepcopy(os.environ)
-    del run_env["PATH"]
-    del run_env["PYTHONPATH"]
+    for env_var in ["PATH", "PYTHONPATH"]:
+        try:
+            del run_env[env_var]
+        except KeyError:
+            pass
 
     log.info(f"{cmd=}")
     log.info(f"{cwd=}")

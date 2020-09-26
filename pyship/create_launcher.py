@@ -71,7 +71,7 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
 
             mkdirs(app_path_output)
 
-            explicit_modules_to_import = ["ismain", "sentry_sdk", "typeguard", "sentry_sdk.integrations.stdlib",
+            explicit_modules_to_import = ["ismain", "sentry_sdk", "typeguard", "sentry_sdk.integrations.stdlib", "pywin32",
                                           "pyship"  # pyship is needed since launcher calls other routines in pyship
                                           ]
 
