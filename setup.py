@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup
 
 from pyship import __application_name__, __author__, __version__
 
@@ -9,7 +9,7 @@ setup(
     version=__version__,
     author=__author__,
 
-    packages=find_packages(exclude=["test_*"]),
+    packages=[__application_name__, f"{__application_name__}.launcher", f"{__application_name__}.updater", f"{__application_name__}.aws"],
 
     package_data={
         "": ["*.ico"],
