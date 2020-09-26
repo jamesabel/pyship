@@ -13,7 +13,7 @@ from pyship import AppInfo, get_logger, run_nsis, create_lip, create_launcher, p
 log = get_logger(pyship_application_name)
 
 
-@attrs()
+@attrs(auto_attribs=True)
 class PyShip:
 
     project_dir: Path = Path()  # target app project dir, e.g. the "home" directory of the project.  If None, current working directory is used.
