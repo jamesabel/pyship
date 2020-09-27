@@ -48,11 +48,23 @@ class PyShip:
 
             lip_dir = create_lip(target_app_info, app_dir, True, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)
 
+
             # run nsis
-            icon_file_path = get_icon(target_app_info, pyship_print)
-            shutil.copy2(icon_file_path, app_dir)  # temporarily for nsis
+
+            # todo: pass the icon path to the nsis script instead of copying the file
+            project_dir_icon_path = Path(self.project_dir, target_app_info.icon_file_name)
+            # NSIS needs the project icon in the project dir.  If it's not already there, then find it and temporarily copy it.
+            # If the target application doesn't have its own icon then pyship will use the default pyship icon (renamed).
+            copied_icon = False
+            icon_path = get_icon(target_app_info, pyship_print)
+            if not project_dir_icon_path.exists() and icon_path is not None:
+                copied_icon = True
+                shutil.copy2(icon_path, project_dir_icon_path)
+
             installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)
-            os.unlink(Path(app_dir, target_app_info.icon_file_name))
+
+            if copied_icon:
+                os.unlink(project_dir_icon_path)
 
             # todo: upload the installer somewhere
 
