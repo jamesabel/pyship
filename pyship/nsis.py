@@ -6,7 +6,7 @@ from semver import VersionInfo
 from typeguard import typechecked
 from balsa import get_logger
 
-from pyship import __application_name__, AppInfo, mkdirs, get_target_os, subprocess_run, pyship_print
+from pyship import __application_name__, AppInfo, mkdirs, get_target_os, subprocess_run, pyship_print, get_icon
 
 
 log = get_logger(__application_name__)
@@ -38,6 +38,8 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
 
     # basic format is from:
     # http://nsis.sourceforge.net/A_simple_installer_with_start_menu_shortcut_and_uninstaller
+
+    icon_path = get_icon(target_app_info, pyship_print)
 
     license_file_name = "LICENSE"
     installer_exe_path = None
@@ -90,7 +92,7 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         nsis_lines.append('LicenseData "LICENSE"')
         nsis_lines.append(r"# This will be in the installer/uninstaller's title bar")
         nsis_lines.append('Name "${COMPANYNAME} - ${APPNAME}"')
-        nsis_lines.append('Icon "${APPNAME}.ico"')
+        nsis_lines.append(f'Icon {icon_path}')
         nsis_lines.append(f'outFile "{installer_exe_path}"')
         nsis_lines.append("")
         nsis_lines.append("!include LogicLib.nsh")
@@ -129,7 +131,7 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         nsis_lines.append("  ")
         nsis_lines.append("  # Start Menu")
         nsis_lines.append('  createDirectory "$SMPROGRAMS\\${COMPANYNAME}"')
-        nsis_lines.append('  createShortCut "$SMPROGRAMS\\${COMPANYNAME}\\${APPNAME}.lnk" "$INSTDIR\\${EXENAME}" "" "$INSTDIR\\${APPNAME}.ico"')
+        nsis_lines.append('  createShortCut "$SMPROGRAMS\\${COMPANYNAME}\\${APPNAME}.lnk" "$INSTDIR\\${APPNAME}\\${EXENAME}" "" "$INSTDIR\\${APPNAME}.ico"')
         nsis_lines.append("")
 
         if target_app_info.run_on_startup:
@@ -139,12 +141,12 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
 
         nsis_lines.append("  # Registry information for add/remove programs")
         nsis_lines.append(
-            '  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "DisplayName" "${COMPANYNAME} - ${APPNAME} - ${DESCRIPTION}"'
+            '  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "DisplayName" "${APPNAME}"'
         )
         nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "UninstallString" "$\\"$INSTDIR\\uninstall.exe$\\""')
         nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "QuietUninstallString" "$\\"$INSTDIR\\uninstall.exe$\\" /S"')
         nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "InstallLocation" "$INSTDIR"')
-        nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "DisplayIcon" "$\\"$INSTDIR\\logo.ico$\\""')
+        nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "DisplayIcon" "$\\"$INSTDIR\\${APPNAME}\\${APPNAME}.ico$\\""')
         nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "Publisher" "${COMPANYNAME}"')
         nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "HelpLink" "${HELPURL}"')
         nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "URLUpdateInfo" "${UPDATEURL}"')
@@ -165,7 +167,7 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         nsis_lines.append("	 SetShellVarContext all")
 
         nsis_lines.append("  # Verify the uninstaller - last chance to back out")
-        nsis_lines.append('	 MessageBox MB_OKCANCEL "Permanantly remove ${APPNAME}?" IDOK next')
+        nsis_lines.append('	 MessageBox MB_OKCANCEL "Permanently remove ${APPNAME}?" IDOK next')
         nsis_lines.append("		Abort")
         nsis_lines.append("	 next:")
         nsis_lines.append("  !insertmacro VerifyUserIsAdmin")
