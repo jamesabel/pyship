@@ -75,7 +75,6 @@ def get_app_info_wheel(app_info: AppInfo, dist_path: Path) -> AppInfo:
 def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path) -> (AppInfo, None):
     """
     Get combined app info from all potential sources.
-    :param name: target application name (optional)
     :param target_app_project_dir: app project dir, e.g. where a pyproject.toml may reside. (optional)
     :param target_app_dist_dir: the "distribution" dir, e.g. where a wheel may reside (optional)
     :return: an AppInfo instance
@@ -110,6 +109,7 @@ def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path) -> (Ap
             else:
                 pyship_print(f"{required_field}={attribute_value}")
 
-    app_info.icon_file_name = f"{app_info.name}.ico"
+    if app_info is not None and app_info.name is not None:
+        app_info.icon_file_name = f"{app_info.name}.ico"
 
     return app_info
