@@ -5,7 +5,7 @@ from pathlib import Path
 from typeguard import typechecked
 
 import pyship
-from pyship import AppInfo, pyship_print, get_logger, mkdirs, subprocess_run
+from pyship import AppInfo, pyship_print, get_logger, mkdirs, subprocess_run, get_icon
 from pyship import __application_name__ as pyship_application_name
 from pyship.launcher import application_name as launcher_application_name
 from pyship.launcher import calculate_launcher_metadata, load_launcher_metadata, store_launcher_metadata
@@ -43,26 +43,7 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
         launcher_exe_filename = f"{target_app_info.name}.exe"
         launcher_exe_path = Path(app_path_output, target_app_info.name, launcher_exe_filename)
 
-        icon_file_name = f"{target_app_info.name}.ico"
-        icon_path = Path(target_app_info.project_dir, icon_file_name).absolute()  # default
-        icon_path_candidates = [icon_path,
-                                Path(target_app_info.project_dir, target_app_info.name, icon_file_name).absolute()  # alternate
-                                ]
-        for icon_path_candidate in icon_path_candidates:
-            if icon_path_candidate.exists():
-                icon_path = icon_path_candidate
-                break
-
-        if not icon_path.exists():
-            # use pyship's icon if the target app doesn't have one
-            pyship_icon_path = Path(Path(pyship.__file__).parent, f"{pyship_application_name}.ico").absolute()
-            log.warning(f"{target_app_info.name} does not include its own icon - using {pyship_application_name} icon ({pyship_icon_path})")
-            log.info(f"{icon_path_candidates=}")
-            if pyship_icon_path.exists():
-                log.info(f"copying {pyship_icon_path} to {icon_path}")
-                shutil.copy2(pyship_icon_path, icon_path)
-            else:
-                log.fatal(f"{pyship_icon_path} does not exist")
+        icon_path = get_icon(target_app_info, pyship_print)
 
         python_interpreter_path = sys.executable
         if python_interpreter_path is None or len(python_interpreter_path) < 1:

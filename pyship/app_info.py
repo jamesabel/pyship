@@ -1,7 +1,4 @@
 from pathlib import Path
-import sys
-from importlib import import_module, reload, invalidate_caches
-from pprint import pprint
 from dataclasses import dataclass
 
 import toml
@@ -27,6 +24,7 @@ class AppInfo:
     project_dir: Path = None
     python_exe_path: Path = None
     pyship_installed_package_dir: Path = None
+    icon_file_name: str = None
 
     def setup_paths(self, target_app_project_dir: Path):
         self.project_dir = target_app_project_dir
@@ -59,46 +57,6 @@ def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path = No
                         app_info.is_gui = pyship_app_info.get("is_gui")  # False if CLI
                         app_info.run_on_startup = pyship_app_info.get("run_on_startup")
     return app_info
-
-
-# @typechecked(always=True)
-# def get_app_info_module(app_info: AppInfo, module_path: Path = None) -> AppInfo:
-#     if module_path is not None and module_path.exists():
-#         # only temporarily put this module in the path if it's not there already
-#         if appended_path := module_path is not None and str(module_path) not in sys.path:
-#             sys.path.append(str(module_path))
-#
-#         try:
-#
-#             # Do as much as we can to ensure we can import a module already imported, since we re-load the test app module in our test cases (probably not something we'll see in normal
-#             # usage though).
-#             invalidate_caches()
-#             app_module = import_module(app_info.name)
-#             app_module = reload(app_module)  # for our test cases we need to reload a modified module (it doesn't hurt to reload an unmodified module)
-#
-#             author_string = app_module.__dict__.get("__author__")
-#             if author_string is not None:
-#                 app_info.author = author_string
-#                 pyship_print(f"author={author_string}")
-#
-#             version_string = app_module.__dict__.get("__version__")
-#             if version_string is not None:
-#                 pyship_print(f"version={version_string}")
-#                 app_info.version = VersionInfo.parse(version_string)
-#
-#             app_info.description = app_module.__dict__.get("__doc__")
-#             if app_info.description is not None:
-#                 app_info.description = app_info.description.strip()
-#
-#             log.info(f"got app info from {module_path}")
-#
-#         except ModuleNotFoundError:
-#             log.info(f"{sys.path=}")
-#             log.info(f"module {app_info.name} not found")
-#
-#         if appended_path:
-#             sys.path.remove(str(module_path))
-#     return app_info
 
 
 @typechecked(always=True)
@@ -151,5 +109,7 @@ def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path) -> (Ap
                 break
             else:
                 pyship_print(f"{required_field}={attribute_value}")
+
+    app_info.icon_file_name = f"{app_info.name}.ico"
 
     return app_info

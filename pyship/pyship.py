@@ -8,7 +8,7 @@ from typeguard import typechecked
 
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
-from pyship import AppInfo, get_logger, run_nsis, create_lip, create_launcher, pyship_print, mkdirs, APP_DIR_NAME, create_lip_file, DEFAULT_DIST_DIR_NAME, get_app_info, PyShipCloud
+from pyship import AppInfo, get_logger, run_nsis, create_lip, create_launcher, pyship_print, mkdirs, APP_DIR_NAME, create_lip_file, DEFAULT_DIST_DIR_NAME, get_app_info, PyShipCloud, get_icon
 
 log = get_logger(pyship_application_name)
 
@@ -49,20 +49,16 @@ class PyShip:
             lip_dir = create_lip(target_app_info, app_dir, True, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)
 
             # run nsis
-            icon_file_name = f"{target_app_info.name}.ico"
-            icon_file_path = Path(self.project_dir, icon_file_name)
-            if icon_file_path.exists():
-                shutil.copy2(icon_file_path, app_dir)  # temporarily for nsis
-                installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)
-                os.unlink(Path(app_dir, icon_file_name))
+            icon_file_path = get_icon(target_app_info, pyship_print)
+            shutil.copy2(icon_file_path, app_dir)  # temporarily for nsis
+            installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)
+            os.unlink(Path(app_dir, target_app_info.icon_file_name))
 
-                # todo: upload the installer somewhere
+            # todo: upload the installer somewhere
 
-                create_lip_file(lip_dir)  # create shpy file after installer run
+            create_lip_file(lip_dir)  # create shpy file after installer run
 
-                pyship_print(f"{pyship_application_name} done")
-            else:
-                log.error(f'{icon_file_path} does not exist ("{icon_file_path.absolute()}")')
+            pyship_print(f"{pyship_application_name} done")
 
         return installer_exe_path
 
