@@ -134,3 +134,8 @@ dmypy.json
 app/
 _*/
 scripts/all.bat
+installers/
+*.nsi
+cache/
+frozen/
+temp/

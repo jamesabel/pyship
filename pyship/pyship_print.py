@@ -1,9 +1,8 @@
 from tkinter import Tk, Label
 
 from typeguard import typechecked
-from sundry import local_time_string
 
-from pyship import get_logger, __application_name__
+from pyship import get_logger, __application_name__, local_time_string
 
 log = get_logger(__application_name__)
 

@@ -37,5 +37,3 @@ def log_process_output(output_type: str, process_output: bytes, log_function: Ca
     for line in lines:
         log_function(f"{output_type} : {line.strip()}")
     return lines
-
-

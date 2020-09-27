@@ -1,4 +1,3 @@
-
 # this is from sundry. todo: separate this out into its own package/module on PyPI
 
 import hashlib

@@ -1,162 +1,225 @@
-import os
 import sys
 from pathlib import Path
-from semver import parse_version_info
-import re
+from semver import VersionInfo
 import json
-from pprint import pprint
-from logging import getLogger
 import appdirs
-
+import re
+import logging
+import subprocess
 
 from ismain import is_main
+from balsa import HandlerType
+import requests
+import sentry_sdk
 
-from pyship import __application_name__, __author__, restart_return_code, error_return_code, can_not_find_file_return_code, subprocess_run, python_interpreter_exes
+from pyship import __application_name__, __author__
+from pyship import __version__ as pyship_version
+from pyship import restart_return_code, error_return_code, can_not_find_file_return_code, python_interpreter_exes, ok_return_code
 from pyship import PyshipLog, get_logger
+from pyship.launcher import RestartMonitor
 
 # Just for the launcher, not the user's app that pyship is launching
 launcher_application_name = f"{__application_name__}_launcher"
 
-log = getLogger(launcher_application_name)
+log = get_logger(launcher_application_name)
+
+launcher_verbose_string = "--launcher_verbose"
 
 
-def setup_logging(target_app_name: str, is_gui: bool) -> bool:
+def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
 
-    if not is_gui:
-        print("sys.argv:")
-        pprint(sys.argv)  # todo: remove this one everything is working OK
+    verbose = len(sys.argv) > 1 and sys.argv[1].lower() == launcher_verbose_string
 
-    verbose = len(sys.argv) > 1 and (sys.argv[1].lower() == "-v" or sys.argv[1].lower() == "--verbose")
+    pyship_log = PyshipLog(launcher_application_name, __author__, gui=is_gui, verbose=verbose)
 
-    balsa = PyshipLog(launcher_application_name, __author__, gui=is_gui, verbose=verbose)
+    if verbose:
+        print(f"{pyship_log.log_path=}")
 
-    # use Sentry's exception service
-    sentry_dsn = os.environ.get(f"SENTRY_DSN_{target_app_name.upper()}")
-    if sentry_dsn is not None:
-        balsa.sentry_dsn = sentry_dsn
-        balsa.use_sentry = True
+    exception_string = None  # store exception strings here until logging gets set up
 
-    balsa.init_logger()
+    if report_exceptions:
+        # use Sentry's exception service
+        sentry_dsn = None
+        try:
+            response = requests.get("https://api.pyship.org/resources/pyship/sentry")
+            if response.status_code == 200:
+                try:
+                    sentry_dsn = json.loads(response.text)["dsn"]
+                except json.decoder.JSONDecodeError as e:
+                    exception_string = e
+        except KeyError as e:
+            exception_string = e
+        except requests.exceptions.RequestException as e:
+            exception_string = e
+        if sentry_dsn is not None:
+            pyship_log.sentry_dsn = sentry_dsn
+
+            # init sentry outside of balsa and turn off integrations to workaround bug:
+            # ModuleNotFoundError: No module named 'sentry_sdk.integrations.excepthook'
+            pyship_log.use_sentry = False
+            sentry_sdk.init(sentry_dsn, default_integrations=False)
+
+    pyship_log.init_logger()
+    # UI log at a high level since the user will not see launcher output (unless something goes terribly wrong)
+    for ht in [HandlerType.DialogBox, HandlerType.Console]:
+        if ht in pyship_log.handlers:
+            pyship_log.handlers[ht].setLevel(logging.ERROR)
+
+    if exception_string is not None:
+        log.info(exception_string)  # don't present these to the user unless verbose selected
+
+    log.info(f"{verbose=}")
+    log.info(f"{pyship_version=}")
 
     return verbose
 
 
-def launch() -> int:
+def launch(additional_path: Path = None, app_dir: Path = None) -> int:
     """
     launch the pyship app
+    :param additional_path - additional search path for app (mainly for testing)
+    :param app_dir - override app dir (mainly for testing)
     :return: 0 if no error, non-zero on error (like Windows apps)
     """
 
     return_code = None
 
-    # derive the target app name based on the pyshipy dir(s) that exist
+    # derive the target app name based on the lip dir(s) that exist
+    lip_regex_string = "([_a-z0-9]*)_([.0-9]+)"
+    lip_regex = re.compile(lip_regex_string, flags=re.IGNORECASE)  # simple format that accepts common semver (but not all semver)
 
-
-    pyshipy_regex_string = "([_a-z0-9]*)_([.0-9]+)"
-    pyshipy_regex = re.compile(pyshipy_regex_string, flags=re.IGNORECASE)  # simple format that accepts common semver (but not all semver)
-
-    pyship_parent = Path("..")
+    if app_dir is None:
+        app_dir = Path(sys.executable).parent.parent.resolve().absolute()  # up one dir from where the python interpreter is
 
     # these should be set below, but in case there's no metadata file set them to something to allow the logging to be set up
     is_gui = False
+    report_exceptions = True
     target_app_name = __application_name__
     target_app_author = __author__
 
-    for metadata_file_path in pyship_parent.glob("*_metadata.json"):
+    for metadata_file_path in app_dir.glob("*_metadata.json"):
         with metadata_file_path.open() as f:
             metadata = json.load(f)
             target_app_name = metadata.get("app")
-            target_app_author = metadata.get("author")
-            is_gui = metadata.get("is_gui")
+            target_app_author = metadata.get("author", target_app_author)
+            is_gui = metadata.get("is_gui", is_gui)
+            report_exceptions = metadata.get("report_exceptions", report_exceptions)
 
-    verbose = setup_logging(target_app_name, is_gui)
+    setup_logging(is_gui, report_exceptions)
+
+    log.info(f"{app_dir=}")
 
     if target_app_name is None:
-        log.error(f'could not derive target app name in {pyship_parent.absolute()}")')
+        log.error(f'could not derive target app name in {app_dir}")')
     else:
 
-        log.info(f"{target_app_name}")
+        log.info(f"{target_app_name=}")
 
         # 1) find the latest <application_name>_<version>
         # 2) execute it via python -m <application_name>
         # 3) inside the program, it has option to call pyship module's upgrade() function.  If an upgrade happens, upgrade() will return True
-        #    and the program has the option to call pyship's request_restart() and then exit (it will automatically get restarted).
-        # 4) look in Program Data for a restart request (that was set via upgrade() ) - if so, do this all over again
+        #    and the program has the option to request a restart by returning the restart_return_code exit code.
 
-        # the pyship program executes out of data space
-        # program_dir = os.path.join(appdirs.user_data_dir(target_app_name, launcher_author))
+        glob_string = f"{target_app_name}_*"  # lip directories will be of this form
 
-        # get latest version of the app to be launched
-        glob_string = f"{target_app_name}_*"
+        restart_monitor = RestartMonitor()
 
-        # get app versions in the parent directory of the launcher
-        parent_glob_list = [p for p in Path("..").glob(glob_string)]
-        log.info(f"{parent_glob_list=}")
+        while (return_code is None or return_code == restart_return_code) and not restart_monitor.excessive():
 
-        user_data_glob_list = [p for p in Path(appdirs.user_data_dir(target_app_name, target_app_author)).glob(glob_string)]
-        log.info(f"{user_data_glob_list=}")
+            restart_monitor.add()
 
-        latest_version = None
-        versions = []
-        for candidate_dir in parent_glob_list + user_data_glob_list:
-            if candidate_dir.is_dir():
-                matches = re.match(pyshipy_regex, candidate_dir.name)
+            # todo: put finding the most recent app version in a function - I'll pretty sure this is done other places.  Also, it allows a unit test to be written for it.
+            # find the most recent app version
+
+            search_dirs = [app_dir, Path(appdirs.user_data_dir(target_app_name, target_app_author))]
+            if additional_path is not None:
+                search_dirs.append(additional_path)
+
+            candidate_dirs = []
+            for search_dir in search_dirs:
+                for d in search_dir.glob(glob_string):
+                    if d.is_dir():
+                        candidate_dirs.append(d)
+
+            versions = {}
+            for candidate_dir in candidate_dirs:
+                matches = re.match(lip_regex, candidate_dir.name)
                 if matches is not None:
                     version = matches.group(2)
                     try:
-                        semver = parse_version_info(version)
+                        semver = VersionInfo.parse(version)
                     except ValueError:
                         semver = None
                     if semver is not None:
-                        versions.append(semver)
+                        versions[semver] = candidate_dir
                     else:
                         log.error(f"could not get version out of {candidate_dir}")
 
-        if len(versions) > 0:
-            versions.sort()
-            latest_version = str(versions[-1])
-            log.info(f"latest_version={latest_version}")
-        else:
-            log.error(f"could not find any expected application version in {cwd}")
-
-        if latest_version is not None:
-
-            while return_code is None or return_code == restart_return_code:
+            if len(versions) > 0:
+                latest_version = sorted(versions.keys())[-1]
+                log.info(f"{latest_version=}")
 
                 # locate the python interpreter executable
-                python_exe_path = None
-                is_gui = None
-                python_exe_parent_dir = os.path.join(f"{target_app_name}_{latest_version}")
-                # the installer would have left exactly one of these python executables
-                for is_gui_candidate, python_exe_candidate in python_interpreter_exes.items():
-                    python_exe_candidate_path = os.path.join(python_exe_parent_dir, python_exe_candidate)
-                    if os.path.exists(python_exe_candidate_path):
-                        python_exe_path = python_exe_candidate_path
-                        is_gui = is_gui_candidate
-
-                if is_gui is False:
-                    print(f"found {python_exe_path}")
+                python_exe_path = Path(versions[latest_version], python_interpreter_exes[is_gui])
 
                 # run the target app using the python interpreter we just found
-                if python_exe_path is None:
-                    log.error(f"python exe not found at {python_exe_parent_dir}")
-                    return_code = can_not_find_file_return_code
-                else:
+                if python_exe_path.exists():
                     cmd = [python_exe_path, "-m", target_app_name]
                     if len(sys.argv) > 1:
-                        cmd.extend(sys.argv[1:])  # pass along any arguments to the target application
+                        for arg in sys.argv[1:]:
+                            if arg != launcher_verbose_string:
+                                cmd.append(arg)  # pass along any arguments to the target application
                     log.info(f"{cmd}")
                     try:
-                        if is_gui is False:
-                            print("subprocess:")
-                            print(cmd)
-                        return_code = subprocess_run(cmd, is_gui=is_gui)  # if app returns "restart_value" then it wants to be restarted
+
+                        # todo: this should work with PyInstaller, but it doesn't and I don't know why:
+                        # return_code, _, _ = subprocess_run(cmd, cwd=python_exe_path.parent, mute_output=is_gui)  # if app returns "restart_value" then it wants to be restarted
+
+                        # todo: so do this instead:
+                        target_process = subprocess.run(cmd, cwd=python_exe_path.parent, capture_output=True, text=True)
+                        return_code = target_process.returncode  # if app returns "restart_value" then it wants to be restarted
+
+                        # Treatment of the output from the subprocess run in launcher is similar - but not exactly - the same as is in pyship/subprocess_run.py, so keep them separate for now.
+                        # Maybe eventually we'll have just one shared routine once enough tests are in place.
+                        std_out = target_process.stdout
+                        std_err = target_process.stderr
+
+                        if (std_err is not None and len(std_err.strip()) > 0) or (target_process.returncode != ok_return_code and target_process.returncode != restart_return_code):
+                            # if there's a problem, log it with what the caller provides
+                            for out, log_function in [(std_out, log.warning), (std_err, log.error)]:
+                                if out is not None and len(out.strip()) > 0:
+                                    log_function(out)
+
+                        # log, and possibly print, each line of output from the process
+                        for name, std_x, f in [("stdout", std_out, sys.stdout), ("stderr", std_err, sys.stderr)]:
+                            if std_x is not None and len(std_x.strip()) > 0:
+                                for so_line in std_x.splitlines():
+                                    so_line_strip = so_line.strip()
+                                    if len(so_line_strip) > 0:
+                                        log.info(f"{name}:{so_line_strip}")  # when logging, start with the name of the output string (stdout, stderr)
+
+                                # output stdout, stderr that came (directly) from the process
+                                print(std_x, file=f)
+
+                        log.info(f"{return_code=}")
+
                     except FileNotFoundError as e:
                         log.error(f"{e} {cmd}")
                         return_code = error_return_code
+                else:
+                    log.error(f"python exe not found at {python_exe_path}")
+                    return_code = can_not_find_file_return_code
+
+            else:
+                log.error(f'could not find any expected application version in {search_dirs} ({glob_string=}))')
+
+        if restart_monitor.excessive():
+            log.error(f"excessive restarts {restart_monitor.restarts=}")
 
     if return_code is None:
         return_code = error_return_code
+
+    log.info(f"returning : {return_code=}")
 
     return return_code
 

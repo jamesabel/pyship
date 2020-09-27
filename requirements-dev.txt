@@ -1,14 +1,15 @@
 ismain
-sundry
 balsa
 requests
 attrs
 typeguard
 sentry-sdk
 toml
+boto3
+awsimple
 #
 # pypi
-flit
+twine
 keyring
 #
 # development
