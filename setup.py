@@ -2,7 +2,8 @@ from setuptools import setup
 
 from pyship import __application_name__, __author__, __version__, __description__, __author_email__, __download_url__, __url__
 
-requirements = ["setuptools", "wheel", "ismain", "balsa", "requests", "attrs", "typeguard", "toml", "pyinstaller", "semver", "python-dateutil", "wheel-inspect", "boto3", "awsimple", "pywin32"]
+requirements = ["setuptools", "wheel", "ismain", "balsa", "requests", "attrs", "typeguard", "toml", "pyinstaller", "semver", "python-dateutil", "wheel-inspect", "boto3", "awsimple",
+                "pywin32", "pyshipupdate"]
 
 with open("readme.md", encoding="utf-8") as f:
     long_description = "\n" + f.read()
@@ -21,7 +22,7 @@ setup(
     download_url=__download_url__,
     keywords=["freezer", "installer", "ship"],
     classifiers=[],
-    packages=[__application_name__, f"{__application_name__}.launcher", f"{__application_name__}.updater", f"{__application_name__}.aws"],
+    packages=[__application_name__, f"{__application_name__}.launcher", f"{__application_name__}.aws"],
     package_data={
         "": ["*.ico"],
     },

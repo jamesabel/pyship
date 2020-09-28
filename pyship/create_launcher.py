@@ -1,11 +1,11 @@
 import sys
-import shutil
 from pathlib import Path
 
 from typeguard import typechecked
 
+from pyshipupdate import mkdirs
 import pyship
-from pyship import AppInfo, pyship_print, get_logger, mkdirs, subprocess_run, get_icon
+from pyship import AppInfo, pyship_print, get_logger, subprocess_run, get_icon
 from pyship import __application_name__ as pyship_application_name
 from pyship.launcher import application_name as launcher_application_name
 from pyship.launcher import calculate_launcher_metadata, load_launcher_metadata, store_launcher_metadata

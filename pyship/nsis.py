@@ -6,7 +6,8 @@ from semver import VersionInfo
 from typeguard import typechecked
 from balsa import get_logger
 
-from pyship import __application_name__, AppInfo, mkdirs, get_target_os, subprocess_run, pyship_print, get_icon
+from pyshipupdate import mkdirs, get_target_os
+from pyship import __application_name__, AppInfo, subprocess_run, pyship_print, get_icon
 
 
 log = get_logger(__application_name__)

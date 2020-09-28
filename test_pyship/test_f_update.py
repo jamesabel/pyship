@@ -5,7 +5,7 @@ from pathlib import Path
 from semver import VersionInfo
 
 from pyship import PyShip, subprocess_run, get_logger, __application_name__, pyship_print
-from test_pyship import TST_APP_NAME, TstAppDirs
+from test_pyship import TST_APP_NAME, TstAppDirs, find_links
 
 log = get_logger(__application_name__)
 
@@ -18,7 +18,7 @@ def test_update():
     def do_pyship(tst_app_dirs: TstAppDirs):
         pyship_print(f"{tst_app_dirs.target_app_version=}")
         ps = PyShip(tst_app_dirs.project_dir, dist_dir=tst_app_dirs.dist_dir,
-                    find_links=[Path("dist").absolute()]  # the local pyship under development
+                    find_links=find_links  # the local pyship under development
                     )
         inst = ps.ship_installer()
         return ps, inst

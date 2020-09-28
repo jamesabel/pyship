@@ -5,7 +5,8 @@ import os
 
 from typeguard import typechecked
 
-from pyship import mkdirs, rmdir, get_logger, __application_name__
+from pyshipupdate import mkdirs, rmdir
+from pyship import get_logger, __application_name__
 
 log = get_logger(__application_name__)
 

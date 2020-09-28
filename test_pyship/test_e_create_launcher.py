@@ -4,7 +4,8 @@ from semver import VersionInfo
 
 from ismain import is_main
 
-from pyship import create_launcher, AppInfo, mkdirs, __author__
+from pyshipupdate import mkdirs
+from pyship import create_launcher, AppInfo, __author__
 from test_pyship import TST_APP_NAME, TstAppDirs
 
 

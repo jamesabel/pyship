@@ -9,7 +9,8 @@ import subprocess
 
 from balsa import Balsa
 
-from pyship import __application_name__ as pyship_application_name, rmdir
+from pyshipupdate import rmdir
+from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
 
 from test_pyship import TST_APP_NAME, TstAppDirs

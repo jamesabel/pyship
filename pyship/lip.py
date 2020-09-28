@@ -11,8 +11,9 @@ from platform import system
 from semver import VersionInfo
 from typeguard import typechecked
 
+from pyshipupdate import is_windows, copy_tree
 import pyship
-from pyship import AppInfo, file_download, pyship_print, extract, get_logger, __application_name__, is_windows, copy_tree, subprocess_run, LIP_EXT
+from pyship import AppInfo, file_download, pyship_print, extract, get_logger, __application_name__, subprocess_run, LIP_EXT
 
 
 log = get_logger(__application_name__)

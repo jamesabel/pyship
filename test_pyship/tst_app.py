@@ -1,14 +1,13 @@
 from pathlib import Path
 from semver import VersionInfo
 
-from pyship import mkdirs, subprocess_run, get_logger, __application_name__, APP_DIR_NAME
+from pyshipupdate import mkdirs
+from pyship import subprocess_run, get_logger, __application_name__, APP_DIR_NAME
 
 TST_APP_NAME = "tstpyshipapp"
 
 
 log = get_logger(__application_name__)
-
-PYSHIP_DIST_DIR = Path("dist").absolute()
 
 
 class TstAppDirs:
