@@ -12,7 +12,7 @@ log = get_logger(__application_name__)
 
 def test_update():
     """
-    test that we can update the app (i.e. update pyshipy)
+    test that we can update the app
     """
 
     def do_pyship(tst_app_dirs: TstAppDirs):
@@ -48,7 +48,7 @@ def test_update():
     # uncomment for detailed debugging
     # cmd.append("--launcher_verbose")
 
-    # run the app from it's own directory
+    # run the app from its own directory
     return_code, std_out, std_err = subprocess_run(cmd, cwd=original_app_dirs.launcher_exe_path.parent, stdout_log=pyship_print)
 
     # we'll get multiple version JSON strings (one per line)

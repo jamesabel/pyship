@@ -4,9 +4,9 @@ from pathlib import Path
 
 from balsa import Balsa, get_logger
 
+from pyshipupdate import UpdaterLocal
 from pyship import restart_return_code, ok_return_code, APP_DIR_NAME
 from pyship import __application_name__ as pyship_application_name
-from pyship.updater import UpdaterLocal
 from pyship import __author__ as pyship_author
 
 from .__init__ import __application_name__ as name
