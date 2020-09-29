@@ -7,7 +7,7 @@ from copy import deepcopy
 
 from typeguard import typechecked
 
-from pyship import __application_name__, ok_return_code, restart_return_code, error_return_code, get_logger, pyship_print
+from pyship import __application_name__, ok_return_code, restart_return_code, error_return_code, get_logger
 
 log = get_logger(__application_name__)
 
@@ -38,12 +38,12 @@ def subprocess_run(cmd: list, cwd: Path = None, mute_output: bool = True, stdout
         except KeyError:
             pass
 
-    log.info(f"{cmd=}")
+    for k, v in run_env.items():
+        log.debug(f"{k}={v}")
     log.info(f"{cwd=}")
     log.info(f"{mute_output=}")
     log.info(f"{os.getcwd()=}")
-    for k, v in run_env.items():
-        log.info(f"{k}={v}")
+    log.info(f"{cmd=}")
 
     try:
 

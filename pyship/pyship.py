@@ -1,14 +1,13 @@
-import os
 from pathlib import Path
-import shutil
 
 import appdirs
 from attr import attrs
 from typeguard import typechecked
 
+from pyshipupdate import mkdirs
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
-from pyship import AppInfo, get_logger, run_nsis, create_lip, create_launcher, pyship_print, mkdirs, APP_DIR_NAME, create_lip_file, DEFAULT_DIST_DIR_NAME, get_app_info, PyShipCloud, get_icon
+from pyship import AppInfo, get_logger, run_nsis, create_lip, create_launcher, pyship_print, APP_DIR_NAME, create_lip_file, DEFAULT_DIST_DIR_NAME, get_app_info, PyShipCloud
 
 log = get_logger(pyship_application_name)
 

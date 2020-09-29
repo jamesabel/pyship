@@ -1,11 +1,11 @@
 import sys
-import shutil
 from pathlib import Path
 
 from typeguard import typechecked
 
+from pyshipupdate import mkdirs
 import pyship
-from pyship import AppInfo, pyship_print, get_logger, mkdirs, subprocess_run, get_icon
+from pyship import AppInfo, pyship_print, get_logger, subprocess_run, get_icon
 from pyship import __application_name__ as pyship_application_name
 from pyship.launcher import application_name as launcher_application_name
 from pyship.launcher import calculate_launcher_metadata, load_launcher_metadata, store_launcher_metadata
@@ -53,6 +53,7 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
             mkdirs(app_path_output)
 
             explicit_modules_to_import = ["ismain", "sentry_sdk", "typeguard", "sentry_sdk.integrations.stdlib", "pywin32",
+                                          "pyshipupdate", # todo: remove this once pyship's wheel requires pyshipupdate
                                           "pyship"  # pyship is needed since launcher calls other routines in pyship
                                           ]
 

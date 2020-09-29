@@ -3,7 +3,8 @@ from pathlib import Path
 
 from ismain import is_main
 
-from pyship import ok_return_code, rmdir
+from pyshipupdate import rmdir
+from pyship import ok_return_code
 
 from pyship.launcher import launch
 

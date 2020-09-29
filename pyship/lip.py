@@ -11,8 +11,9 @@ from platform import system
 from semver import VersionInfo
 from typeguard import typechecked
 
+from pyshipupdate import is_windows, copy_tree
 import pyship
-from pyship import AppInfo, file_download, pyship_print, extract, get_logger, __application_name__, is_windows, copy_tree, subprocess_run, LIP_EXT
+from pyship import AppInfo, file_download, pyship_print, extract, get_logger, __application_name__, subprocess_run, LIP_EXT
 
 
 log = get_logger(__application_name__)
@@ -33,7 +34,7 @@ def create_lip(target_app_info: AppInfo, app_dir: Path, remove_pth: bool, target
     """
 
     # create the lip dir
-    lip_dir = create_base_lip(target_app_info, app_dir, cache_dir)
+    lip_dir = create_base_lip(target_app_info, app_dir, cache_dir, find_links)
     install_target_app(target_app_info.name, lip_dir, target_app_package_dist_dir, remove_pth, find_links)
     return lip_dir
 
@@ -50,13 +51,14 @@ def create_lip_file(lip_dir: Path) -> Path:
 
 
 @typechecked(always=True)
-def create_base_lip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path) -> (Path, None):
+def create_base_lip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path, find_links: list) -> (Path, None):
     """
     create pyship python environment called lip
 
     :param target_app_info: target app info
     :param app_dir: app gets built here (i.e. the output of this function)
     :param cache_dir: cache dir
+    :param find_links: a list of "find links" to add to pip invocation
     :return absolute path to created lip
     """
 
@@ -154,7 +156,7 @@ def install_target_app(module_name: str, python_env_dir: Path, target_app_packag
     find_links.append(str(target_app_package_dist_dir.absolute()))
 
     for find_link in find_links:
-        cmd.extend(["-f", str(find_link)])
+        cmd.extend(["-f", f'file://{str(find_link)}'])
 
     pyship_print(f"{python_env_dir}")
     pyship_print(f"{cmd}")

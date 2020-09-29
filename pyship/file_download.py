@@ -8,7 +8,8 @@ from typeguard import typechecked
 import requests
 from balsa import get_logger
 
-from pyship import __application_name__ as pyship_application_name, mkdirs
+from pyshipupdate import mkdirs
+from pyship import __application_name__ as pyship_application_name
 
 log = get_logger(pyship_application_name)
 

@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-requirements = ["balsa", "pyship"]
+requirements = ["balsa", "pyshipupdate", "pyship"]
 
 setup(
     name="tstpyshipapp",

@@ -3,7 +3,8 @@ import subprocess
 
 from ismain import is_main
 
-from pyship import create_launcher, AppInfo, __application_name__, __author__, __version__, rmdir
+from pyshipupdate import rmdir
+from pyship import create_launcher, AppInfo, __application_name__, __author__, __version__
 
 
 def test_a_create_launcher_for_pyship():
