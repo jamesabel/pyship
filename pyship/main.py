@@ -13,4 +13,6 @@ def main():
     pyship = PyShip()
     if args.name is not None:
         pyship.name = args.name  # optionally get the target application name from the command line
+    if args.findlinks is not None and len(args.findlinks) > 0:
+        pyship.find_links = args.findlinks
     pyship.ship_installer()
