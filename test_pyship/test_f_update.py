@@ -23,23 +23,20 @@ def test_update():
         inst = ps.ship_installer()
         return ps, inst
 
-    # create the version we're going to upgrade *to* and put it in a separate dir
-    updated_version = VersionInfo(0, 0, 2)
-    updated_app_dirs = TstAppDirs(TST_APP_NAME, updated_version)
-    updated_pyship, installer_exe_path = do_pyship(updated_app_dirs)  # bump patch to create version to be upgraded to
-    assert installer_exe_path is not None
-    assert installer_exe_path.exists()
-
-    # now create the 'original' version
     original_version = VersionInfo(0, 0, 1)
+    updated_version = VersionInfo(0, 0, 2)
     original_app_dirs = TstAppDirs(TST_APP_NAME, original_version)
-    py_ship, installer_exe_path = do_pyship(original_app_dirs)
-    assert installer_exe_path is not None
-    assert installer_exe_path.exists()
+    pyships = []
+    for version in [original_version, updated_version]:
+        app_dirs = TstAppDirs(TST_APP_NAME, version)
+        ps, installer_exe_path = do_pyship(app_dirs)  # bump patch to create version to be upgraded to
+        pyships.append(ps)
+        assert installer_exe_path is not None
+        assert installer_exe_path.exists()
 
     # Check that the app is the same for both copies. We need the same file in 2 different places for the test infrastructure, but they have
     # to have the same functional contents.
-    app_contents = [open(Path(ps.project_dir, TST_APP_NAME, "app.py")).read() for ps in [py_ship, updated_pyship]]
+    app_contents = [open(Path(ps.project_dir, TST_APP_NAME, "app.py")).read() for ps in pyships]
     assert app_contents[0] == app_contents[1]
 
     # run the 'original' app version and test that it updates itself
@@ -54,8 +51,10 @@ def test_update():
     # we'll get multiple version JSON strings (one per line)
     lines = [ln.strip() for ln in std_out.splitlines() if len(ln.strip()) > 0]
     log.info(f"{lines=}")
+    assert len(lines) == 2
     for i, version_string in enumerate(["0.0.1", "0.0.2"]):
         one_line = lines[i]
+        print(one_line)
         log.info(one_line)
         try:
             app_run_dict = json.loads(one_line)

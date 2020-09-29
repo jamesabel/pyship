@@ -1,6 +1,6 @@
 __application_name__ = "pyship"
 __author__ = "abel"
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 __title__ = __application_name__
 __author_email__ = "j@abel.co"
 __url__ = "https://github.com/jamesabel/pyship"
