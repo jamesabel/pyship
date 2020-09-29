@@ -1,6 +1,8 @@
 REM install latest pyship into the venvs
 REM
 REM pyships's venv
+rmdir /S /Q dist
+rmdir /S /Q build
 venv\Scripts\python setup.py bdist_wheel
 venv\Scripts\pip.exe uninstall -y pyship
 venv\Scripts\pip.exe install pyship -f dist
