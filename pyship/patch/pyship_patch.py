@@ -27,3 +27,6 @@ def pyship_patch():
     def exec_module(self, module):
         exec(self.get_code(module.__name__), module.__dict__)
     zipimporter.exec_module = exec_module
+
+
+pyship_patch()

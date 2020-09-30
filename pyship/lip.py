@@ -126,7 +126,8 @@ def create_base_lip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path, fi
 
     # write out patch files
     Path(lip_dir, "pyship_patch.pth").write_text("import pyship_patch")  # this causes the pyship_patch.py to be loaded and therefore executed
-    Path(lip_dir, "pyship_patch.py").write_text(inspect.getsource(pyship.patch.pyship_patch.pyship_patch))  # due to the above, this file gets executed at Python interpreter startup
+    patch_string = f"{inspect.getsource(pyship.patch.pyship_patch.pyship_patch)}\n\npyship_patch()\n"
+    Path(lip_dir, "pyship_patch.py").write_text(patch_string)  # due to the above, this file gets executed at Python interpreter startup
 
     return lip_dir
 
