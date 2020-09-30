@@ -7,12 +7,14 @@ import subprocess
 import tkinter
 from pathlib import Path
 from platform import system
+import inspect
 
 from semver import VersionInfo
 from typeguard import typechecked
 
 from pyshipupdate import is_windows, copy_tree
 import pyship
+import pyship.patch.pyship_patch
 from pyship import AppInfo, file_download, pyship_print, extract, get_logger, __application_name__, subprocess_run, LIP_EXT
 
 
@@ -121,6 +123,10 @@ def create_base_lip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path, fi
             shutil.copy2(str(Path(python_base_install_dir, "DLLs", file_name)), str(lip_dir))
     else:
         log.fatal(f"Unsupported OS: {system()}")
+
+    # write out patch files
+    Path(lip_dir, "pyship_patch.pth").write_text("import pyship_patch")  # this causes the pyship_patch.py to be loaded and therefore executed
+    Path(lip_dir, "pyship_patch.py").write_text(inspect.getsource(pyship.patch.pyship_patch.pyship_patch))  # due to the above, this file gets executed at Python interpreter startup
 
     return lip_dir
 
