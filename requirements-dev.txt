@@ -29,3 +29,4 @@ pywin32
 # testing
 pytest
 pytest-cov
+moto
