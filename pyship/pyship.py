@@ -7,7 +7,7 @@ from typeguard import typechecked
 from pyshipupdate import mkdirs
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
-from pyship import AppInfo, get_logger, run_nsis, create_lip, create_launcher, pyship_print, APP_DIR_NAME, create_lip_file, DEFAULT_DIST_DIR_NAME, get_app_info, PyShipCloud
+from pyship import AppInfo, get_logger, run_nsis, create_clip, create_launcher, pyship_print, APP_DIR_NAME, create_clip_file, DEFAULT_DIST_DIR_NAME, get_app_info, PyShipCloud
 
 log = get_logger(pyship_application_name)
 
@@ -45,13 +45,13 @@ class PyShip:
 
             create_launcher(target_app_info, app_dir)  # create the OS specific launcher executable
 
-            lip_dir = create_lip(target_app_info, app_dir, True, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)
+            clip_dir = create_clip(target_app_info, app_dir, True, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)
 
             installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)
 
             # todo: upload the installer somewhere
 
-            create_lip_file(lip_dir)  # create shpy file after installer run
+            create_clip_file(clip_dir)  # create shpy file after installer run
 
             pyship_print(f"{pyship_application_name} done")
 
@@ -60,10 +60,10 @@ class PyShip:
     @typechecked(always=True)
     def ship_update(self) -> (Path, None):
         """
-        Create and upload an update of this target app.  The update is a zip of a lip directory, with the extension .shpy.
+        Create and upload an update of this target app.  The update is a zip of a clip directory, with the extension .clip.
         """
         target_app_info = AppInfo()
         target_app_info.setup_paths(self.project_dir)
         app_dir = Path(self.project_dir, APP_DIR_NAME, target_app_info.name).absolute()
-        # derived classes will take it from here and do what they need to to place the lip in a place the user will get it via a call to Updater.update() ...
-        return create_lip(target_app_info, app_dir, True, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)
+        # derived classes will take it from here and do what they need to to place the clip in a place the user will get it via a call to Updater.update() ...
+        return create_clip(target_app_info, app_dir, True, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)

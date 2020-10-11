@@ -11,7 +11,7 @@ def pyship_patch():
     # along with this hack to implement it in the Python environment:
     # https://nedbatchelder.com/blog/201001/running_code_at_python_startup.html
     #
-    # this must accompany pyship_patch.pth (i.e. in the same directory) to load this upon Python interpreter startup.  In other words, they both must be put in the lip directory
+    # this must accompany pyship_patch.pth (i.e. in the same directory) to load this upon Python interpreter startup.  In other words, they both must be put in the clip directory
     # (where python.exe resides).
     #
     # pyship_patch.pth contents:

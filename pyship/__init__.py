@@ -3,7 +3,7 @@
 python_interpreter_exes = {True: "pythonw.exe", False: "python.exe"}  # True is GUI, False is CLI
 
 APP_DIR_NAME = "app"  # analogous to a "Program Files" or "Applications" directory
-LIP_EXT = "lip"  # zipped lip file extension
+CLIP_EXT = "clip"  # zipped clip file extension
 DEFAULT_DIST_DIR_NAME = "dist"
 
 from .__version__ import __version__, __author__, __application_name__, __title__, __description__, __url__, __author_email__, __download_url__
@@ -19,7 +19,7 @@ from .get_icon import get_icon
 from .nsis import run_nsis
 from .file_download import file_download, extract
 from .create_launcher import create_launcher
-from .lip import create_base_lip, version_from_lip_zip, install_target_app, create_lip, create_lip_file
+from .clip import create_base_clip, version_from_clip_zip, install_target_app, create_clip, create_clip_file
 from .cloud import PyShipCloud, PyShipAWS
 from .pyship import PyShip
 from .main import main

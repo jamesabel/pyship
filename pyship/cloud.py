@@ -33,17 +33,17 @@ class PyShipCloud(ABC):
         """
         ...
 
-    def upload_lip_file(self, lip_file_path: Path):
+    def upload_clip_file(self, clip_file_path: Path):
         """
-        upload the lip file to the cloud that can be used to update the target app
-        :param lip_file_path: path to lip file (a zipped up lip dir)
+        upload the clip file to the cloud that can be used to update the target app
+        :param clip_file_path: path to clip file (a zipped up clip dir)
         """
         ...
 
-    def download_lip_file(self, lip_file_path: Path):
+    def download_clip_file(self, clip_file_path: Path):
         """
-        download the lip file, most likely to do an update to a new version
-        :param lip_file_path: path to lip file (a zipped up lip dir)
+        download the clip file, most likely to do an update to a new version
+        :param clip_file_path: path to clip file (a zipped up clip dir)
         """
         ...
 
@@ -70,8 +70,8 @@ class PyShipAWS(PyShipCloud):
         app_info = {name_string: self.app_name, version_string: str(version), timestamp_string: time.time()}
         self.s3_access.write_string(json.dumps(app_info, indent=4), self.app_info_s3_key)
 
-    def upload_lip_file(self, lip_file_path: Path):
-        self.s3_access.upload(lip_file_path, lip_file_path.name)
+    def upload_clip_file(self, clip_file_path: Path):
+        self.s3_access.upload(clip_file_path, clip_file_path.name)
 
-    def download_lip_file(self, lip_file_path: Path):
-        self.s3_access.download_cached(lip_file_path.name, lip_file_path)
+    def download_clip_file(self, clip_file_path: Path):
+        self.s3_access.download_cached(clip_file_path.name, clip_file_path)

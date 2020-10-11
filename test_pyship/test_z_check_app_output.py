@@ -17,6 +17,7 @@ def test_check_app_output():
     @typechecked(always=True)
     def check_output(check_process: subprocess.CompletedProcess):
         lines = [ln.strip() for ln in check_process.stdout.splitlines() if len(ln.strip()) > 0]
+        assert len(lines) > 0
         app_out = json.loads(lines[-1])  # the test app prints out JSON
         print(app_out)
         assert app_out["name"] == TST_APP_NAME
