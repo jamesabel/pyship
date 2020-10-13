@@ -3,6 +3,7 @@ from json.decoder import JSONDecodeError
 from pathlib import Path
 
 from semver import VersionInfo
+from awsimple import S3Access
 
 from pyship import PyShip, subprocess_run, get_logger, __application_name__, pyship_print
 from test_pyship import TST_APP_NAME, TstAppDirs, find_links
@@ -23,6 +24,7 @@ def test_update():
         inst = ps.ship_installer()
         return ps, inst
 
+    S3Access(TST_APP_NAME).create_bucket()
     original_version = VersionInfo(0, 0, 1)
     updated_version = VersionInfo(0, 0, 2)
     original_app_dirs = TstAppDirs(TST_APP_NAME, original_version)
