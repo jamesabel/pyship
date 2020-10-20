@@ -1,5 +1,10 @@
 REM install latest pyship into the venvs
 REM
+REM first update pyshipupdate
+cd ..\pyshipupdate
+call build.bat
+cd ..\pyship
+REM
 REM pyships's venv
 call make_venv.bat
 rmdir /S /Q dist
