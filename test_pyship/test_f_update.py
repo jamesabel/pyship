@@ -3,8 +3,9 @@ from json.decoder import JSONDecodeError
 from pathlib import Path
 
 from semver import VersionInfo
+from awsimple import S3Access
 
-from pyship import PyShip, subprocess_run, get_logger, __application_name__, pyship_print
+from pyship import PyShip, subprocess_run, get_logger, __application_name__, pyship_print, PyShipCloud
 from test_pyship import TST_APP_NAME, TstAppDirs, find_links
 
 log = get_logger(__application_name__)
@@ -15,14 +16,18 @@ def test_update():
     test that we can update the app
     """
 
+    s3_access = S3Access(TST_APP_NAME)
+
     def do_pyship(tst_app_dirs: TstAppDirs):
         pyship_print(f"{tst_app_dirs.target_app_version=}")
         ps = PyShip(tst_app_dirs.project_dir, dist_dir=tst_app_dirs.dist_dir,
                     find_links=find_links  # the local pyship under development
                     )
+        ps.cloud_access = PyShipCloud(TST_APP_NAME, s3_access)
         inst = ps.ship_installer()
         return ps, inst
 
+    PyShipCloud(TST_APP_NAME, s3_access).s3_access.create_bucket()
     original_version = VersionInfo(0, 0, 1)
     updated_version = VersionInfo(0, 0, 2)
     original_app_dirs = TstAppDirs(TST_APP_NAME, original_version)

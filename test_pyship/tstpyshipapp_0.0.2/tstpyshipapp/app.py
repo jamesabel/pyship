@@ -1,13 +1,13 @@
 import json
 import sys
-from pathlib import Path
 
 from balsa import Balsa, get_logger
 
-from pyshipupdate import UpdaterLocal
-from pyship import restart_return_code, ok_return_code, APP_DIR_NAME
-from pyship import __application_name__ as pyship_application_name
+from pyshipupdate import UpdaterAwsS3
+from pyshipupdate import __version__ as pyshipupdate_version
+from pyship import restart_return_code, ok_return_code
 from pyship import __author__ as pyship_author
+from pyship import __version__ as pyship_version
 
 from .__init__ import __application_name__ as name
 from .__init__ import __version__ as version
@@ -23,12 +23,11 @@ def tstpyshipapp():
 
     balsa = Balsa(logger_name, pyship_author, verbose=verbose)
     balsa.init_logger()
+    log.info(f"{pyshipupdate_version=}")
+    log.info(f"{pyship_version=}")
+    log.info(f"app {version=}")
 
-    updater = UpdaterLocal(name)
-    updated_app_path = Path(Path.home(), "projects", pyship_application_name,  "test_pyship", f"{name}_0.0.2", APP_DIR_NAME, name).resolve().absolute()
-    log.info(f"{updated_app_path=}")
-    updater.app_dirs.add(updated_app_path)
-
+    updater = UpdaterAwsS3(name)
     if updater.update(version):
         exit_code = restart_return_code  # app has been updated so restart to run the updated version
     else:
