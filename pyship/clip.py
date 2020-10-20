@@ -45,7 +45,7 @@ def create_clip_file(clip_dir: Path) -> Path:
     """
     create clip file (the zipped update for the target application) from clip dir
     :param clip_dir:
-    :return: path to the shpy file
+    :return: path to the clip file
     """
     clip_dir_string = str(clip_dir)
     archive_name = shutil.make_archive(clip_dir_string, "zip", clip_dir_string)  # create a "zip" file of the clip dir

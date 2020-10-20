@@ -1,6 +1,7 @@
 REM install latest pyship into the venvs
 REM
 REM pyships's venv
+call make_venv.bat
 rmdir /S /Q dist
 rmdir /S /Q build
 venv\Scripts\python setup.py bdist_wheel

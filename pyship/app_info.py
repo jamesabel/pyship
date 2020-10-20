@@ -85,31 +85,34 @@ def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path) -> (Ap
 
     get_app_info_py_project(app_info, target_app_project_dir)
 
-    wheel_list = list(target_app_dist_dir.glob(f"{app_info.name}*.whl"))
-    if len(wheel_list) == 0:
-        log.error(f"no wheel at {target_app_dist_dir} ({target_app_dist_dir.absolute()})")
-    elif len(wheel_list) > 1:
-        log.error(f"multiple wheels at {target_app_dist_dir} : {wheel_list}")
+    if app_info.name is None:
+        log.error(f"{app_info.name=} {target_app_project_dir=}")
     else:
-        app_info = get_app_info_wheel(app_info, wheel_list[0])
 
-        if app_info.is_gui is None:
-            # todo: automatically guess if the app is a GUI app by looking for PyQt, etc.
-            is_gui_guess = False
+        wheel_list = list(target_app_dist_dir.glob(f"{app_info.name}*.whl"))
+        if len(wheel_list) == 0:
+            log.error(f"{app_info.name} : no wheel at {target_app_dist_dir} ({target_app_dist_dir.absolute()})")
+        elif len(wheel_list) > 1:
+            log.error(f"multiple wheels at {target_app_dist_dir} : {wheel_list}")
+        else:
+            app_info = get_app_info_wheel(app_info, wheel_list[0])
 
-            log.warning(f"is_gui has not been set by the user (e.g. in pyproject.toml) - assuming {is_gui_guess}")
-            app_info.is_gui = is_gui_guess
+            if app_info.is_gui is None:
+                # todo: automatically guess if the app is a GUI app by looking for PyQt, etc.
+                is_gui_guess = False
 
-        # check that we have the minimum fields filled in
-        for required_field in ["name", "author", "version"]:
-            if (attribute_value := getattr(app_info, required_field)) is None:
-                log.error(f'"{required_field}" not defined for the target application')
-                app_info = None  # not sufficient to create app info
-                break
-            else:
-                pyship_print(f"{required_field}={attribute_value}")
+                log.warning(f"is_gui has not been set by the user (e.g. in pyproject.toml) - assuming {is_gui_guess}")
+                app_info.is_gui = is_gui_guess
 
-    if app_info is not None and app_info.name is not None:
-        app_info.icon_file_name = f"{app_info.name}.ico"
+            # check that we have the minimum fields filled in
+            for required_field in ["name", "author", "version"]:
+                if (attribute_value := getattr(app_info, required_field)) is None:
+                    log.error(f'"{required_field}" not defined for the target application')
+                    app_info = None  # not sufficient to create app info
+                    break
+                else:
+                    pyship_print(f"{required_field}={attribute_value}")
+
+            app_info.icon_file_name = f"{app_info.name}.ico"
 
     return app_info

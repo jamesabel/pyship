@@ -47,11 +47,14 @@ class PyShip:
 
             clip_dir = create_clip(target_app_info, app_dir, True, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)
 
-            installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)
+            clip_file_path = create_clip_file(clip_dir)  # create clip file
+            installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)  # create installer
 
-            # todo: upload the installer somewhere
-
-            create_clip_file(clip_dir)  # create shpy file after installer run
+            if self.cloud_access is None:
+                log.info(f"no cloud access provided - will not attempt upload")
+            else:
+                self.cloud_access.upload(installer_exe_path)  # create and upload installer
+                self.cloud_access.upload(clip_file_path)  # create and upload clip file
 
             pyship_print(f"{pyship_application_name} done")
 
