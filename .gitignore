@@ -140,3 +140,5 @@ cache/
 frozen/
 temp/
 backup/
+# videos
+*.mkv
