@@ -1,6 +1,0 @@
-#
-# pyship
-#
-typeguard
-pyinstaller
-pytest

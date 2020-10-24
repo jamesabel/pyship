@@ -1,0 +1,65 @@
+
+Hi my name is James Abel and I'd like to present PyShip, an easy way to ship your Python Desktop Applications to End Users 
+
+Suppose you've created an awesome Python application, something like the code on the left.  Then of course, you'd like to give it to 
+end users, something like the group on the right.  Of course, this is how things might have looked pre-Covid, and things are a bit different today.
+
+The idea of pyship is to be able to ship apps to end users in a straight-forward and reliable way. The terms often used here are "freezers" and "installers",
+so you may have heard of terms before. pyship is a freezer, and it provides an installer.
+
+The goal of pyship is to freeze virtually any Python application.  This has been a sticky point of some freezers, in that 
+sometimes the optimizations used to freeze an application actually make it more difficult to get the frozen application to actually work.
+
+Pyship is probably most useful for GUI applications, but can also freeze command line apps.
+
+Also, applications created with PyShip make no assumption of any pre-installed Python.  The execuable that is run looks like a native 
+application to the operating system.  In other words, a ".exe" on Windows.
+
+In addition, PyShip supports automatic application updating, which can be done in the background.  This is something that is fairly unique to pyship.
+
+Currently pyship only supports Windows but it is architected so that MacOS and Linux ports may be added later.
+
+----
+
+PyShip utilizes existing Python capabilities in order to make it more straight-forward to create an application that can be frozen.
+The first two steps are normal Python constructs.  The first is to make your application run-able as a "main module", in other words 
+with the "-m" switch.  The second is to package your application as a Python distribution, which at this point is a wheel.  There are 
+existing tools to make this relatively straight forward, such as flit.
+
+Once you have your application as a main module in a Python distribution, you need to tell PyShip a couple of things. First, you need to tell it 
+your application name. It's best to do that in the pyproject.toml file.  If you're using flit this has already been created for you. Also, you 
+should tell PyShip if your application is a GUI or command line application in the pyproject.toml file. Once you've done that, you're ready to run PyShip.
+
+One of the main architectural features of PyShip is the clip, which stands for Complete Location Independent Python.  This is created by pyship and is a 
+directory that contains everything needed to run your application, which is the Python interpreter, your application installed via your distribution, and 
+all of your dependencies.  It also contains a launcher, which is a native exectuable, such as a .exe for Windows, that the OS calls to run your application.
+
+pyship also creates an installer.  This is a normal Windows installer created using the NSIS utility application.
+
+pyship can automatically upload all of this to the cloud, and currently AWS is supported.  Then you can reference your installer as an S3 object and have 
+users download it from there.
+
+I mentioned updating before.  Your application can also update itself in the background. The clip files, which is a zip of the clip directory, are versioned 
+and also uploaded to the cloud.  pyship provides an update capability that downloads any new versions and those versions are used when your application restarts. 
+This can be done without user intervention, since the launcher app can restart your application as part of this process.  For many applications, such as task bar apps, 
+this requires no end user intervention.
+
+----
+
+To learn how to use pyship, I have created a very small example application.  This is a small GUI application that you can clone from my git repo and try out.
+You can take it through all the steps I mentioned above to learn how to create an application using pyship.
+
+----
+
+I have recently released pyship and I'm looking for beta testers.  pyship is up on PyPI and ready to try out.  Please try it out and give me your feedback,
+and post issues if you find anything.
+
+You can go to pyship.org and that will take you to the github repo.
+
+----
+
+Finally I'd like to thank Thomas Kluyver, Gliph and Eli for their work in this area, and the help they've provided in the past.
+
+Again, just visit pyship.org to get started.
+
+Thank you!
