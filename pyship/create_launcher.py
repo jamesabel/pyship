@@ -89,7 +89,6 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
                 cmd_string = " ".join(command_line)
                 pyship_print(f"project_dir={str(target_app_info.project_dir)}")
                 pyship_print(cmd_string)
-                Path(target_app_info.project_dir, "make_launcher.bat").open("w").write(cmd_string)  # for convenience, debug, etc.
                 process_return_code, std_out, std_err = subprocess_run(command_line, cwd=target_app_info.project_dir, mute_output=True)
                 # metadata is in the app parent dir
                 store_launcher_metadata(app_path_output, launcher_metadata_filename, launcher_metadata)
