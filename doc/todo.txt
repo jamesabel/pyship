@@ -2,4 +2,10 @@
 - run PyInstaller directly from Python (instead of doing a sunprocess.run() )
   https://pyinstaller.readthedocs.io/en/stable/usage.html#running-pyinstaller-from-python-code
 
+- use runpy.run_module ( https://docs.python.org/3/library/runpy.html#runpy.run_module ) instead of doing subprocess.run on python.exe
+
+- use the moto mock feature of awsimple for testing
+
+- use Sentry (https://api.pyship.org/resources/pyship/sentry)
+
 - this is actually a sundry todo, but extract the required parts of sundry into a new package since sundry brings in too many things for this tool
