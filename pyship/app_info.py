@@ -44,18 +44,28 @@ def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path = No
             pyproject = toml.load(f)
             project_section = pyproject.get("project")
             if project_section is not None:
-                app_info.name = project_section.get("name")  # app name
+
+                app_info.name = project_section.get("name")
                 app_info.author = project_section.get("author")  # app author
 
-                tool_section = pyproject.get("tool")
-                if tool_section is not None:
+            tool_section = pyproject.get("tool")
+            if tool_section is not None:
 
-                    # get info from pyship section
-                    # [tool.pyship]
-                    pyship_app_info = tool_section.get("pyship")
-                    if pyship_app_info is not None:
-                        app_info.is_gui = pyship_app_info.get("is_gui")  # False if CLI
-                        app_info.run_on_startup = pyship_app_info.get("run_on_startup")
+                if app_info.name is None:
+                    # The user didn't provide a separate [project].name so let's try to get it from what flit writes out at [tool.flit.metadata]/module.
+                    # This is all we want or need to get from tool.flit.metadata since the remainder of the fields will be in the package distribution.
+                    flit_section = tool_section.get("flit")
+                    if flit_section is not None:
+                        flit_metadata = flit_section.get("metadata")
+                        if flit_metadata is not None:
+                            app_info.name = flit_metadata.get("module")
+
+                # get info from pyship section
+                # [tool.pyship]
+                pyship_app_info = tool_section.get("pyship")
+                if pyship_app_info is not None:
+                    app_info.is_gui = pyship_app_info.get("is_gui")  # False if CLI
+                    app_info.run_on_startup = pyship_app_info.get("run_on_startup")
     return app_info
 
 

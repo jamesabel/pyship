@@ -1,0 +1,14 @@
+[build-system]
+requires = ["flit_core >=2,<3"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "pyshipexample"
+author = "abel"
+author-email = "j@abel.co"
+home-page = "https://github.com/jamesabel/pyshipexample"
+classifiers = ["License :: OSI Approved :: MIT License"]
+requires = [
+    "PyQt5",
+    "ismain"
+]
