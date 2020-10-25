@@ -1,8 +1,9 @@
 from tkinter import Tk, Label
+from datetime import datetime
 
 from typeguard import typechecked
 
-from pyship import get_logger, __application_name__, local_time_string
+from pyship import get_logger, __application_name__
 
 log = get_logger(__application_name__)
 
@@ -20,5 +21,5 @@ def pyship_print(s: str, is_gui: bool = False):
         label.update()
         window.deiconify()
     else:
-        print_string = f"{local_time_string()} : {s}"
+        print_string = f"{datetime.now().astimezone().isoformat()} : {s}"
         print(print_string)

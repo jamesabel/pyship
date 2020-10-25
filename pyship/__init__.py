@@ -8,7 +8,6 @@ DEFAULT_DIST_DIR_NAME = "dist"
 
 from .__version__ import __version__, __author__, __application_name__, __title__, __description__, __url__, __author_email__, __download_url__
 from .constants import dist_dir
-from .date_time import local_time_string, utc_time_string
 from .exe_return_codes import restart_return_code, can_not_find_file_return_code, ok_return_code, error_return_code
 from .logging import PyshipLog, get_logger, log_process_output
 from .pyship_print import pyship_print
