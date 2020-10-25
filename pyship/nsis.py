@@ -48,7 +48,7 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
     if Path(target_app_info.project_dir, license_file_name).exists():
 
         nsis_file_path = Path(target_app_info.project_dir, f"{target_app_info.name}.nsi").absolute()
-        log.info(f"making {nsis_file_path}")
+        pyship_print(f"building installer {nsis_file_path} ({nsis_file_path.absolute()})")
 
         exe_name = f"{target_app_info.name}.exe"
         installers_folder = "installers"

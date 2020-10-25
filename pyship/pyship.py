@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime, timedelta
 
 import appdirs
 from attr import attrs
@@ -27,6 +28,8 @@ class PyShip:
         Perform all the steps to ship the app, including creating the installer.
         :return: the path to the created installer or None if it could not be created
         """
+
+        start_time = datetime.now()
         pyship_print(f"{pyship_application_name} starting")
 
         target_app_info = get_app_info(self.project_dir, self.dist_dir)
@@ -56,7 +59,8 @@ class PyShip:
                 self.cloud_access.upload(installer_exe_path)  # create and upload installer
                 self.cloud_access.upload(clip_file_path)  # create and upload clip file
 
-            pyship_print(f"{pyship_application_name} done")
+            elapsed_time = datetime.now() - start_time
+            pyship_print(f"{pyship_application_name} done (elapsed_time={str(elapsed_time)})")
 
         return installer_exe_path
 
