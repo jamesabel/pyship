@@ -25,7 +25,6 @@ sphinx
 # installers/launchers
 pyinstaller
 semver
-pywin32
 #
 # testing
 pytest
