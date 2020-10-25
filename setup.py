@@ -22,7 +22,7 @@ setup(
     download_url=__download_url__,
     keywords=["freezer", "installer", "ship"],
     classifiers=[],
-    packages=[__application_name__, f"{__application_name__}.launcher", f"{__application_name__}.aws", f"{__application_name__}.patch"],
+    packages=[__application_name__, f"{__application_name__}.launcher", f"{__application_name__}.patch"],
     package_data={
         "": ["*.ico"],
     },
