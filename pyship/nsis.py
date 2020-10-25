@@ -81,7 +81,7 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         nsis_lines.append(f"!define UPDATEURL {target_app_info.url}")  # "Product Updates" link
         nsis_lines.append(f"!define ABOUTURL {target_app_info.url}")  # "Publisher" link
 
-        installed_size = get_folder_size(app_dir)/1024  # EstimatedSize is in KB
+        installed_size = get_folder_size(app_dir) / 1024  # EstimatedSize is in KB
         nsis_lines.append(f"!define INSTALLSIZE {installed_size}")
 
         nsis_lines.append("")
@@ -93,7 +93,7 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         nsis_lines.append('LicenseData "LICENSE"')
         nsis_lines.append(r"# This will be in the installer/uninstaller's title bar")
         nsis_lines.append('Name "${COMPANYNAME} - ${APPNAME}"')
-        nsis_lines.append(f'Icon {icon_path}')
+        nsis_lines.append(f"Icon {icon_path}")
         nsis_lines.append(f'outFile "{installer_exe_path}"')
         nsis_lines.append("")
         nsis_lines.append("!include LogicLib.nsh")
@@ -141,13 +141,13 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
             nsis_lines.append("")
 
         nsis_lines.append("  # Registry information for add/remove programs")
-        nsis_lines.append(
-            '  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "DisplayName" "${APPNAME}"'
-        )
+        nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "DisplayName" "${APPNAME}"')
         nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "UninstallString" "$\\"$INSTDIR\\uninstall.exe$\\""')
         nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "QuietUninstallString" "$\\"$INSTDIR\\uninstall.exe$\\" /S"')
         nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "InstallLocation" "$INSTDIR"')
-        nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "DisplayIcon" "$\\"$INSTDIR\\${APPNAME}\\${APPNAME}.ico$\\""')
+        nsis_lines.append(
+            '  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "DisplayIcon" "$\\"$INSTDIR\\${APPNAME}\\${APPNAME}.ico$\\""'
+        )
         nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "Publisher" "${COMPANYNAME}"')
         nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "HelpLink" "${HELPURL}"')
         nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\${COMPANYNAME} ${APPNAME}" "URLUpdateInfo" "${UPDATEURL}"')

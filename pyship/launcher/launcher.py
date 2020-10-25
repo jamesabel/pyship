@@ -211,7 +211,7 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
                     return_code = can_not_find_file_return_code
 
             else:
-                log.error(f'could not find any expected application version in {search_dirs} ({glob_string=}))')
+                log.error(f"could not find any expected application version in {search_dirs} ({glob_string=}))")
 
         if restart_monitor.excessive():
             log.error(f"excessive restarts {restart_monitor.restarts=}")

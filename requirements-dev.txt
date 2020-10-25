@@ -17,6 +17,7 @@ keyring
 wheel
 wheel-inspect
 black
+flake8
 #
 # docs
 sphinx

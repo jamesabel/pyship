@@ -21,13 +21,11 @@ def get_icon(target_app_info: AppInfo, ui_print: Callable) -> Path:
 
     icon_file_name = f"{target_app_info.name}.ico"
     icon_paths = [
-
         # First try to use the icon provided by the target app
         Path(target_app_info.project_dir, icon_file_name).absolute(),
         Path(target_app_info.project_dir, target_app_info.name, icon_file_name).absolute(),
-
         # use pyship's icon if the target app doesn't have one (make this the last entry in this list)
-        Path(Path(pyship.__file__).parent, f"{__application_name__}.ico").absolute()
+        Path(Path(pyship.__file__).parent, f"{__application_name__}.ico").absolute(),
     ]
 
     icon_path = None

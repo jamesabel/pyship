@@ -28,7 +28,7 @@ def test_create_launcher():
     for _ in range(0, 2):
         mkdirs(tst_app_dirs.app_dir, remove_first=True)
         create_launcher(target_app_info, tst_app_dirs.app_dir)
-        assert(tst_app_dirs.launcher_exe_path.exists())
+        assert tst_app_dirs.launcher_exe_path.exists()
 
 
 if is_main():

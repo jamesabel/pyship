@@ -163,33 +163,7 @@ def install_target_app(module_name: str, python_env_dir: Path, target_app_packag
     find_links.append(str(target_app_package_dist_dir.absolute()))
 
     for find_link in find_links:
-        cmd.extend(["-f", f'file://{str(find_link)}'])
+        cmd.extend(["-f", f"file://{str(find_link)}"])
 
     subprocess_run(cmd, python_env_dir)
 
-
-@typechecked(always=True)
-def version_from_clip_zip(target_app_name: str, candidate_clip_zip: str) -> (VersionInfo, None):
-    """
-    Tests if a string is a clip zip string.  If so, extract the version from a clip zip string.  If the string is not a valid clip zip string, return None.
-    Example: a clip zip string of "abc_1.2.3.zip" for app "abc" returns VersionInfo of 1.2.3.
-    :param target_app_name: target app name
-    :param candidate_clip_zip: candidate clip app zip string to try to get the version from
-    :return: version or None if not a successful parse for a clip zip string
-    """
-    version = None
-    if candidate_clip_zip.startswith(target_app_name):
-        version_string = candidate_clip_zip[len(target_app_name):]
-        for extension in [".zip", ".7z"]:
-            if version is None and version_string.endswith(extension):
-                version_string = version_string[: -len(extension)]  # remove extension
-                if version_string.startswith("_"):
-                    try:
-                        version = VersionInfo.parse(version_string[1:])  # pass over the "_"
-                    except IndexError as e:
-                        pass
-                    except TypeError as e:
-                        pass
-                    except ValueError as e:
-                        pass
-    return version

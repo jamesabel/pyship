@@ -1,4 +1,3 @@
-
 def pyship_patch():
     # this is a function in order to load its source (via inspect.getsource() ), that is written to pyship_patch.py (without the function definition)
 
@@ -22,10 +21,12 @@ def pyship_patch():
 
     def create_module(self, spec):
         return None
+
     zipimporter.create_module = create_module
 
     def exec_module(self, module):
         exec(self.get_code(module.__name__), module.__dict__)
+
     zipimporter.exec_module = exec_module
 
 

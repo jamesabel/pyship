@@ -20,9 +20,7 @@ def test_update():
 
     def do_pyship(tst_app_dirs: TstAppDirs):
         pyship_print(f"{tst_app_dirs.target_app_version=}")
-        ps = PyShip(tst_app_dirs.project_dir, dist_dir=tst_app_dirs.dist_dir,
-                    find_links=find_links  # the local pyship under development
-                    )
+        ps = PyShip(tst_app_dirs.project_dir, dist_dir=tst_app_dirs.dist_dir, find_links=find_links)  # the local pyship under development
         ps.cloud_access = PyShipCloud(TST_APP_NAME, s3_access)
         inst = ps.ship_installer()
         return ps, inst

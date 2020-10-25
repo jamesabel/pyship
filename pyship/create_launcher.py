@@ -48,15 +48,19 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
 
         python_interpreter_path = sys.executable
         if python_interpreter_path is None or len(python_interpreter_path) < 1:
-            log.error(f"python interpreter path not found")
+            log.error("python interpreter path not found")
         else:
 
             mkdirs(app_path_output)
 
-            explicit_modules_to_import = ["ismain", "sentry_sdk", "typeguard", "sentry_sdk.integrations.stdlib", "pywin32",
-                                          "pyshipupdate", # todo: remove this once pyship's wheel requires pyshipupdate
-                                          "pyship"  # pyship is needed since launcher calls other routines in pyship
-                                          ]
+            explicit_modules_to_import = [
+                "ismain",
+                "sentry_sdk",
+                "typeguard",
+                "sentry_sdk.integrations.stdlib",
+                "pywin32",
+                "pyship",  # pyship is needed since launcher calls other routines in pyship
+            ]
 
             venv_dir = Path(target_app_info.project_dir, "venv")  # venv for the target app
             pyinstaller_exe_path = Path(venv_dir, "Scripts", "pyinstaller.exe")

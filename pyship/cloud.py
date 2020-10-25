@@ -15,6 +15,7 @@ class PyShipCloud:
     """
     AWS cloud access
     """
+
     def __init__(self, app_name: str, s3_access: S3Access):
         """
         AWS cloud access

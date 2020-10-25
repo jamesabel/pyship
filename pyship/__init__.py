@@ -19,7 +19,7 @@ from .get_icon import get_icon
 from .nsis import run_nsis
 from .file_download import file_download, extract
 from .create_launcher import create_launcher
-from .clip import create_base_clip, version_from_clip_zip, install_target_app, create_clip, create_clip_file
+from .clip import create_base_clip, install_target_app, create_clip, create_clip_file
 from .cloud import PyShipCloud
 from .pyship import PyShip
 from .main import main

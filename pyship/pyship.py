@@ -54,7 +54,7 @@ class PyShip:
             installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)  # create installer
 
             if self.cloud_access is None:
-                log.info(f"no cloud access provided - will not attempt upload")
+                log.info("no cloud access provided - will not attempt upload")
             else:
                 self.cloud_access.upload(installer_exe_path)  # create and upload installer
                 self.cloud_access.upload(clip_file_path)  # create and upload clip file
