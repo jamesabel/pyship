@@ -96,12 +96,12 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
 
                 if launcher_exe_path.exists():
                     built_it = True
-                    pyship_print(f"launcher built ({launcher_exe_path})")
+                    log.info(f"launcher built ({launcher_exe_path})")
                 else:
                     # launcher wasn't built - there was an error - so display the pyinstaller output to the user
                     pyship_print(launcher_run.std_out)
                     pyship_print(launcher_run.std_err)
             else:
-                pyship_print(f"{launcher_exe_path} already built - no need to rebuild")
+                log.info(f"{launcher_exe_path} already built - no need to rebuild")
 
     return built_it

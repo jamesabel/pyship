@@ -40,7 +40,7 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
     # basic format is from:
     # http://nsis.sourceforge.net/A_simple_installer_with_start_menu_shortcut_and_uninstaller
 
-    icon_path = get_icon(target_app_info, pyship_print)
+    icon_path = get_icon(target_app_info, log.info)
 
     license_file_name = "LICENSE"
     installer_exe_path = None

@@ -76,7 +76,7 @@ def create_base_clip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path) -
     file_download(zip_url, cache_dir, zip_file)
     clip_dir_name = f"{target_app_info.name}_{str(target_app_info.version)}"
     clip_dir = Path(app_dir, clip_dir_name).absolute()
-    pyship_print(f"creating application {clip_dir_name} ({clip_dir})")
+    pyship_print(f"creating {clip_dir_name} ({clip_dir})")
     extract(cache_dir, zip_file, clip_dir)
 
     # Programmatically edit ._pth file, e.g. python38._pth
@@ -144,7 +144,7 @@ def install_target_app(module_name: str, python_env_dir: Path, target_app_packag
     """
 
     # install this local app in the embedded python dir
-    pyship_print(f"installing {module_name}")
+    log.info(f"installing {module_name}")
 
     if remove_pth:
         # remove python*._pth
