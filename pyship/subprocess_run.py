@@ -16,9 +16,10 @@ log = get_logger(__application_name__)
 def subprocess_run(cmd: list, cwd: Path = None, mute_output: bool = True, stdout_log: Callable = log.info, stderr_log: Callable = log.warning) -> (int, (str, None), (str, None)):
     """
     subprocess run taking return code into account
+
     :param cmd: run command
     :param cwd: current directory
-    :param mute_output: True to mute output, False to sent output to stdout/stderr
+    :param mute_output: True to mute output, False to send output to stdout/stderr
     :param stdout_log: function to call for stdout string
     :param stderr_log: function to call for stderr string
     :return: process return code, stdout, stderr

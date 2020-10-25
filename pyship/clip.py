@@ -102,14 +102,15 @@ def create_base_clip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path) -
     # get_file("https://bootstrap.pypa.io/get-pip.py", cache_folder, get_pip_file)
     get_pip_file = "get-pip.py"
     get_pip_path = os.path.join(os.path.dirname(pyship.__file__), get_pip_file)
-    log.info(f"{get_pip_path}")
-    cmd = ["python.exe", os.path.abspath(get_pip_path), "--no-warn-script-location"]
-    log.info(f"{cmd} (cwd={clip_dir})")
-    subprocess.run(cmd, cwd=clip_dir, shell=True)  # todo: use subprocess_run
+    log.info(f"{get_pip_path=}")
+    get_pip_cmd = ["python.exe", os.path.abspath(get_pip_path), "--no-warn-script-location"]
+    log.info(f"{get_pip_cmd=}")
+    subprocess.run(get_pip_cmd, cwd=clip_dir, capture_output=True, shell=True, check=True)  # subprocess_run uses typeguard and we don't have that yet so just use subprocess.run
 
     # upgrade pip
-    cmd = ["python.exe", "-m", "pip", "install", "--no-deps", "--upgrade", "pip"]
-    subprocess.run(cmd, cwd=clip_dir, shell=True)  # todo: use subprocess_run
+    pip_upgrade_cmd = ["python.exe", "-m", "pip", "install", "--no-deps", "--upgrade", "pip"]
+    log.info(f"{pip_upgrade_cmd=}")
+    subprocess.run(pip_upgrade_cmd, cwd=clip_dir, capture_output=True, shell=True, check=True)  # subprocess_run uses typeguard and we don't have that yet so just use subprocess.run
 
     # the embedded Python doesn't ship with tkinter, so add it to clip
     # https://stackoverflow.com/questions/37710205/python-embeddable-zip-install-tkinter
@@ -164,10 +165,7 @@ def install_target_app(module_name: str, python_env_dir: Path, target_app_packag
     for find_link in find_links:
         cmd.extend(["-f", f'file://{str(find_link)}'])
 
-    pyship_print(f"{python_env_dir}")
-    pyship_print(f"{cmd}")
-    Path(python_env_dir, "install_target.bat").open("w").write(" ".join(cmd))  # for convenience, debug, etc.
-    subprocess_run(cmd, cwd=python_env_dir, mute_output=False)
+    subprocess_run(cmd, python_env_dir)
 
 
 @typechecked(always=True)
