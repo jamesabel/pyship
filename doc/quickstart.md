@@ -1,3 +1,3 @@
 # pyship Quick Start
-*(see [pyship full documentation](pyship.md) for details)*
 
+*(see [pyship full documentation](pyship.md) for details)*
