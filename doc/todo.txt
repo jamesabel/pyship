@@ -1,5 +1,7 @@
 
-- run PyInstaller directly from Python (instead of doing a sunprocess.run() )
+- create a test for the cloud functional (upload installer and clip)
+
+- run PyInstaller directly from Python (instead of doing a subprocess.run() )
   https://pyinstaller.readthedocs.io/en/stable/usage.html#running-pyinstaller-from-python-code
 
 - use runpy.run_module ( https://docs.python.org/3/library/runpy.html#runpy.run_module ) instead of doing subprocess.run on python.exe
