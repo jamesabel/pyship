@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 
-requirements = ["balsa", "pyshipupdate", "pyship"]
+# moto is only in the requirements since we're testing - it won't be in normal apps
+requirements = ["balsa", "pyshipupdate", "pyship", "moto"]
 
 setup(
     name="tstpyshipapp",
