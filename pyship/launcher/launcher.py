@@ -14,8 +14,8 @@ import sentry_sdk
 
 from pyship import __application_name__, __author__
 from pyship import __version__ as pyship_version
-from pyship import restart_return_code, error_return_code, can_not_find_file_return_code, python_interpreter_exes, ok_return_code
-from pyship import PyshipLog, get_logger
+from pyship import PyshipLog, get_logger, python_interpreter_exes
+from pyshipupdate import restart_return_code, error_return_code, can_not_find_file_return_code, ok_return_code
 from pyship.launcher import RestartMonitor
 
 # Just for the launcher, not the user's app that pyship is launching

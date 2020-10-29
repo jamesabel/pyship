@@ -4,7 +4,7 @@ from semver import VersionInfo
 
 from typeguard import typechecked
 
-from pyship import ok_return_code
+from pyshipupdate import ok_return_code
 
 from test_pyship import TstAppDirs
 from test_pyship import TST_APP_NAME

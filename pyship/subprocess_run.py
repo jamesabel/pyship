@@ -7,7 +7,8 @@ from copy import deepcopy
 
 from typeguard import typechecked
 
-from pyship import __application_name__, ok_return_code, restart_return_code, error_return_code, get_logger
+from pyship import __application_name__, get_logger
+from pyshipupdate import ok_return_code, restart_return_code, error_return_code
 
 log = get_logger(__application_name__)
 

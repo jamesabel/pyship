@@ -1,5 +1,4 @@
 from pathlib import Path
-import subprocess
 
 from ismain import is_main
 

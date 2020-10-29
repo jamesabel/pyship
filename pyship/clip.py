@@ -166,4 +166,3 @@ def install_target_app(module_name: str, python_env_dir: Path, target_app_packag
         cmd.extend(["-f", f"file://{str(find_link)}"])
 
     subprocess_run(cmd, python_env_dir)
-

@@ -3,9 +3,8 @@ import sys
 
 from balsa import Balsa, get_logger
 
-from pyshipupdate import UpdaterAwsS3
+from pyshipupdate import UpdaterAwsS3, restart_return_code, ok_return_code
 from pyshipupdate import __version__ as pyshipupdate_version
-from pyship import restart_return_code, ok_return_code
 from pyship import __author__ as pyship_author
 from pyship import __version__ as pyship_version
 
