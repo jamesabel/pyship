@@ -76,10 +76,10 @@ class PyShip:
                     s3_access = S3Access(bucket, aws_access_key_id=self.cloud_id, aws_secret_access_key=self.cloud_secret)
                 self.cloud_access = PyShipCloud(target_app_info.name, s3_access)
 
-                pyship_print(f"uploading {installer_exe_path} to bucket {s3_access.bucket_name}/{installer_exe_path.name}")
+                pyship_print(f"uploading {installer_exe_path} to {s3_access.bucket_name}/{installer_exe_path.name}")
                 self.cloud_access.upload(installer_exe_path)  # upload installer file
 
-                pyship_print(f"uploading {clip_file_path} to bucket {s3_access.bucket_name}/{clip_file_path.name}")
+                pyship_print(f"uploading {clip_file_path} to {s3_access.bucket_name}/{clip_file_path.name}")
                 self.cloud_access.upload(clip_file_path)  # upload clip file
 
             elapsed_time = datetime.now() - start_time
