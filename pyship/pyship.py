@@ -27,6 +27,7 @@ class PyShip:
     cloud_profile: str = None  # e.g. AWS IAM profile
     cloud_id: str = None  # e.g. AWS Access Key ID
     cloud_secret: str = None  # e.g. AWS Secret Access Key
+    cloud_access: PyShipCloud = None  # making this accessible outside this class aids in testing, especially when mocking
 
     @typechecked(always=True)
     def ship_installer(self) -> (Path, None):
@@ -73,13 +74,13 @@ class PyShip:
                     s3_access = S3Access(bucket, profile_name=self.cloud_profile)
                 else:
                     s3_access = S3Access(bucket, aws_access_key_id=self.cloud_id, aws_secret_access_key=self.cloud_secret)
-                cloud_access = PyShipCloud(target_app_info.name, s3_access)
+                self.cloud_access = PyShipCloud(target_app_info.name, s3_access)
 
                 pyship_print(f"uploading {installer_exe_path} to bucket {s3_access.bucket_name}/{installer_exe_path.name}")
-                cloud_access.upload(installer_exe_path)  # upload installer file
+                self.cloud_access.upload(installer_exe_path)  # upload installer file
 
                 pyship_print(f"uploading {clip_file_path} to bucket {s3_access.bucket_name}/{clip_file_path.name}")
-                cloud_access.upload(clip_file_path)  # upload clip file
+                self.cloud_access.upload(clip_file_path)  # upload clip file
 
             elapsed_time = datetime.now() - start_time
             pyship_print(f"{pyship_application_name} done (elapsed_time={str(elapsed_time)})")
