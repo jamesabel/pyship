@@ -11,6 +11,11 @@ def arguments():
     parser = argparse.ArgumentParser(prog=__name__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument("-n", "--name", help="name of target application to ship (if not provided elsewhere such as in pyproject.toml at: [project] name=<name>")
+
+    parser.add_argument("-p", "--profile", help="cloud profile")
+    parser.add_argument("-i", "--id", help="cloud id")
+    parser.add_argument("-s", "--secret", help="cloud secret")
+
     parser.add_argument("-d", "--dist", default=DEFAULT_DIST_DIR_NAME, help="distribution directory for this target application (i.e. directory that contains the wheel)")
     parser.add_argument(
         "-f",

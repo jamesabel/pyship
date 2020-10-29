@@ -1,4 +1,4 @@
-from pyship import PyShip, __application_name__, __author__, PyshipLog, arguments, pyship_print
+from pyship import PyShip, __application_name__, __author__, PyshipLog, arguments, pyship_print, PyShipCloud
 
 
 def main():
@@ -15,4 +15,10 @@ def main():
         pyship.name = args.name  # optionally get the target application name from the command line
     if args.findlinks is not None and len(args.findlinks) > 0:
         pyship.find_links = args.findlinks
+    if args.profile is not None:
+        pyship.cloud_profile = args.profile
+    if args.id is not None:
+        pyship.cloud_id = args.id
+    if args.secret is not None:
+        pyship.cloud_secret = args.secret
     pyship.ship_installer()

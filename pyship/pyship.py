@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import appdirs
 from attr import attrs
 from typeguard import typechecked
+from awsimple import S3Access
 
 from pyshipupdate import mkdirs
 from pyship import __application_name__ as pyship_application_name
@@ -20,7 +21,12 @@ class PyShip:
     dist_dir: Path = Path(DEFAULT_DIST_DIR_NAME)  # many packaging tools (e.g filt, etc.) use "dist" as the package destination directory
     find_links: list = []  # extra dirs for pip to use for packages not yet on PyPI (e.g. under local development)
     cache_dir: Path = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))  # used to cache things like the embedded Python zip (to keep us off the python.org servers)
-    cloud_access: PyShipCloud = None
+
+    # cloud credentials, locations, etc.
+    cloud_bucket = None  # e.g. AWS S3 bucket
+    cloud_profile: str = None  # e.g. AWS IAM profile
+    cloud_id: str = None  # e.g. AWS Access Key ID
+    cloud_secret: str = None  # e.g. AWS Secret Access Key
 
     @typechecked(always=True)
     def ship_installer(self) -> (Path, None):
@@ -42,6 +48,10 @@ class PyShip:
         elif target_app_info.name is None:
             log.error(f"{target_app_info.name=}")
         else:
+
+            if self.cloud_profile is None and self.cloud_id is None:
+                pyship_print("no cloud access provided - will not attempt upload")
+
             app_dir = Path(self.project_dir, APP_DIR_NAME, target_app_info.name).absolute()
 
             mkdirs(app_dir, remove_first=True)
@@ -53,11 +63,23 @@ class PyShip:
             clip_file_path = create_clip_file(clip_dir)  # create clip file
             installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)  # create installer
 
-            if self.cloud_access is None:
-                log.info("no cloud access provided - will not attempt upload")
-            else:
-                self.cloud_access.upload(installer_exe_path)  # create and upload installer
-                self.cloud_access.upload(clip_file_path)  # create and upload clip file
+            if self.cloud_profile is not None or self.cloud_id is not None:
+
+                # if cloud bucket not given we'll try to use the project name
+                bucket = target_app_info.name if self.cloud_bucket is None else self.cloud_bucket
+
+                # use either a cloud profile (i.e. credentials usually stored in local file(s) ) or explicit cloud credentials
+                if self.cloud_profile is not None:
+                    s3_access = S3Access(bucket, profile_name=self.cloud_profile)
+                else:
+                    s3_access = S3Access(bucket, aws_access_key_id=self.cloud_id, aws_secret_access_key=self.cloud_secret)
+                cloud_access = PyShipCloud(target_app_info.name, s3_access)
+
+                pyship_print(f"uploading {installer_exe_path} to bucket {s3_access.bucket_name}/{installer_exe_path.name}")
+                cloud_access.upload(installer_exe_path)  # upload installer file
+
+                pyship_print(f"uploading {clip_file_path} to bucket {s3_access.bucket_name}/{clip_file_path.name}")
+                cloud_access.upload(clip_file_path)  # upload clip file
 
             elapsed_time = datetime.now() - start_time
             pyship_print(f"{pyship_application_name} done (elapsed_time={str(elapsed_time)})")
