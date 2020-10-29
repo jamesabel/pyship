@@ -9,7 +9,7 @@ from test_pyship import TstAppDirs, TST_APP_NAME, __application_name__, find_lin
 log = get_logger(__application_name__)
 
 
-def test_create_lip():
+def test_create_clip():
 
     version = VersionInfo.parse("0.0.1")
     tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
@@ -24,4 +24,4 @@ def test_create_lip():
 if is_main():
     pyship_log = PyshipLog(__application_name__, __author__, log_directory="log", delete_existing_log_files=True, verbose=True)
     pyship_log.init_logger()
-    test_create_lip()
+    test_create_clip()
