@@ -1,14 +1,14 @@
 
+- clean up old versions.  i.e. delete all versions older than the current one in the user dir (e.g. AppDirs local)
+
 - a re-install doesn't seem to be functional - is it doing a proper uninstall first?
-- in general, check that the uninstall removes everything
+- in general, check that the uninstall removes everything - it seems that it doesn't remove the clip(s), either directory or file
 
 - run PyInstaller directly from Python (instead of doing a subprocess.run() )
   https://pyinstaller.readthedocs.io/en/stable/usage.html#running-pyinstaller-from-python-code
 
 - use runpy.run_module ( https://docs.python.org/3/library/runpy.html#runpy.run_module ) instead of doing subprocess.run on python.exe
 
-- use the moto mock feature of awsimple for testing
+- use the moto mock feature of awsimple for all testing (currently fails a few tests since moto is process based and the tables don't exist in the test processes)
 
 - use Sentry (https://api.pyship.org/resources/pyship/sentry)
-
-- this is actually a sundry todo, but extract the required parts of sundry into a new package since sundry brings in too many things for this tool
