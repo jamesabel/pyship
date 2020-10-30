@@ -1,5 +1,6 @@
 
-- create a test for the cloud functional (upload installer and clip)
+- a re-install doesn't seem to be functional - is it doing a proper uninstall first?
+- in general, check that the uninstall removes everything
 
 - run PyInstaller directly from Python (instead of doing a subprocess.run() )
   https://pyinstaller.readthedocs.io/en/stable/usage.html#running-pyinstaller-from-python-code

@@ -26,7 +26,7 @@ def tstpyshipapp():
     log.info(f"{pyship_version=}")
     log.info(f"app {version=}")
 
-    updater = UpdaterAwsS3(name)
+    updater = UpdaterAwsS3(name, pyship_author)
     if updater.update(version):
         exit_code = restart_return_code  # app has been updated so restart to run the updated version
     else:
