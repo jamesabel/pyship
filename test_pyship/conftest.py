@@ -4,16 +4,25 @@ import logging
 import os
 
 from balsa import Balsa
+from appdirs import user_data_dir
 from awsimple import use_moto_mock_env_var
 
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
+from pyshipupdate import rmdir
+
+from test_pyship import TST_APP_NAME
 
 
 class TestPyshipLoggingHandler(logging.Handler):
     def emit(self, record):
         print(record.getMessage())
         assert False
+
+
+@pytest.fixture(scope="module", autouse=True)
+def cleanup_clips():
+    rmdir(Path(user_data_dir(TST_APP_NAME, pyship_author), f"{TST_APP_NAME}_0.0.2"))  # clip dir in appdata local can be left over from prior runs
 
 
 @pytest.fixture(scope="session", autouse=True)
