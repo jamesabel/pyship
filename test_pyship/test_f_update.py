@@ -26,7 +26,7 @@ def test_update():
         pyship_print(f"{tst_app_dirs.target_app_version=}")
         ps = PyShip(tst_app_dirs.project_dir, dist_dir=tst_app_dirs.dist_dir, cloud_profile="pyshiptest", find_links=find_links)  # the local pyship under development
         ps.cloud_access = pyship_cloud
-        inst = ps.ship_installer()
+        inst = ps.ship()
         return ps, inst
 
     original_version = VersionInfo(0, 0, 1)

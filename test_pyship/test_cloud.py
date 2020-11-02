@@ -18,7 +18,7 @@ def test_cloud():
     py_ship.cloud_bucket = "testawsimple"  # awsimple moto mock makes this
     py_ship.cloud_profile = os.environ.get("CLOUD_PROFILE", "default")  # since we're using moto to mock we don't need a real profile
     log.info(f"{py_ship.cloud_profile=}")
-    py_ship.ship_installer()
+    py_ship.ship()
 
     uploaded_files = py_ship.cloud_access.s3_access.dir()
     pprint(uploaded_files)

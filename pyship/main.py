@@ -21,4 +21,4 @@ def main():
         pyship.cloud_id = args.id
     if args.secret is not None:
         pyship.cloud_secret = args.secret
-    pyship.ship_installer()
+    pyship.ship()

@@ -9,6 +9,7 @@ from awsimple import S3Access
 from pyshipupdate import mkdirs, create_bucket_name
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
+from pyship import __version__ as pyship_version
 from pyship import AppInfo, get_logger, run_nsis, create_clip, create_launcher, pyship_print, APP_DIR_NAME, create_clip_file, DEFAULT_DIST_DIR_NAME, get_app_info, PyShipCloud
 
 log = get_logger(pyship_application_name)
@@ -30,14 +31,14 @@ class PyShip:
     cloud_access: PyShipCloud = None  # making this accessible outside this class aids in testing, especially when mocking
 
     @typechecked(always=True)
-    def ship_installer(self) -> (Path, None):
+    def ship(self) -> (Path, None):
         """
         Perform all the steps to ship the app, including creating the installer.
         :return: the path to the created installer or None if it could not be created
         """
 
         start_time = datetime.now()
-        pyship_print(f"{pyship_application_name} starting")
+        pyship_print(f"{pyship_application_name} starting ({str(pyship_version)})")
 
         target_app_info = get_app_info(self.project_dir, self.dist_dir)
 
@@ -86,14 +87,3 @@ class PyShip:
             pyship_print(f"{pyship_application_name} done (elapsed_time={str(elapsed_time)})")
 
         return installer_exe_path
-
-    @typechecked(always=True)
-    def ship_update(self) -> (Path, None):
-        """
-        Create and upload an update of this target app.  The update is a zip of a clip directory, with the extension .clip.
-        """
-        target_app_info = AppInfo()
-        target_app_info.setup_paths(self.project_dir)
-        app_dir = Path(self.project_dir, APP_DIR_NAME, target_app_info.name).absolute()
-        # derived classes will take it from here and do what they need to to place the clip in a place the user will get it via a call to Updater.update() ...
-        return create_clip(target_app_info, app_dir, True, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)
