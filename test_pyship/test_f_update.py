@@ -1,11 +1,13 @@
 import json
 from json.decoder import JSONDecodeError
 from pathlib import Path
+from pprint import pprint
 
 from semver import VersionInfo
-from awsimple import S3Access
 
-from pyship import PyShip, subprocess_run, get_logger, __application_name__, pyship_print, PyShipCloud
+from pyshipupdate import UpdaterAwsS3
+
+from pyship import PyShip, subprocess_run, get_logger, __application_name__, pyship_print, PyShipCloud, __author__
 from test_pyship import TST_APP_NAME, TstAppDirs, find_links
 
 log = get_logger(__application_name__)
@@ -16,16 +18,17 @@ def test_update():
     test that we can update the app
     """
 
-    s3_access = S3Access(TST_APP_NAME)
+    updater = UpdaterAwsS3(TST_APP_NAME, __author__)
+    pyship_cloud = PyShipCloud(TST_APP_NAME, updater)
+    pyship_cloud.s3_access.create_bucket()  # is this necessary?
 
     def do_pyship(tst_app_dirs: TstAppDirs):
         pyship_print(f"{tst_app_dirs.target_app_version=}")
-        ps = PyShip(tst_app_dirs.project_dir, dist_dir=tst_app_dirs.dist_dir, find_links=find_links)  # the local pyship under development
-        ps.cloud_access = PyShipCloud(TST_APP_NAME, s3_access)
+        ps = PyShip(tst_app_dirs.project_dir, dist_dir=tst_app_dirs.dist_dir, cloud_profile="pyshiptest", find_links=find_links)  # the local pyship under development
+        ps.cloud_access = pyship_cloud
         inst = ps.ship_installer()
         return ps, inst
 
-    PyShipCloud(TST_APP_NAME, s3_access).s3_access.create_bucket()
     original_version = VersionInfo(0, 0, 1)
     updated_version = VersionInfo(0, 0, 2)
     original_app_dirs = TstAppDirs(TST_APP_NAME, original_version)
@@ -54,6 +57,7 @@ def test_update():
     # we'll get multiple version JSON strings (one per line)
     lines = [ln.strip() for ln in std_out.splitlines() if len(ln.strip()) > 0]
     log.info(f"{lines=}")
+    pprint(lines)
     assert len(lines) == 2
     for i, version_string in enumerate(["0.0.1", "0.0.2"]):
         one_line = lines[i]

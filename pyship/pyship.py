@@ -1,12 +1,12 @@
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import appdirs
 from attr import attrs
 from typeguard import typechecked
 from awsimple import S3Access
 
-from pyshipupdate import mkdirs
+from pyshipupdate import mkdirs, create_bucket_name
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
 from pyship import AppInfo, get_logger, run_nsis, create_clip, create_launcher, pyship_print, APP_DIR_NAME, create_clip_file, DEFAULT_DIST_DIR_NAME, get_app_info, PyShipCloud
@@ -67,7 +67,7 @@ class PyShip:
             if self.cloud_profile is not None or self.cloud_id is not None:
 
                 # if cloud bucket not given we'll try to use the project name
-                bucket = target_app_info.name if self.cloud_bucket is None else self.cloud_bucket
+                bucket = create_bucket_name(target_app_info.name, target_app_info.author) if self.cloud_bucket is None else self.cloud_bucket
 
                 # use either a cloud profile (i.e. credentials usually stored in local file(s) ) or explicit cloud credentials
                 if self.cloud_profile is not None:
@@ -76,7 +76,7 @@ class PyShip:
                     s3_access = S3Access(bucket, aws_access_key_id=self.cloud_id, aws_secret_access_key=self.cloud_secret)
                 self.cloud_access = PyShipCloud(target_app_info.name, s3_access)
 
-                pyship_print(f"uploading {installer_exe_path} to {s3_access.bucket_name}/{installer_exe_path.name}")
+                pyship_print(f"uploading {installer_exe_path} to {self.cloud_access. s3_access.bucket_name}/{installer_exe_path.name}")
                 self.cloud_access.upload(installer_exe_path)  # upload installer file
 
                 pyship_print(f"uploading {clip_file_path} to {s3_access.bucket_name}/{clip_file_path.name}")
