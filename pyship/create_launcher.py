@@ -87,7 +87,7 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
             command_line.append(str(launcher_path))
 
             # avoid re-building launcher if its functionality wouldn't change
-            metadata = calculate_metadata(target_app_info.name, target_app_info.author, VersionInfo.parse(target_app_info.version),
+            metadata = calculate_metadata(target_app_info.name, target_app_info.author, target_app_info.version,
                                                    Path(launcher_module_dir), icon_path, target_app_info.is_gui)
             if not launcher_exe_path.exists() or metadata != load_metadata(app_path_output, metadata_filename):
 
