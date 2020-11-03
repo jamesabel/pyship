@@ -9,7 +9,7 @@ import pyship
 from pyship import AppInfo, pyship_print, get_logger, get_icon
 from pyship import __application_name__ as pyship_application_name
 from pyship.launcher import application_name as launcher_application_name
-from pyship.launcher import calculate_launcher_metadata, load_launcher_metadata, store_launcher_metadata
+from pyship.launcher import calculate_metadata, load_metadata, store_metadata
 
 
 log = get_logger(launcher_application_name)
@@ -30,7 +30,7 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
         log.error(f"{target_app_info.name=}")
     else:
 
-        launcher_metadata_filename = f"{target_app_info.name}_metadata.json"
+        metadata_filename = f"{target_app_info.name}_metadata.json"
 
         # create launcher
 
@@ -86,8 +86,9 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
             command_line.append(str(launcher_path))
 
             # avoid re-building launcher if its functionality wouldn't change
-            launcher_metadata = calculate_launcher_metadata(target_app_info.name, target_app_info.author, Path(launcher_module_dir), icon_path, target_app_info.is_gui)
-            if not launcher_exe_path.exists() or launcher_metadata != load_launcher_metadata(app_path_output, launcher_metadata_filename):
+            metadata = calculate_metadata(target_app_info.name, target_app_info.author, target_app_info.version,
+                                                   Path(launcher_module_dir), icon_path, target_app_info.is_gui)
+            if not launcher_exe_path.exists() or metadata != load_metadata(app_path_output, metadata_filename):
 
                 pyship_print(f"building launcher ({launcher_exe_path})")
                 log.info(f"project_dir={str(target_app_info.project_dir)}")
@@ -95,7 +96,7 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
                 # pyinstaller outputs regular status messages to stderr for some reason so just capture all output but also check for error return code
                 launcher_run = subprocess.run(command_line, cwd=target_app_info.project_dir, capture_output=True, text=True, check=True)
                 # metadata is in the app parent dir
-                store_launcher_metadata(app_path_output, launcher_metadata_filename, launcher_metadata)
+                store_metadata(app_path_output, metadata_filename, metadata)
 
                 if launcher_exe_path.exists():
                     built_it = True

@@ -7,6 +7,7 @@ from typeguard import typechecked
 from awsimple import S3Access
 
 from pyshipupdate import mkdirs, create_bucket_name
+from pyshipupdate import __version__ as pyshipupdate_version
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
 from pyship import __version__ as pyship_version
@@ -38,7 +39,7 @@ class PyShip:
         """
 
         start_time = datetime.now()
-        pyship_print(f"{pyship_application_name} starting ({str(pyship_version)})")
+        pyship_print(f"{pyship_application_name} starting (pyship={str(pyship_version)},pyshipupdate={str(pyshipupdate_version)})")
 
         target_app_info = get_app_info(self.project_dir, self.dist_dir)
 

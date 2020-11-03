@@ -42,7 +42,7 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
     # http://nsis.sourceforge.net/A_simple_installer_with_start_menu_shortcut_and_uninstaller
 
     icon_path = get_icon(target_app_info, log.info)
-    shutil.copy2(icon_path, Path(app_dir, target_app_info.name, icon_path.name))  # copy icon next to exe
+    shutil.copy2(icon_path, Path(app_dir, target_app_info.name, f"{target_app_info.name}.ico"))  # copy icon next to exe
 
     license_file_name = "LICENSE"
     installer_exe_path = None
@@ -187,7 +187,7 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         nsis_lines.append("  RMDir /r $INSTDIR\\${APPNAME}")
         nsis_lines.append("  RMDir /r $INSTDIR\\${APPNAME}_%s" % str(target_app_info.version))
         nsis_lines.append("  delete $INSTDIR\\${APPNAME}_%s.clip" % str(target_app_info.version))
-        nsis_lines.append("  delete $INSTDIR\\${APPNAME}_%s.json" % str(target_app_info.version))
+        nsis_lines.append("  delete $INSTDIR\\*.json")
         # use these patterns so that we delete the uninstaller last
         nsis_lines.append("  delete $INSTDIR\\LICENSE")
         nsis_lines.append("  delete $INSTDIR\\COPY")  # for GPL
