@@ -184,10 +184,10 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         nsis_lines.append('  rmDir "$SMPROGRAMS\\${COMPANYNAME}"')
 
         nsis_lines.append("  # Remove files")
-        nsis_lines.append("  RMDir /r $INSTDIR\\${APPNAME}\\")
-        nsis_lines.append("  RMDir /r $INSTDIR\\${APPNAME}_*\\")
-        nsis_lines.append("  delete $INSTDIR\\${APPNAME}_*.clip")
-        nsis_lines.append("  delete $INSTDIR\\${APPNAME}_*.json")
+        nsis_lines.append("  RMDir /r $INSTDIR\\${APPNAME}")
+        nsis_lines.append("  RMDir /r $INSTDIR\\${APPNAME}_%s" % str(target_app_info.version))
+        nsis_lines.append("  delete $INSTDIR\\${APPNAME}_%s.clip" % str(target_app_info.version))
+        nsis_lines.append("  delete $INSTDIR\\${APPNAME}_%s.json" % str(target_app_info.version))
         # use these patterns so that we delete the uninstaller last
         nsis_lines.append("  delete $INSTDIR\\LICENSE")
         nsis_lines.append("  delete $INSTDIR\\COPY")  # for GPL
