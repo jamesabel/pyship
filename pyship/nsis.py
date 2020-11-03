@@ -2,6 +2,7 @@ import os
 import datetime
 from pathlib import Path
 from semver import VersionInfo
+import shutil
 
 from typeguard import typechecked
 from balsa import get_logger
@@ -41,6 +42,7 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
     # http://nsis.sourceforge.net/A_simple_installer_with_start_menu_shortcut_and_uninstaller
 
     icon_path = get_icon(target_app_info, log.info)
+    shutil.copy2(icon_path, Path(app_dir, target_app_info.name, icon_path.name))  # copy icon next to exe
 
     license_file_name = "LICENSE"
     installer_exe_path = None
@@ -132,12 +134,12 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         nsis_lines.append("  ")
         nsis_lines.append("  # Start Menu")
         nsis_lines.append('  createDirectory "$SMPROGRAMS\\${COMPANYNAME}"')
-        nsis_lines.append('  createShortCut "$SMPROGRAMS\\${COMPANYNAME}\\${APPNAME}.lnk" "$INSTDIR\\${APPNAME}\\${EXENAME}" "" "$INSTDIR\\${APPNAME}.ico"')
+        nsis_lines.append('  createShortCut "$SMPROGRAMS\\${COMPANYNAME}\\${APPNAME}.lnk" "$INSTDIR\\${APPNAME}\\${EXENAME}" "" "$INSTDIR\\${APPNAME}\\${APPNAME}.ico"')
         nsis_lines.append("")
 
         if target_app_info.run_on_startup:
             nsis_lines.append("  # run on Windows startup")
-            nsis_lines.append('  WriteRegStr HKEY_LOCAL_MACHINE "Software\\Microsoft\\Windows\\CurrentVersion\\Run" "${APPNAME}" "$INSTDIR\\${EXENAME}"')
+            nsis_lines.append('  WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Run" "${APPNAME}" "$INSTDIR\\${APPNAME}\\${EXENAME}"')
             nsis_lines.append("")
 
         nsis_lines.append("  # Registry information for add/remove programs")
@@ -182,12 +184,13 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         nsis_lines.append('  rmDir "$SMPROGRAMS\\${COMPANYNAME}"')
 
         nsis_lines.append("  # Remove files")
-        nsis_lines.append("  RMDir /r $INSTDIR\\%s" % target_app_info.name)  # all the user files should be here
+        nsis_lines.append("  RMDir /r $INSTDIR\\${APPNAME}\\")
+        nsis_lines.append("  RMDir /r $INSTDIR\\${APPNAME}_*\\")
+        nsis_lines.append("  delete $INSTDIR\\${APPNAME}_*.clip")
+        nsis_lines.append("  delete $INSTDIR\\${APPNAME}_*.json")
         # use these patterns so that we delete the uninstaller last
         nsis_lines.append("  delete $INSTDIR\\LICENSE")
         nsis_lines.append("  delete $INSTDIR\\COPY")  # for GPL
-        nsis_lines.append("  delete $INSTDIR\\${EXENAME}")
-        nsis_lines.append("  delete $INSTDIR\\*.ico")
 
         nsis_lines.append("  # Always delete uninstaller as the last action")
         nsis_lines.append("  delete $INSTDIR\\uninstall.exe")
