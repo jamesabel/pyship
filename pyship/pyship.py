@@ -30,6 +30,7 @@ class PyShip:
     cloud_id: str = None  # e.g. AWS Access Key ID
     cloud_secret: str = None  # e.g. AWS Secret Access Key
     cloud_access: PyShipCloud = None  # making this accessible outside this class aids in testing, especially when mocking
+    upload: bool = True  # set to False to tell pyship to not attempt to perform file upload to the cloud (e.g. installer, clip files to AWS S3)
 
     @typechecked(always=True)
     def ship(self) -> (Path, None):
@@ -52,9 +53,6 @@ class PyShip:
             log.error(f"{target_app_info.name=}")
         else:
 
-            if self.cloud_profile is None and self.cloud_id is None:
-                pyship_print("no cloud access provided - will not attempt upload")
-
             app_dir = Path(self.project_dir, APP_DIR_NAME, target_app_info.name).absolute()
 
             mkdirs(app_dir, remove_first=True)
@@ -66,23 +64,34 @@ class PyShip:
             clip_file_path = create_clip_file(clip_dir)  # create clip file
             installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)  # create installer
 
-            if self.cloud_profile is not None or self.cloud_id is not None:
-
-                # if cloud bucket not given we'll try to use the project name
-                bucket = create_bucket_name(target_app_info.name, target_app_info.author) if self.cloud_bucket is None else self.cloud_bucket
-
-                # use either a cloud profile (i.e. credentials usually stored in local file(s) ) or explicit cloud credentials
-                if self.cloud_profile is not None:
-                    s3_access = S3Access(bucket, profile_name=self.cloud_profile)
+            if self.upload:
+                if self.cloud_profile is None and self.cloud_id is None:
+                    pyship_print("no cloud access provided - will not attempt upload")
                 else:
-                    s3_access = S3Access(bucket, aws_access_key_id=self.cloud_id, aws_secret_access_key=self.cloud_secret)
-                self.cloud_access = PyShipCloud(target_app_info.name, s3_access)
 
-                pyship_print(f"uploading {installer_exe_path} to {self.cloud_access. s3_access.bucket_name}/{installer_exe_path.name}")
-                self.cloud_access.upload(installer_exe_path)  # upload installer file
+                    # if cloud bucket not given we'll try to use the project name
+                    bucket = create_bucket_name(target_app_info.name, target_app_info.author) if self.cloud_bucket is None else self.cloud_bucket
 
-                pyship_print(f"uploading {clip_file_path} to {s3_access.bucket_name}/{clip_file_path.name}")
-                self.cloud_access.upload(clip_file_path)  # upload clip file
+                    # use either a cloud profile (i.e. credentials usually stored in local file(s) ) or explicit cloud credentials
+                    if self.cloud_profile is None:
+                        if self.cloud_secret is None:
+                            log.error(f"{self.cloud_secret=}")
+                            s3_access = None
+                        else:
+                            s3_access = S3Access(bucket, aws_access_key_id=self.cloud_id, aws_secret_access_key=self.cloud_secret)
+                    else:
+                        s3_access = S3Access(bucket, profile_name=self.cloud_profile)
+
+                    if s3_access is not None:
+                        self.cloud_access = PyShipCloud(target_app_info.name, s3_access)
+
+                        pyship_print(f"uploading {installer_exe_path} to {self.cloud_access. s3_access.bucket_name}/{installer_exe_path.name}")
+                        self.cloud_access.upload(installer_exe_path)  # upload installer file
+
+                        pyship_print(f"uploading {clip_file_path} to {s3_access.bucket_name}/{clip_file_path.name}")
+                        self.cloud_access.upload(clip_file_path)  # upload clip file
+            else:
+                pyship_print("no upload requested")
 
             elapsed_time = datetime.now() - start_time
             pyship_print(f"{pyship_application_name} done (elapsed_time={str(elapsed_time)})")

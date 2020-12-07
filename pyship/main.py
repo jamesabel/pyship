@@ -21,4 +21,6 @@ def main():
         pyship.cloud_id = args.id
     if args.secret is not None:
         pyship.cloud_secret = args.secret
+    if args.noupload:
+        pyship.upload = False
     pyship.ship()
