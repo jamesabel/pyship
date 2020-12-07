@@ -14,3 +14,5 @@ Enables shipping a python application to end users.
 ## Documentation and Examples
 
 [Learn PyShip By Example](https://github.com/jamesabel/pyshipexample)
+
+[Short video on pyship given at Pyninsula](https://abelpublic.s3.us-west-2.amazonaws.com/pyship_pyninsula_10_2020.mkv)
