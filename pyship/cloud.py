@@ -24,6 +24,7 @@ class PyShipCloud:
 
     @typechecked
     def upload(self, file_path: Path):
+        self.s3_access.set_public_readable(True)  # all uploads are public readable (disable upload to keep installers and clips private)
         self.s3_access.create_bucket()
         self.s3_access.upload(file_path, file_path.name)
 

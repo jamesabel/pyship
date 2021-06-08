@@ -16,6 +16,16 @@ class PyshipCouldNotGetVersion(PyshipException):
         super().__init__(self.__class__.__name__, python_ver_tuple)
 
 
+class PyshipNoAppName(PyshipException):
+    def __init__(self):
+        super().__init__(self.__class__.__name__)
+
+
+class PyshipNoTargetAppInfo(PyshipException):
+    def __init__(self):
+        super().__init__(self.__class__.__name__)
+
+
 class PyshipLicenseFileDoesNotExist(PyshipException):
     def __init__(self, path: Path):
         super().__init__(self.__class__.__name__, path)

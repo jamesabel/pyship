@@ -12,7 +12,7 @@ from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
 from pyship import __version__ as pyship_version
 from pyship import run_nsis, create_clip, create_pyship_launcher, pyship_print, APP_DIR_NAME, create_clip_file, DEFAULT_DIST_DIR_NAME, get_app_info, PyShipCloud
-from pyship import PyshipNoProductDirectory
+from pyship import PyshipNoProductDirectory, PyshipNoAppName, PyshipNoTargetAppInfo
 from pyshipupdate import mkdirs, create_bucket_name
 from pyshipupdate import __version__ as pyshipupdate_version
 
@@ -22,7 +22,7 @@ log = get_logger(pyship_application_name)
 @attrs(auto_attribs=True)
 class PyShip:
 
-    project_dir: Path = Path()  # target app project dir, e.g. the "home" directory of the project.  If None, current working directory is used.
+    project_dir: Path = Path()  # target app project dir, e.g. the "home" directory of the project.  If not set, current working directory is used.
     dist_dir: Path = Path(DEFAULT_DIST_DIR_NAME)  # many packaging tools (e.g filt, etc.) use "dist" as the package destination directory
     find_links: list = list()  # extra dirs for pip to use for packages not yet on PyPI (e.g. under local development)
     cache_dir: Path = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))  # used to cache things like the embedded Python zip (to keep us off the python.org servers)
@@ -48,11 +48,12 @@ class PyShip:
         target_app_info = get_app_info(self.project_dir, self.dist_dir)
 
         if self.project_dir is None:
+            assert isinstance(self.project_dir, Path)
             raise PyshipNoProductDirectory(self.project_dir)
         elif target_app_info is None:
-            log.error(f"{target_app_info=}")
+            raise PyshipNoTargetAppInfo
         elif target_app_info.name is None:
-            log.error(f"{target_app_info.name=}")
+            raise PyshipNoAppName
         else:
 
             app_dir = Path(self.project_dir, APP_DIR_NAME, target_app_info.name).absolute()
