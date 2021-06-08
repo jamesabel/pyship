@@ -1,9 +1,8 @@
 from pathlib import Path
 import time
 import subprocess
-import shutil
 
-from pyship import create_launcher, __application_name__, AppInfo
+from pyship import __application_name__
 
 from ismain import is_main
 
