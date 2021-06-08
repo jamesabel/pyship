@@ -1,5 +1,6 @@
 from typeguard import typechecked
 from typing import Callable
+from logging import Logger
 
 from balsa import Balsa
 from balsa import get_logger as balsa_get_logger
@@ -11,15 +12,15 @@ class PyshipLog(Balsa):
     pass
 
 
-@typechecked(always=True)
-def get_logger(name: str):
+@typechecked
+def get_logger(name: str) -> Logger:
     return balsa_get_logger(name)
 
 
 log = get_logger(__application_name__)
 
 
-@typechecked(always=True)
+@typechecked
 def log_process_output(output_type: str, process_output: bytes, log_function: Callable = log.debug) -> list:
     """
     log the output from a process call

@@ -1,5 +1,6 @@
 from pathlib import Path
 from dataclasses import dataclass
+from typing import Union
 
 import toml
 from semver import VersionInfo
@@ -7,24 +8,27 @@ from typeguard import typechecked
 from wheel_inspect import inspect_wheel
 
 from pyship import __application_name__ as pyship_application_name
-from pyship import get_logger, pyship_print
+from pyship import get_logger, pyship_print, PyshipInsufficientAppInfo, NullPath
 
 log = get_logger(pyship_application_name)
 
 
 @dataclass
 class AppInfo:
-    name: str = None
-    author: str = None
-    version: VersionInfo = None
-    is_gui: bool = None
-    url: str = None
-    description: str = None
-    run_on_startup: bool = None
-    project_dir: Path = None
-    python_exe_path: Path = None
-    pyship_installed_package_dir: Path = None
-    icon_file_name: str = None
+    name: Union[str, None] = None
+    author: Union[str, None] = None
+    version: Union[VersionInfo, None] = None
+    is_gui: Union[bool, None] = None
+    url: Union[str, None] = None
+    description: Union[str, None] = None
+    run_on_startup: Union[bool, None] = None
+
+    # these will be filled in
+    project_dir: Path = NullPath()
+    python_exe_path: Path = NullPath()
+    pyship_installed_package_dir: Path = NullPath()
+
+    icon_file_name: Union[str, None] = None
 
     def setup_paths(self, target_app_project_dir: Path):
         self.project_dir = target_app_project_dir
@@ -32,8 +36,8 @@ class AppInfo:
         self.pyship_installed_package_dir = Path(self.project_dir, "venv", "Lib", "site-packages", pyship_application_name)
 
 
-@typechecked(always=True)
-def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path = None) -> AppInfo:
+@typechecked
+def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path) -> AppInfo:
     pyproject_toml_file_name = "pyproject.toml"
     pyproject_toml_file_path = Path(target_app_project_dir, pyproject_toml_file_name)
 
@@ -69,7 +73,7 @@ def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path = No
     return app_info
 
 
-@typechecked(always=True)
+@typechecked
 def get_app_info_wheel(app_info: AppInfo, dist_path: Path) -> AppInfo:
     if dist_path is not None and dist_path.exists():
         wheel_info = inspect_wheel(dist_path)
@@ -81,8 +85,8 @@ def get_app_info_wheel(app_info: AppInfo, dist_path: Path) -> AppInfo:
     return app_info
 
 
-@typechecked(always=True)
-def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path) -> (AppInfo, None):
+@typechecked
+def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path) -> AppInfo:
     """
     Get combined app info from all potential sources.
     :param target_app_project_dir: app project dir, e.g. where a pyproject.toml may reside. (optional)
@@ -118,8 +122,7 @@ def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path) -> (Ap
             for required_field in ["name", "author", "version"]:
                 if (attribute_value := getattr(app_info, required_field)) is None:
                     log.error(f'"{required_field}" not defined for the target application')
-                    app_info = None  # not sufficient to create app info
-                    break
+                    raise PyshipInsufficientAppInfo
                 else:
                     pyship_print(f"{required_field}={attribute_value}")
 

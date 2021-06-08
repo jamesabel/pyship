@@ -9,19 +9,18 @@ from pathlib import Path
 from platform import system
 import inspect
 
-from semver import VersionInfo
 from typeguard import typechecked
 
 from pyshipupdate import is_windows, copy_tree
 import pyship
 import pyship.patch.pyship_patch
-from pyship import AppInfo, file_download, pyship_print, extract, get_logger, __application_name__, subprocess_run, CLIP_EXT
+from pyship import AppInfo, file_download, pyship_print, extract, get_logger, __application_name__, subprocess_run, CLIP_EXT, PyshipCouldNotGetVersion
 
 
 log = get_logger(__application_name__)
 
 
-@typechecked(always=True)
+@typechecked
 def create_clip(target_app_info: AppInfo, app_dir: Path, remove_pth: bool, target_app_package_dist_dir: Path, cache_dir: Path, find_links: list) -> Path:
     """
     create clip (Complete Location Independent Python) environment
@@ -37,6 +36,7 @@ def create_clip(target_app_info: AppInfo, app_dir: Path, remove_pth: bool, targe
 
     # create the clip dir
     clip_dir = create_base_clip(target_app_info, app_dir, cache_dir)
+    assert isinstance(target_app_info.name, str)
     install_target_app(target_app_info.name, clip_dir, target_app_package_dist_dir, remove_pth, find_links)
     return clip_dir
 
@@ -52,8 +52,8 @@ def create_clip_file(clip_dir: Path) -> Path:
     return Path(clip_dir, archive_name).rename(Path(clip_dir, f"{archive_name[:-3]}{CLIP_EXT}"))  # make_archive creates a .zip, but we want a .lip
 
 
-@typechecked(always=True)
-def create_base_clip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path) -> (Path, None):
+@typechecked
+def create_base_clip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path) -> Path:
     """
     create pyship python environment called clip
 
@@ -68,7 +68,12 @@ def create_base_clip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path) -
     python_ver_tuple = platform.python_version_tuple()
 
     # get the embedded python interpreter
-    base_patch_str = re.search(r"([0-9]+)", python_ver_tuple[2]).group(1)
+    search = re.search(r"([0-9]+)", python_ver_tuple[2])
+    if search is not None:
+        base_patch_str = search.group(1)
+    else:
+        raise PyshipCouldNotGetVersion(python_ver_tuple)
+
     # version but with numbers only and not the extra release info (e.g. b, rc, etc.)
     ver_base_str = f"{python_ver_tuple[0]}.{python_ver_tuple[1]}.{base_patch_str}"
     zip_file = Path(f"python-{python_ver_str}-embed-amd64.zip")
@@ -132,7 +137,7 @@ def create_base_clip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path) -
     return clip_dir
 
 
-@typechecked(always=True)
+@typechecked
 def install_target_app(module_name: str, python_env_dir: Path, target_app_package_dist_dir: Path, remove_pth: bool, find_links: list):
     """
     install target app as a module (and its dependencies) into clip

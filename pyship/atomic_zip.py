@@ -11,7 +11,7 @@ from pyship import get_logger, __application_name__
 log = get_logger(__application_name__)
 
 
-@typechecked(always=True)
+@typechecked
 def atomic_unzip(zip_file_path: Path, destination_dir: Path) -> bool:
     """
     Unzip a zip file to a directory in a safe, atomic way.  This avoids the issue where if an unzip fails in the middle it can potentially leave a directory with partially unzipped contents.

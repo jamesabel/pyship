@@ -1,7 +1,6 @@
 import sys
 from pathlib import Path
 import subprocess
-from semver import VersionInfo
 
 from typeguard import typechecked
 
@@ -16,8 +15,8 @@ from pyship.launcher import calculate_metadata, load_metadata, store_metadata
 log = get_logger(launcher_application_name)
 
 
-@typechecked(always=True)
-def create_launcher(target_app_info: AppInfo, app_path_output: Path):
+@typechecked
+def create_pyship_launcher(target_app_info: AppInfo, app_path_output: Path):
     """
     create the launcher executable
     :param target_app_info: target app info
@@ -36,6 +35,7 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
         # create launcher
 
         # find the launcher source file path
+        assert hasattr(pyship, "__path__")
         pyship_path_list = pyship.__path__
         if len(pyship_path_list) != 1:
             log.warning(f"not length of 1: {pyship_path_list}")
@@ -87,11 +87,12 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
             command_line.append(str(launcher_path))
 
             # avoid re-building launcher if its functionality wouldn't change
-            metadata = calculate_metadata(target_app_info.name, target_app_info.author, target_app_info.version,
-                                                   Path(launcher_module_dir), icon_path, target_app_info.is_gui)
+            assert isinstance(target_app_info.author, str)
+            assert isinstance(target_app_info.is_gui, bool)
+            metadata = calculate_metadata(target_app_info.name, target_app_info.author, target_app_info.version, Path(launcher_module_dir), icon_path, target_app_info.is_gui)
             if not launcher_exe_path.exists() or metadata != load_metadata(app_path_output, metadata_filename):
 
-                pyship_print(f"building launcher ({launcher_exe_path})")
+                pyship_print(f'building launcher ("{launcher_exe_path}")')
                 log.info(f"project_dir={str(target_app_info.project_dir)}")
                 log.info(f"{command_line=}")
                 # pyinstaller outputs regular status messages to stderr for some reason so just capture all output but also check for error return code
@@ -104,8 +105,8 @@ def create_launcher(target_app_info: AppInfo, app_path_output: Path):
                     log.info(f"launcher built ({launcher_exe_path})")
                 else:
                     # launcher wasn't built - there was an error - so display the pyinstaller output to the user
-                    pyship_print(launcher_run.std_out)
-                    pyship_print(launcher_run.std_err)
+                    pyship_print(launcher_run.stdout)
+                    pyship_print(launcher_run.stderr)
             else:
                 log.info(f"{launcher_exe_path} already built - no need to rebuild")
 

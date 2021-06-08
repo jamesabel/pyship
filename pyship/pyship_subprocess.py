@@ -4,17 +4,18 @@ from typing import Callable
 import sys
 import os
 from copy import deepcopy
+from typing import Tuple, Optional
 
 from typeguard import typechecked
 
-from pyship import __application_name__, get_logger
+from pyship import __application_name__, get_logger, NullPath
 from pyshipupdate import ok_return_code, restart_return_code, error_return_code
 
 log = get_logger(__application_name__)
 
 
-@typechecked(always=True)
-def subprocess_run(cmd: list, cwd: Path = None, mute_output: bool = True, stdout_log: Callable = log.info, stderr_log: Callable = log.warning) -> (int, (str, None), (str, None)):
+@typechecked
+def subprocess_run(cmd: list, cwd: Path = NullPath(), mute_output: bool = True, stdout_log: Callable = log.info, stderr_log: Callable = log.warning) -> Tuple[int, Optional[str], Optional[str]]:
     """
     subprocess run taking return code into account
 
@@ -29,9 +30,6 @@ def subprocess_run(cmd: list, cwd: Path = None, mute_output: bool = True, stdout
     std_out = None
     std_err = None
 
-    if cwd is not None:
-        cwd = str(cwd)  # subprocess requires a string
-
     # remove PATHs that (if they exist) will interfere with running this command
     run_env = deepcopy(os.environ)
     for env_var in ["PATH", "PYTHONPATH"]:
@@ -42,14 +40,17 @@ def subprocess_run(cmd: list, cwd: Path = None, mute_output: bool = True, stdout
 
     for k, v in run_env.items():
         log.debug(f"{k}={v}")
-    log.info(f"{cwd=}")
     log.info(f"{mute_output=}")
     log.info(f"{os.getcwd()=}")
     log.info(f"{cmd=}")
 
     try:
 
-        target_process = subprocess.run(cmd, cwd=cwd, env=run_env, capture_output=True, text=True)
+        if isinstance(cwd, NullPath):
+            target_process = subprocess.run(cmd, env=run_env, capture_output=True, text=True)
+        else:
+            log.info(f"{cwd=}")
+            target_process = subprocess.run(cmd, cwd=str(cwd), env=run_env, capture_output=True, text=True)
         std_out = target_process.stdout
         std_err = target_process.stderr
         if (std_err is not None and len(std_err.strip()) > 0) or (target_process.returncode != ok_return_code and target_process.returncode != restart_return_code):

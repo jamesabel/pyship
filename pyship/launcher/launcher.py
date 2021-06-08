@@ -35,7 +35,7 @@ def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
     if verbose:
         print(f"{pyship_log.log_path=}")
 
-    exception_string = None  # store exception strings here until logging gets set up
+    exception_string = ""  # store exception strings here until logging gets set up
 
     if report_exceptions:
         # use Sentry's exception service
@@ -46,11 +46,11 @@ def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
                 try:
                     sentry_dsn = json.loads(response.text)["dsn"]
                 except json.decoder.JSONDecodeError as e:
-                    exception_string = e
+                    exception_string = str(e)
         except KeyError as e:
-            exception_string = e
+            exception_string = str(e)
         except requests.exceptions.RequestException as e:
-            exception_string = e
+            exception_string = str(e)
         if sentry_dsn is not None:
             pyship_log.sentry_dsn = sentry_dsn
 
@@ -65,7 +65,7 @@ def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
         if ht in pyship_log.handlers:
             pyship_log.handlers[ht].setLevel(logging.ERROR)
 
-    if exception_string is not None:
+    if len(exception_string) > 0:
         log.info(exception_string)  # don't present these to the user unless verbose selected
 
     log.info(f"{verbose=}")
@@ -164,7 +164,7 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
 
                 # run the target app using the python interpreter we just found
                 if python_exe_path.exists():
-                    cmd = [python_exe_path, "-m", target_app_name]
+                    cmd = [str(python_exe_path), "-m", target_app_name]
                     if len(sys.argv) > 1:
                         for arg in sys.argv[1:]:
                             if arg != launcher_verbose_string:
@@ -179,7 +179,7 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
                         target_process = subprocess.run(cmd, cwd=python_exe_path.parent, capture_output=True, text=True)
                         return_code = target_process.returncode  # if app returns "restart_value" then it wants to be restarted
 
-                        # Treatment of the output from the subprocess run in launcher is similar - but not exactly - the same as is in pyship/subprocess_run.py, so keep them separate for now.
+                        # Treatment of the output from the subprocess run in launcher is similar - but not exactly - the same as is in pyship/pyship_subprocess.py, so keep them separate for now.
                         # Maybe eventually we'll have just one shared routine once enough tests are in place.
                         std_out = target_process.stdout
                         std_err = target_process.stderr

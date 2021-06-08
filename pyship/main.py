@@ -1,9 +1,9 @@
-from pyship import PyShip, __application_name__, __author__, PyshipLog, arguments, pyship_print, PyShipCloud
+from pyship import PyShip, __application_name__, __author__, PyshipLog, get_arguments, pyship_print
 
 
 def main():
 
-    args = arguments()
+    args = get_arguments()
 
     pyship_log = PyshipLog(__application_name__, __author__)
     pyship_log.init_logger_from_args(args)

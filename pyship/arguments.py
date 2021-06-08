@@ -1,12 +1,13 @@
 import sys
 import argparse
+from typing import Any
 
 from balsa import verbose_arg_string, delete_existing_arg_string, log_dir_arg_string
 
 from pyship import __name__, __version__, DEFAULT_DIST_DIR_NAME
 
 
-def arguments():
+def get_arguments() -> Any:
 
     parser = argparse.ArgumentParser(prog=__name__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 

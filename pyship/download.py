@@ -14,7 +14,7 @@ from pyship import __application_name__ as pyship_application_name
 log = get_logger(pyship_application_name)
 
 
-@typechecked(always=True)
+@typechecked
 def file_download(url: str, destination_folder: Path, file_name: Path):
     destination_folder.mkdir(parents=True, exist_ok=True)
     destination_path = Path(destination_folder, file_name)
@@ -32,7 +32,7 @@ def file_download(url: str, destination_folder: Path, file_name: Path):
     return destination_path
 
 
-@typechecked(always=True)
+@typechecked
 def extract(source_folder: Path, source_file: Path, destination_folder: Path):
     mkdirs(destination_folder, remove_first=True)
     source = Path(source_folder, source_file)

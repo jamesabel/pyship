@@ -11,7 +11,7 @@ window = Tk()
 window.withdraw()  # no main window
 
 
-@typechecked(always=True)
+@typechecked
 def pyship_print(s: str, is_gui: bool = False):
     log.info(s)
     if is_gui:
