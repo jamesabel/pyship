@@ -5,7 +5,7 @@ from semver import VersionInfo
 from ismain import is_main
 
 from pyshipupdate import mkdirs
-from pyship import create_launcher, AppInfo, __author__
+from pyship import create_pyship_launcher, AppInfo, __author__
 from test_pyship import TST_APP_NAME, TstAppDirs
 
 
@@ -27,7 +27,7 @@ def test_create_launcher():
 
     for _ in range(0, 2):
         mkdirs(tst_app_dirs.app_dir, remove_first=True)
-        create_launcher(target_app_info, tst_app_dirs.app_dir)
+        create_pyship_launcher(target_app_info, tst_app_dirs.app_dir)
         assert tst_app_dirs.launcher_exe_path.exists()
 
 
