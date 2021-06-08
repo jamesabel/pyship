@@ -7,15 +7,18 @@ from copy import deepcopy
 from typing import Tuple, Optional
 
 from typeguard import typechecked
+from balsa import get_logger
 
-from pyship import __application_name__, get_logger, NullPath
+from pyship import __application_name__, NullPath
 from pyshipupdate import ok_return_code, restart_return_code, error_return_code
 
 log = get_logger(__application_name__)
 
 
 @typechecked
-def subprocess_run(cmd: list, cwd: Path = NullPath(), mute_output: bool = True, stdout_log: Callable = log.info, stderr_log: Callable = log.warning) -> Tuple[int, Optional[str], Optional[str]]:
+def subprocess_run(
+    cmd: list, cwd: Path = NullPath(), mute_output: bool = True, stdout_log: Callable = log.info, stderr_log: Callable = log.warning
+) -> Tuple[int, Optional[str], Optional[str]]:
     """
     subprocess run taking return code into account
 

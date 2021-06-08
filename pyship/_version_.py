@@ -2,7 +2,7 @@ from pyshipupdate import __author__ as pyship_author
 
 __application_name__ = "pyship"
 __author__ = pyship_author
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __title__ = __application_name__
 __author_email__ = "j@abel.co"
 __url__ = "https://github.com/jamesabel/pyship"

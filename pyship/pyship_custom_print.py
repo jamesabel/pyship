@@ -2,8 +2,9 @@ from tkinter import Tk, Label
 from datetime import datetime
 
 from typeguard import typechecked
+from balsa import get_logger
 
-from pyship import get_logger, __application_name__
+from pyship import __application_name__
 
 log = get_logger(__application_name__)
 

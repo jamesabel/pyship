@@ -4,10 +4,11 @@ from pathlib import Path
 from pprint import pprint
 
 from semver import VersionInfo
+from balsa import get_logger
 
 from pyshipupdate import UpdaterAwsS3
 
-from pyship import PyShip, subprocess_run, get_logger, __application_name__, pyship_print, PyShipCloud, __author__
+from pyship import PyShip, subprocess_run, __application_name__, pyship_print, PyShipCloud, __author__
 from test_pyship import TST_APP_NAME, TstAppDirs, find_links
 
 log = get_logger(__application_name__)

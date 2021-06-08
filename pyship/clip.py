@@ -10,11 +10,12 @@ from platform import system
 import inspect
 
 from typeguard import typechecked
+from balsa import get_logger
 
 from pyshipupdate import is_windows, copy_tree
 import pyship
 import pyship.patch.pyship_patch
-from pyship import AppInfo, file_download, pyship_print, extract, get_logger, __application_name__, subprocess_run, CLIP_EXT, PyshipCouldNotGetVersion
+from pyship import AppInfo, file_download, pyship_print, extract, __application_name__, subprocess_run, CLIP_EXT, PyshipCouldNotGetVersion
 
 
 log = get_logger(__application_name__)

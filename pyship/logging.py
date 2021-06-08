@@ -1,20 +1,14 @@
 from typeguard import typechecked
 from typing import Callable
-from logging import Logger
 
 from balsa import Balsa
-from balsa import get_logger as balsa_get_logger
+from balsa import get_logger
 
 from pyship import __application_name__
 
 
 class PyshipLog(Balsa):
     pass
-
-
-@typechecked
-def get_logger(name: str) -> Logger:
-    return balsa_get_logger(name)
 
 
 log = get_logger(__application_name__)

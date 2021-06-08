@@ -2,8 +2,9 @@ from typing import Callable
 from pathlib import Path
 
 from typeguard import typechecked
+from balsa import get_logger
 
-from pyship import AppInfo, get_logger, __application_name__
+from pyship import AppInfo, __application_name__
 import pyship
 
 log = get_logger(__application_name__)

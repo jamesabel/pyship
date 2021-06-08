@@ -4,9 +4,10 @@ import zipfile
 import os
 
 from typeguard import typechecked
+from balsa import get_logger
 
 from pyshipupdate import mkdirs, rmdir
-from pyship import get_logger, __application_name__
+from pyship import __application_name__
 
 log = get_logger(__application_name__)
 

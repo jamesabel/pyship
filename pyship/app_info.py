@@ -6,9 +6,10 @@ import toml
 from semver import VersionInfo
 from typeguard import typechecked
 from wheel_inspect import inspect_wheel
+from balsa import get_logger
 
 from pyship import __application_name__ as pyship_application_name
-from pyship import get_logger, pyship_print, PyshipInsufficientAppInfo, NullPath
+from pyship import pyship_print, PyshipInsufficientAppInfo, NullPath
 
 log = get_logger(pyship_application_name)
 

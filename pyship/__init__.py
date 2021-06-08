@@ -8,9 +8,9 @@ DEFAULT_DIST_DIR_NAME = "dist"
 
 from .pyship_path import NullPath
 from ._version_ import __version__, __author__, __application_name__, __title__, __description__, __url__, __author_email__, __download_url__
+from .logging import PyshipLog, log_process_output
 from .pyship_exceptions import PyshipException, PyshipNoProductDirectory, PyshipCouldNotGetVersion, PyshipLicenseFileDoesNotExist, PyshipInsufficientAppInfo
 from .constants import dist_dir
-from .logging import PyshipLog, get_logger, log_process_output
 from .pyship_custom_print import pyship_print
 from .arguments import get_arguments
 from .pyship_subprocess import subprocess_run

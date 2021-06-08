@@ -2,7 +2,9 @@ from ismain import is_main
 from semver import VersionInfo
 from pathlib import Path
 
-from pyship import create_clip, AppInfo, PyshipLog, get_logger, __author__
+from balsa import get_logger
+
+from pyship import create_clip, AppInfo, PyshipLog, __author__
 
 from test_pyship import TstAppDirs, TST_APP_NAME, __application_name__, find_links
 

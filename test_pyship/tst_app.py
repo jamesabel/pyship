@@ -1,8 +1,9 @@
 from pathlib import Path
 from semver import VersionInfo
 
-from pyshipupdate import mkdirs
-from pyship import subprocess_run, get_logger, __application_name__, APP_DIR_NAME
+from balsa import get_logger
+
+from pyship import __application_name__, APP_DIR_NAME
 
 TST_APP_NAME = "tstpyshipapp"
 
@@ -23,20 +24,3 @@ class TstAppDirs:
         self.venv_dir = Path(self.project_dir, "venv")
         self.dist_dir = Path(self.project_dir, "dist")
         self.launcher_exe_path = Path(self.app_dir, self.target_app_name, f"{TST_APP_NAME}.exe")
-
-
-# def tst_app_flit_build(tst_app_dirs: TstAppDirs):
-#     """
-#     build the test app as a package
-#     :param tst_app_dirs: instance of a test app dirs
-#     """
-#     mkdirs(tst_app_dirs.dist_dir, remove_first=True)
-#     flit_exe_path = Path("venv", "Scripts", "flit.exe")
-#     pyproject_path = Path(tst_app_dirs.project_dir, "pyproject.toml")
-#     if not flit_exe_path.exists():
-#         log.error(f"{flit_exe_path} does not exist")
-#     elif not pyproject_path.exists():
-#         log.error(f"{pyproject_path} does not exist")
-#     else:
-#         # use flit to build the target app into a distributable package in the "dist" directory
-#         subprocess_run([str(flit_exe_path), "-f", str(pyproject_path), "build"], stdout_log=print)

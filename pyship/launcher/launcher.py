@@ -8,13 +8,13 @@ import logging
 import subprocess
 
 from ismain import is_main
-from balsa import HandlerType
+from balsa import HandlerType, get_logger
 import requests
 import sentry_sdk
 
 from pyship import __application_name__, __author__
 from pyship import __version__ as pyship_version
-from pyship import PyshipLog, get_logger, python_interpreter_exes
+from pyship import PyshipLog, python_interpreter_exes
 from pyshipupdate import restart_return_code, error_return_code, can_not_find_file_return_code, ok_return_code
 from pyship.launcher import RestartMonitor
 

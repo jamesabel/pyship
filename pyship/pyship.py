@@ -6,11 +6,12 @@ import appdirs
 from attr import attrs
 from typeguard import typechecked
 from awsimple import S3Access
+from balsa import get_logger
 
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
 from pyship import __version__ as pyship_version
-from pyship import get_logger, run_nsis, create_clip, create_pyship_launcher, pyship_print, APP_DIR_NAME, create_clip_file, DEFAULT_DIST_DIR_NAME, get_app_info, PyShipCloud
+from pyship import run_nsis, create_clip, create_pyship_launcher, pyship_print, APP_DIR_NAME, create_clip_file, DEFAULT_DIST_DIR_NAME, get_app_info, PyShipCloud
 from pyship import PyshipNoProductDirectory
 from pyshipupdate import mkdirs, create_bucket_name
 from pyshipupdate import __version__ as pyshipupdate_version
@@ -28,7 +29,7 @@ class PyShip:
 
     # cloud credentials, locations, etc.
     cloud_bucket: Union[str, None] = None  # e.g. AWS S3 bucket
-    cloud_profile: Union[str, None] = None  #  e.g. AWS IAM profile
+    cloud_profile: Union[str, None] = None  # e.g. AWS IAM profile
     cloud_id: Union[str, None] = None  # e.g. AWS Access Key ID
     cloud_secret: Union[str, None] = None  # e.g. AWS Secret Access Key
     cloud_access: Union[PyShipCloud, None] = None  # making this accessible outside this class aids in testing, especially when mocking
@@ -71,6 +72,8 @@ class PyShip:
                 else:
 
                     # if cloud bucket not given we'll try to use the project name
+                    assert isinstance(target_app_info.name, str)
+                    assert isinstance(target_app_info.author, str)
                     bucket = create_bucket_name(target_app_info.name, target_app_info.author) if self.cloud_bucket is None else self.cloud_bucket
 
                     # use either a cloud profile (i.e. credentials usually stored in local file(s) ) or explicit cloud credentials

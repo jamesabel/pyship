@@ -24,6 +24,6 @@ setup(
     classifiers=[],
     packages=[__application_name__, f"{__application_name__}.launcher", f"{__application_name__}.patch"],
     package_data={
-        "": ["*.ico"],
+        "": ["*.ico"], __application_name__: ["py.typed"]
     },
 )

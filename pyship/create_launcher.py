@@ -3,10 +3,11 @@ from pathlib import Path
 import subprocess
 
 from typeguard import typechecked
+from balsa import get_logger
 
 from pyshipupdate import mkdirs
 import pyship
-from pyship import AppInfo, pyship_print, get_logger, get_icon
+from pyship import AppInfo, pyship_print, get_icon
 from pyship import __application_name__ as pyship_application_name
 from pyship.launcher import application_name as launcher_application_name
 from pyship.launcher import calculate_metadata, load_metadata, store_metadata
@@ -36,7 +37,7 @@ def create_pyship_launcher(target_app_info: AppInfo, app_path_output: Path):
 
         # find the launcher source file path
         assert hasattr(pyship, "__path__")
-        pyship_path_list = pyship.__path__
+        pyship_path_list = pyship.__path__  # type: ignore
         if len(pyship_path_list) != 1:
             log.warning(f"not length of 1: {pyship_path_list}")
         pyship_path = pyship_path_list[0]  # parent dir of launcher source
