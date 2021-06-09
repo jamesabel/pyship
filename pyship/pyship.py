@@ -90,11 +90,12 @@ class PyShip:
                     if s3_access is not None:
                         self.cloud_access = PyShipCloud(target_app_info.name, s3_access)
 
-                        pyship_print(f'uploading "{installer_exe_path}" to {self.cloud_access. s3_access.bucket_name}/{installer_exe_path.name}')
-                        self.cloud_access.upload(installer_exe_path)  # upload installer file
+                        installer_url = self.cloud_access.upload(installer_exe_path)  # upload installer file
+                        pyship_print(f'uploaded "{installer_exe_path}" to {installer_url}')
 
-                        pyship_print(f'uploading "{clip_file_path}" to {s3_access.bucket_name}/{clip_file_path.name}')
-                        self.cloud_access.upload(clip_file_path)  # upload clip file
+                        clip_url = self.cloud_access.upload(clip_file_path)  # upload clip file
+                        pyship_print(f'uploaded "{clip_file_path}" to {clip_url}')
+
             else:
                 pyship_print("no upload requested")
 
