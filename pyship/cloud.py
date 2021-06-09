@@ -23,10 +23,17 @@ class PyShipCloud:
         self.s3_access = s3_access
 
     @typechecked
-    def upload(self, file_path: Path):
+    def upload(self, file_path: Path) -> str:
+        """
+        upload a file to S3 and return the URL
+        :param file_path: path to the file to be uploaded
+        :return: URL of uploaded file
+        """
+        s3_key = file_path.name
         self.s3_access.set_public_readable(True)  # all uploads are public readable (disable upload to keep installers and clips private)
         self.s3_access.create_bucket()
-        self.s3_access.upload(file_path, file_path.name)
+        self.s3_access.upload(file_path, s3_key)
+        return self.s3_access.get_s3_object_url(s3_key)
 
     @typechecked
     def download(self, file_path: Path):
