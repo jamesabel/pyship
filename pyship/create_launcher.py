@@ -82,10 +82,21 @@ def create_pyship_launcher(target_app_info: AppInfo, app_path_output: Path):
                 command_line.append("--noconsole")
             # command_line.extend(["--debug", "all"])  # todo: remove once we get the launcher working again
             site_packages_dir = Path(venv_dir, "Lib", "site-packages")
-            launcher_path = Path(site_packages_dir, pyship_application_name, launcher_application_name, f"{launcher_application_name}.py").absolute()
-            if not launcher_path.exists():
-                log.error(f"{launcher_path} does not exist")
-            command_line.append(str(launcher_path))
+
+            # find the launcher source code, so we can make an executable from it
+            launcher_source_path = None
+            launcher_candidate_parents = (site_packages_dir, Path())
+            for parent in launcher_candidate_parents:
+                source_candidate = Path(parent, pyship_application_name, launcher_application_name, f"{launcher_application_name}.py").absolute()
+                if source_candidate.exists():
+                    launcher_source_path = source_candidate
+                    break
+            if launcher_source_path is None:
+                log.fatal(f"could not find launcher path in {launcher_candidate_parents=}")
+                return False
+            else:
+                log.info(f"{launcher_source_path=}")
+                command_line.append(str(launcher_source_path))
 
             # avoid re-building launcher if its functionality wouldn't change
             assert isinstance(target_app_info.author, str)
