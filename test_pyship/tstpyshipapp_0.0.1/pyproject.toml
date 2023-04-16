@@ -1,6 +1,5 @@
 [project]
 name = "tstpyshipapp"
-author = "abel"
 
 [tool.pyship]
 # while most apps will be GUI apps, for testing tstpyshipapp is a CLI app
