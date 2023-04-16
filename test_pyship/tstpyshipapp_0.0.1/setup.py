@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 # moto is only in the requirements since we're testing - it won't be in normal apps
-requirements = ["balsa", "pyshipupdate", "pyship", "moto"]
+requirements = ["balsa", "pyshipupdate", "pyship", "moto", "sentry-sdk"]
 
 setup(
     name="tstpyshipapp",
