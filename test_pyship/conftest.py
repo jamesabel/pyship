@@ -2,6 +2,7 @@ import pytest
 from pathlib import Path
 import logging
 import os
+import subprocess
 
 from balsa import Balsa
 from appdirs import user_data_dir
@@ -9,9 +10,10 @@ from awsimple import use_moto_mock_env_var
 
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
+from pyship import pyship_print
 from pyshipupdate import rmdir
 
-from test_pyship import TST_APP_NAME
+from test_pyship import TST_APP_NAME, __application_name__
 
 
 class TestPyshipLoggingHandler(logging.Handler):
@@ -31,6 +33,16 @@ def session_fixture():
     # todo: get all tests to work with moto. Currently there's an error when the tstpyshipapp apps run since they're trying to access a non-existent bucket (moto creates everything on the fly)
     if False:
         os.environ[use_moto_mock_env_var] = "1"
+
+    # build pyship package itself
+    build_bat_file_path = Path("build.bat")
+    pyship_print(f'running "{build_bat_file_path}" ("{build_bat_file_path.absolute()}")')
+    subprocess.run(build_bat_file_path, capture_output=True)
+
+    # delete any existing builds of the test apps
+    for p in Path(__application_name__).glob(f"{TST_APP_NAME}*/dist"):
+        pyship_print(f'removing "{p}"')
+        rmdir(p)
 
     balsa = Balsa(pyship_application_name, pyship_author, log_directory=Path("log", "pytest"), delete_existing_log_files=True, verbose=False)
 
