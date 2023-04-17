@@ -40,6 +40,7 @@ def is_within_directory(directory: Path, target: Path):
 
 
 def safe_extract(tar, path: Path = Path(".")):
+    # for CVE-2007-4559
     for member in tar.getmembers():
         member_path = Path(path, member.name)
         if not is_within_directory(path, member_path):
