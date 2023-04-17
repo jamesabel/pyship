@@ -4,6 +4,7 @@ import subprocess
 
 from typeguard import typechecked
 from balsa import get_logger
+from semver import VersionInfo
 
 from pyshipupdate import mkdirs
 import pyship
@@ -99,6 +100,7 @@ def create_pyship_launcher(target_app_info: AppInfo, app_path_output: Path):
             # avoid re-building launcher if its functionality wouldn't change
             assert isinstance(target_app_info.author, str)
             assert isinstance(target_app_info.is_gui, bool)
+            assert isinstance(target_app_info.version, VersionInfo)
             metadata = calculate_metadata(target_app_info.name, target_app_info.author, target_app_info.version, Path(launcher_module_dir), icon_path, target_app_info.is_gui)
             if not launcher_exe_path.exists() or metadata != load_metadata(app_path_output, metadata_filename):
                 pyship_print(f'building launcher ("{launcher_exe_path}")')

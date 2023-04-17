@@ -7,6 +7,7 @@ from attr import attrs
 from typeguard import typechecked
 from awsimple import S3Access
 from balsa import get_logger
+from semver import VersionInfo
 
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
@@ -32,7 +33,7 @@ class PyShip:
     cloud_id: Union[str, None] = None  # e.g. AWS Access Key ID
     cloud_secret: Union[str, None] = None  # e.g. AWS Secret Access Key
     cloud_access: Union[PyShipCloud, None] = None  # making this accessible outside this class aids in testing, especially when mocking
-    upload: bool = True  # set to False to tell pyship to not attempt to perform file upload to the cloud (e.g. installer, clip files to AWS S3)
+    upload: bool = True  # set to False in order to tell pyship to not attempt to perform file upload to the cloud (e.g. installer, clip files to AWS S3)
 
     @typechecked
     def ship(self) -> Path:
@@ -63,6 +64,7 @@ class PyShip:
             clip_dir = create_clip(target_app_info, app_dir, True, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)
 
             clip_file_path = create_clip_file(clip_dir)  # create clip file
+            assert isinstance(target_app_info.version, VersionInfo)
             installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)  # create installer
 
             if self.upload:

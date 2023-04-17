@@ -6,6 +6,7 @@ import appdirs
 import re
 import logging
 import subprocess
+from typing import Union
 
 from ismain import is_main
 from balsa import HandlerType, get_logger
@@ -73,7 +74,7 @@ def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
     return verbose
 
 
-def launch(additional_path: Path = None, app_dir: Path = None) -> int:
+def launch(additional_path: Union[Path, None] = None, app_dir: Union[Path, None] = None) -> int:
     """
     launch the pyship app
     :param additional_path - additional search path for app (mainly for testing)
@@ -97,8 +98,8 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
     target_app_author = __author__
 
     for metadata_file_path in app_dir.glob("*_metadata.json"):
-        with metadata_file_path.open() as f:
-            metadata = json.load(f)
+        with metadata_file_path.open() as metadata_file:
+            metadata = json.load(metadata_file)
             target_app_name = metadata.get("app")
             target_app_author = metadata.get("author", target_app_author)
             is_gui = metadata.get("is_gui", is_gui)
@@ -187,7 +188,7 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
                                     log_function(out)
 
                         # log, and possibly print, each line of output from the process
-                        for name, std_x, f in [("stdout", std_out, sys.stdout), ("stderr", std_err, sys.stderr)]:
+                        for name, std_x, sys_f in [("stdout", std_out, sys.stdout), ("stderr", std_err, sys.stderr)]:
                             if std_x is not None and len(std_x.strip()) > 0:
                                 for so_line in std_x.splitlines():
                                     so_line_strip = so_line.strip()
@@ -195,7 +196,7 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
                                         log.info(f"{name}:{so_line_strip}")  # when logging, start with the name of the output string (stdout, stderr)
 
                                 # output stdout, stderr that came (directly) from the process
-                                print(std_x, file=f)
+                                print(std_x, file=sys_f)
 
                         log.info(f"{return_code=}")
 
