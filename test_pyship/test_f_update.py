@@ -21,17 +21,19 @@ def test_update():
 
     updater = UpdaterAwsS3(TST_APP_NAME, __author__)
     pyship_cloud = PyShipCloud(TST_APP_NAME, updater)
+    assert not pyship_cloud.s3_access.is_mocked()  # this test only works with the real AWS since the launched processes don't have access to the env var to make AWSimple mock
     pyship_cloud.s3_access.create_bucket()  # is this necessary?
 
     def do_pyship(tst_app_dirs: TstAppDirs):
         pyship_print(f"{tst_app_dirs.target_app_version=}")
-        ps = PyShip(tst_app_dirs.project_dir, dist_dir=tst_app_dirs.dist_dir, cloud_profile="pyshiptest", find_links=find_links)  # the local pyship under development
-        ps.cloud_access = pyship_cloud
-        inst = ps.ship()
-        return ps, inst
+        _ps = PyShip(tst_app_dirs.project_dir, dist_dir=tst_app_dirs.dist_dir, cloud_profile="pyshiptest", find_links=find_links)  # the local pyship under development
+        _ps.cloud_access = pyship_cloud
+        inst = _ps.ship()
+        return _ps, inst
 
     original_version = VersionInfo(0, 0, 1)
     updated_version = VersionInfo(0, 0, 2)
+
     original_app_dirs = TstAppDirs(TST_APP_NAME, original_version)
     pyships = []
     for version in [original_version, updated_version]:
