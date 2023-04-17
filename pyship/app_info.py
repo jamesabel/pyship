@@ -1,7 +1,9 @@
+import os
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Union
 import subprocess
+import sys
 
 import toml
 from semver import VersionInfo
@@ -88,6 +90,16 @@ def get_app_info_wheel(app_info: AppInfo, dist_path: Path) -> AppInfo:
 
 
 @typechecked
+def run_script(target_app_project_dir: Path, script_file_name: str):
+    script_path = Path(target_app_project_dir, script_file_name)
+    if script_path.exists():
+        pyship_print(f'running "{script_file_name}" (cwd="{target_app_project_dir}")')
+        make_venv_process = subprocess.run(script_file_name, cwd=str(target_app_project_dir), capture_output=True)
+        log.info(make_venv_process.stdout)
+        log.info(make_venv_process.stderr)
+
+
+@typechecked
 def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path) -> AppInfo:
     """
     Get combined app info from all potential sources.
@@ -105,23 +117,21 @@ def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path) -> App
         log.error(f"{app_info.name=} {target_app_project_dir=}")
     else:
 
-        wheel_list = list(target_app_dist_dir.glob(f"{app_info.name}*.whl"))
-
+        wheel_glob = f"{app_info.name}*.whl"
+        wheel_list = list(target_app_dist_dir.glob(wheel_glob))
         if len(wheel_list) < 1:
-            # no wheels file exists, but if there's a .bat file to build it, try that
-            build_script_file_name = "build.bat"  # will be .sh for Linux/MacOS whenever they're supported ...
-            make_venv = "make_venv.bat"
-            build_script_path = Path(target_app_project_dir, build_script_file_name)
-            if build_script_path.exists():
-                pyship_print(f'running "{make_venv}" (cwd="{target_app_project_dir}")')
-                make_venv_process = subprocess.run(make_venv, cwd=str(target_app_project_dir), capture_output=True)
-                log.info(make_venv_process.stdout)
-                log.info(make_venv_process.stderr)
-                pyship_print(f'running "{build_script_file_name}" (cwd="{target_app_project_dir}")')
-                build_process = subprocess.run(build_script_file_name, cwd=str(target_app_project_dir), capture_output=True)
-                log.info(build_process.stdout)
-                log.info(build_process.stderr)
-            wheel_list = list(target_app_dist_dir.glob(f"{app_info.name}*.whl"))  # try again
+            # No wheel file exists, but if there's a .bat file to build it, try that. In general the pyship user should have already created their wheel, but this is also
+            # handy for testing so the pyship repo can be cloned and pytest run, without otherwise having to build the test app's wheel.
+
+            venvs = list(Path(target_app_project_dir).glob("*venv"))  # does venv or .venv exist?
+            if len(venvs) < 1:
+                # Try to build the venv if it doesn't exist. Note that this uses specific script file names, but they can be set via env var.
+                run_script(target_app_project_dir, os.environ.get("PYSHIP_MAKE_VENV_SCRIPT", "make_venv.bat"))  # will be .sh for Linux/MacOS whenever they're supported ...
+
+            # run script to build the wheel
+            run_script(target_app_project_dir, os.environ.get("PYSHIP_BUILD_SCRIPT", "build.bat"))  # will be .sh for Linux/MacOS whenever they're supported ...
+
+            wheel_list = list(target_app_dist_dir.glob(wheel_glob))  # try again to find the wheel
 
         if len(wheel_list) == 0:
             log.error(f"{app_info.name} : no wheel at {target_app_dist_dir} ({target_app_dist_dir.absolute()})")
