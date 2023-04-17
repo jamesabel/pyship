@@ -8,7 +8,6 @@ from pyship import create_pyship_launcher, AppInfo, __application_name__, __auth
 
 
 def test_a_create_launcher_for_pyship():
-
     project_dir = Path().absolute()
     pyship_print(f"{project_dir=}")
 

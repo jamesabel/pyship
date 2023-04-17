@@ -30,7 +30,6 @@ def create_pyship_launcher(target_app_info: AppInfo, app_path_output: Path):
     if target_app_info.name is None or len(target_app_info.name) < 1:
         log.error(f"{target_app_info.name=}")
     else:
-
         metadata_filename = f"{target_app_info.name}_metadata.json"
 
         # create launcher
@@ -52,7 +51,6 @@ def create_pyship_launcher(target_app_info: AppInfo, app_path_output: Path):
         if python_interpreter_path is None or len(python_interpreter_path) < 1:
             log.error("python interpreter path not found")
         else:
-
             mkdirs(app_path_output)
 
             explicit_modules_to_import = [
@@ -103,7 +101,6 @@ def create_pyship_launcher(target_app_info: AppInfo, app_path_output: Path):
             assert isinstance(target_app_info.is_gui, bool)
             metadata = calculate_metadata(target_app_info.name, target_app_info.author, target_app_info.version, Path(launcher_module_dir), icon_path, target_app_info.is_gui)
             if not launcher_exe_path.exists() or metadata != load_metadata(app_path_output, metadata_filename):
-
                 pyship_print(f'building launcher ("{launcher_exe_path}")')
                 log.info(f"project_dir={str(target_app_info.project_dir)}")
                 log.info(f"{command_line=}")

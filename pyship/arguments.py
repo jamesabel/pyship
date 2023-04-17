@@ -8,7 +8,6 @@ from pyship import __name__, __version__, DEFAULT_DIST_DIR_NAME
 
 
 def get_arguments() -> Any:
-
     parser = argparse.ArgumentParser(prog=__name__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument("-n", "--name", help="name of target application to ship (if not provided elsewhere such as in pyproject.toml at: [project] name=<name>")

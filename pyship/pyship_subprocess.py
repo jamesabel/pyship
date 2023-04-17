@@ -48,7 +48,6 @@ def subprocess_run(
     log.info(f"{cmd=}")
 
     try:
-
         if isinstance(cwd, NullPath):
             target_process = subprocess.run(cmd, env=run_env, capture_output=True, text=True)
         else:

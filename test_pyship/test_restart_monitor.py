@@ -6,7 +6,6 @@ from pyship.launcher import RestartMonitor
 
 
 def test_restart_monitor_excessive():
-
     restart_monitor = RestartMonitor()
     for _ in range(0, restart_monitor.max_samples):
         assert not restart_monitor.excessive()
@@ -19,7 +18,6 @@ def test_restart_monitor_excessive():
 
 
 def test_restart_monitor_not_excessive():
-
     restart_monitor = RestartMonitor()
     quick = 0.1
     restart_monitor.quick = quick  # make the "quick" time short to test that we never go below that

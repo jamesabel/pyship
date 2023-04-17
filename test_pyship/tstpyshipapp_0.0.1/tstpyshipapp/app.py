@@ -17,7 +17,6 @@ log = get_logger(logger_name)
 
 
 def tstpyshipapp():
-
     verbose = len(sys.argv) > 1 and (sys.argv[1].lower() == "-v" or sys.argv[1].lower() == "--verbose")
 
     balsa = Balsa(logger_name, pyship_author, verbose=verbose)

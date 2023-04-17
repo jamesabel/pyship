@@ -52,13 +52,11 @@ def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path) -> 
             pyproject = toml.load(f)
             project_section = pyproject.get("project")
             if project_section is not None:
-
                 app_info.name = project_section.get("name")
                 app_info.author = project_section.get("author")  # app author
 
             tool_section = pyproject.get("tool")
             if tool_section is not None:
-
                 if app_info.name is None:
                     # The user didn't provide a separate [project].name so let's try to get it from what flit writes out at [tool.flit.metadata]/module.
                     # This is all we want or need to get from tool.flit.metadata since the remainder of the fields will be in the package distribution.
@@ -116,7 +114,6 @@ def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path) -> App
     if app_info.name is None:
         log.error(f"{app_info.name=} {target_app_project_dir=}")
     else:
-
         wheel_glob = f"{app_info.name}*.whl"
         wheel_list = list(target_app_dist_dir.glob(wheel_glob))
         if len(wheel_list) < 1:

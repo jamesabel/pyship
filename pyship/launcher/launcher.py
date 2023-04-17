@@ -27,7 +27,6 @@ launcher_verbose_string = "--launcher_verbose"
 
 
 def setup_logging(is_gui: bool, report_exceptions: bool) -> bool:
-
     verbose = len(sys.argv) > 1 and sys.argv[1].lower() == launcher_verbose_string
 
     pyship_log = PyshipLog(launcher_application_name, __author__, gui=is_gui, verbose=verbose)
@@ -112,7 +111,6 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
     if target_app_name is None:
         log.error(f'could not derive target app name in {app_dir}")')
     else:
-
         log.info(f"{target_app_name=}")
 
         # 1) find the latest <application_name>_<version>
@@ -125,7 +123,6 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
         restart_monitor = RestartMonitor()
 
         while (return_code is None or return_code == restart_return_code) and not restart_monitor.excessive():
-
             restart_monitor.add()
 
             # todo: put finding the most recent app version in a function - I'll pretty sure this is done other places.  Also, it allows a unit test to be written for it.
@@ -171,7 +168,6 @@ def launch(additional_path: Path = None, app_dir: Path = None) -> int:
                                 cmd.append(arg)  # pass along any arguments to the target application
                     log.info(f"{cmd}")
                     try:
-
                         # todo: this should work with PyInstaller, but it doesn't and I don't know why:
                         # return_code, _, _ = subprocess_run(cmd, cwd=python_exe_path.parent, mute_output=is_gui)  # if app returns "restart_value" then it wants to be restarted
 
