@@ -2,7 +2,6 @@ from pyship import PyShip, __application_name__, __author__, PyshipLog, get_argu
 
 
 def main():
-
     args = get_arguments()
 
     pyship_log = PyshipLog(__application_name__, __author__)

@@ -13,7 +13,6 @@ log = get_logger(__application_name__)
 
 class TstAppDirs:
     def __init__(self, target_app_name: str, version: VersionInfo):
-
         self.target_app_name = target_app_name
         self.target_app_version = version
 

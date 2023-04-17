@@ -11,7 +11,6 @@ log = get_logger(TST_APP_NAME)
 
 
 def test_cloud():
-
     version = VersionInfo.parse("0.0.1")
     tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
     py_ship = PyShip(tst_app_dirs.project_dir, dist_dir=tst_app_dirs.dist_dir)

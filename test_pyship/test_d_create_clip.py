@@ -12,7 +12,6 @@ log = get_logger(__application_name__)
 
 
 def test_create_clip():
-
     version = VersionInfo.parse("0.0.1")
     tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
     app_info = AppInfo(TST_APP_NAME, __author__, version)

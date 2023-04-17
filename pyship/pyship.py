@@ -21,7 +21,6 @@ log = get_logger(pyship_application_name)
 
 @attrs(auto_attribs=True)
 class PyShip:
-
     project_dir: Path = Path()  # target app project dir, e.g. the "home" directory of the project.  If not set, current working directory is used.
     dist_dir: Path = Path(DEFAULT_DIST_DIR_NAME)  # many packaging tools (e.g filt, etc.) use "dist" as the package destination directory
     find_links: list = list()  # extra dirs for pip to use for packages not yet on PyPI (e.g. under local development)
@@ -55,7 +54,6 @@ class PyShip:
         elif target_app_info.name is None:
             raise PyshipNoAppName
         else:
-
             app_dir = Path(self.project_dir, APP_DIR_NAME, target_app_info.name).absolute()
 
             mkdirs(app_dir, remove_first=True)
@@ -71,7 +69,6 @@ class PyShip:
                 if self.cloud_profile is None and self.cloud_id is None:
                     pyship_print("no cloud access provided - will not attempt upload")
                 else:
-
                     # if cloud bucket not given we'll try to use the project name
                     assert isinstance(target_app_info.name, str)
                     assert isinstance(target_app_info.author, str)

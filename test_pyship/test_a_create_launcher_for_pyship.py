@@ -4,13 +4,12 @@ from ismain import is_main
 from semver import VersionInfo
 
 from pyshipupdate import rmdir
-from pyship import create_pyship_launcher, AppInfo, __application_name__, __author__, __version__
+from pyship import create_pyship_launcher, AppInfo, __application_name__, __author__, __version__, pyship_print
 
 
 def test_a_create_launcher_for_pyship():
-
     project_dir = Path().absolute()
-    print(f"{project_dir=}")
+    pyship_print(f"{project_dir=}")
 
     # subprocess.run("local_install.bat", cwd=project_dir)
 
