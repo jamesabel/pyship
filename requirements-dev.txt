@@ -20,6 +20,8 @@ black
 flake8
 mypy
 boto3-stubs[s3]
+types-requests
+types-toml
 #
 # docs
 sphinx
