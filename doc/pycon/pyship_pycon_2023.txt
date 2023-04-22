@@ -1,0 +1,39 @@
+Outline
+
+- Requirements
+  - Freeze practically any Python application 
+    - Most often GUI applications, but also works for CLI
+  - Creates an Installer
+    - "Run on Startup" option
+  - Application runable as a native executable (e.g. .exe for Windows) 
+  - Application can auto-update (no user intervention required)
+  - Windows 
+- Futures
+  - App store aware/signed 
+  - MacOS, popular Linux distros (e.g. Ubuntu, Fedora)
+
+- Technique 
+  - User creates their own application that is runable as a "main module" and packages it
+    - run as python -m <app>
+	- installable with pip 
+	- creating this separately aides in debug and testing 
+  - User specifies pyship specific options in pyproject.toml 
+    - GUI or CLI
+	- run on startup or not 
+  - Run pyship  
+    - python -m pyship 
+    - create launcher (e.g., .exe for Windows)
+	- create CLIP (Complete Location-Independent Python folder)
+	- create installer (NSIS) that can be provided to end users 
+
+- Implementation 
+  - pyinstaller creates the native appliction (.exe)
+    - Simple "Launcher" for Python application 
+    - Launcher also handles updates 
+  - CLIP created using embedded Python and pip install <app>
+  - NSIS creates the launcher 
+
+- acknowledgements 
+  - Thomas Klyver (pynsist)
+  - Glyph 
+  - Steve Dower (Microsoft, embedded Python distribution)
