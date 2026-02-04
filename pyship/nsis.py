@@ -97,6 +97,7 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         nsis_lines.append('Name "${COMPANYNAME} - ${APPNAME}"')
         nsis_lines.append(f"Icon {icon_path}")
         nsis_lines.append(f'outFile "{installer_exe_path}"')
+        nsis_lines.append("SetCompressor LZMA")
         nsis_lines.append("")
         nsis_lines.append("!include LogicLib.nsh")
 

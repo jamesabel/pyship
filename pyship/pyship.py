@@ -45,7 +45,7 @@ class PyShip:
         start_time = datetime.now()
         pyship_print(f"{pyship_application_name} starting (pyship={str(pyship_version)},pyshipupdate={str(pyshipupdate_version)})")
 
-        target_app_info = get_app_info(self.project_dir, self.dist_dir)
+        target_app_info = get_app_info(self.project_dir, self.dist_dir, self.cache_dir)
 
         if self.project_dir is None:
             assert isinstance(self.project_dir, Path)
@@ -61,7 +61,7 @@ class PyShip:
 
             create_pyship_launcher(target_app_info, app_dir)  # create the OS specific launcher executable
 
-            clip_dir = create_clip(target_app_info, app_dir, True, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)
+            clip_dir = create_clip(target_app_info, app_dir, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)
 
             clip_file_path = create_clip_file(clip_dir)  # create clip file
             assert isinstance(target_app_info.version, VersionInfo)

@@ -158,7 +158,7 @@ def launch(additional_path: Union[Path, None] = None, app_dir: Union[Path, None]
                 log.info(f"{latest_version=}")
 
                 # locate the python interpreter executable
-                python_exe_path = Path(versions[latest_version], python_interpreter_exes[is_gui])
+                python_exe_path = Path(versions[latest_version], "Scripts", python_interpreter_exes[is_gui])
 
                 # run the target app using the python interpreter we just found
                 if python_exe_path.exists():

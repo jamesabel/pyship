@@ -44,7 +44,7 @@ def session_init():
     # build pyship package itself
     build_bat_file_path = Path("build.bat")
     pyship_print(f'running "{build_bat_file_path}" ("{build_bat_file_path.absolute()}")')
-    subprocess.run(build_bat_file_path, capture_output=True)
+    subprocess.run(str(build_bat_file_path), capture_output=True, shell=True)
 
     balsa = Balsa(pyship_application_name, pyship_author, log_directory=Path("log", "pytest"), delete_existing_log_files=True, verbose=False)
 
