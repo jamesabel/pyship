@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pytest:*)",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -m pytest test_pyship -v)",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -c \"import typeguard; print\\(typeguard.__version__\\)\")",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -m pip show typeguard pyshipupdate)",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -m pip install \"typeguard<3\")",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -m pytest:*)",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -c \"import subprocess; subprocess.run\\(''build.bat'', capture_output=True, shell=True\\)\")",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -m pytest test_pyship/test_uv_util.py test_pyship/test_c_target_app_info.py test_pyship/test_d_create_clip.py -v --tb=long)",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -c \"from wheel_inspect import inspect_wheel; import json; w = inspect_wheel\\(r''C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\test_pyship\\\\tstpyshipapp_0.0.1\\\\dist\\\\tstpyshipapp-0.0.1-py3-none-any.whl''\\); print\\(json.dumps\\(w[''dist_info''][''metadata''], indent=2\\)\\)\")",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -m pytest test_pyship/test_c_target_app_info.py test_pyship/test_d_create_clip.py -v --tb=long)",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -m pytest test_pyship/test_d_create_clip.py -v --tb=long -s)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -m pip install -U typeguard)",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -c \"import pyship\")",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -m pip install -e \"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyshipupdate\")",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -m pip install \"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyshipupdate\")",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyshipupdate\\\\venv\\\\Scripts\\\\python.exe\" -m pip install -U typeguard)",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyshipupdate\\\\venv\\\\Scripts\\\\python.exe\" setup.py bdist_wheel)",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -m pip install:*)",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -c \"import pyship; print\\(''import ok''\\)\")"
+    ]
+  }
+}
