@@ -31,3 +31,16 @@ line-ending = "auto"
 
 [tool.ty.environment]
 python-version = "3.11"
+
+[tool.coverage.run]
+source = ["pyship"]
+omit = [
+    "*/test_pyship/*",
+    "*/tstpyshipapp*/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+]

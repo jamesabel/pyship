@@ -84,5 +84,12 @@ jobs:
       - name: Install package
         run: pip install --no-build-isolation -e .
 
-      - name: Run tests
-        run: pytest test_pyship/ -v --tb=short
+      - name: Run tests with coverage
+        run: pytest test_pyship/ -v --tb=short --cov=pyship --cov-report=xml --cov-report=term
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          fail_ci_if_error: false
+          verbose: true
