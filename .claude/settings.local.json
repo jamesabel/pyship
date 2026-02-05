@@ -50,7 +50,17 @@
       "Bash(gh run view:*)",
       "Bash(gh pr view:*)",
       "Bash(gh pr merge:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(del \"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\_version_.py\")",
+      "Bash(venvScriptspip.exe install build)",
+      "Bash(C:/Users/JamesAbel/projects/pyship/venv/Scripts/pip.exe install:*)",
+      "Bash(uv pip install:*)",
+      "Bash(\"C:/Users/JamesAbel/projects/pyship/venv/Scripts/python.exe\" -c \"from pyship import __version__, __author__, __description__; print\\(f''version={__version__}, author={__author__}, desc={__description__}''\\)\")",
+      "Bash(\"C:/Users/JamesAbel/projects/pyship/venv/Scripts/python.exe\" -m ruff check \"C:/Users/JamesAbel/projects/pyship/pyship/\")",
+      "Bash(\"C:/Users/JamesAbel/projects/pyship/venv/Scripts/python.exe\" -m pytest \"C:/Users/JamesAbel/projects/pyship/test_pyship/\" -v)",
+      "Bash(gh run list:*)",
+      "Bash(gh run watch:*)",
+      "Bash(git reset:*)"
     ]
   }
 }
