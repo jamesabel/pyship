@@ -48,7 +48,9 @@
       "Bash(powershell:*)",
       "Bash(gh pr checks:*)",
       "Bash(gh run view:*)",
-      "Bash(gh pr view:*)"
+      "Bash(gh pr view:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(git stash:*)"
     ]
   }
 }
