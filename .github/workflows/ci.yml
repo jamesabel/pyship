@@ -38,18 +38,17 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Clone pyshipupdate dependency
-        run: |
-          pip install typeguard balsa semver requests attrs platformdirs
-          cd ..
-          git clone https://github.com/jamesabel/pyshipupdate.git
-          cd pyshipupdate
-          pip install --no-build-isolation -e .
-
       - name: Install dependencies
         run: |
           pip install ty
           pip install -r requirements-dev.txt
+
+      - name: Clone and install pyshipupdate
+        run: |
+          cd ..
+          git clone https://github.com/jamesabel/pyshipupdate.git
+          cd pyshipupdate
+          pip install --no-build-isolation -e .
 
       - name: Install package
         run: pip install --no-build-isolation -e .
@@ -71,16 +70,15 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Clone pyshipupdate dependency
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Clone and install pyshipupdate
         run: |
-          pip install typeguard balsa semver requests attrs platformdirs
           cd ..
           git clone https://github.com/jamesabel/pyshipupdate.git
           cd pyshipupdate
           pip install --no-build-isolation -e .
-
-      - name: Install dependencies
-        run: pip install -r requirements-dev.txt
 
       - name: Install package
         run: pip install --no-build-isolation -e .
