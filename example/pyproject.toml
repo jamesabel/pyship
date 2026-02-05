@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyshipexample"
+version = "0.0.1"
+description = "Example PySide6 GUI application for pyship"
+requires-python = ">=3.11"
+authors = [{name = "abel", email = "j@abel.co"}]
+dependencies = [
+    "PySide6",
+    "ismain",
+]
+
+[tool.pyship]
+is_gui = true
+
+[tool.setuptools.packages.find]
+include = ["pyshipexample"]

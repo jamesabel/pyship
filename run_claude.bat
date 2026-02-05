@@ -1,0 +1,1 @@
+claude --permission-mode acceptEdits
