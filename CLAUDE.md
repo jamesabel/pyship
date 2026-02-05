@@ -46,7 +46,7 @@ Or run `make_venv.bat`.
 build.bat
 ```
 
-Builds a wheel into `dist/` using `python setup.py bdist_wheel`.
+Builds a wheel into `dist/` using `python -m build --wheel`.
 
 ## Running Tests
 
@@ -56,7 +56,7 @@ venv\Scripts\python.exe -m pytest test_pyship/ -v
 
 - Tests are ordered alphabetically by filename prefix (`test_a_`, `test_b_`, ..., `test_z_`).
 - `conftest.py` has a session fixture that builds the pyship wheel and sets up an ERROR-level log handler that fails tests on any ERROR log message.
-- `pytest.ini` excludes `tstpyshipapp` directories from recursive collection.
+- `pyproject.toml` `[tool.pytest.ini_options]` excludes `tstpyshipapp` directories from recursive collection.
 - Some tests (test_y, test_z) require the test app to have a venv set up.
 
 ## Code Conventions

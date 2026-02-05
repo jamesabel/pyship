@@ -28,6 +28,9 @@ sphinx
 # installers/launchers
 semver
 #
+# build
+build
+#
 # testing
 pytest
 pytest-cov

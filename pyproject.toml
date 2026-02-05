@@ -1,3 +1,44 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyship"
+version = "0.3.1"
+description = "freezer, installer and updater for Python applications"
+readme = "readme.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [{name = "abel", email = "j@abel.co"}]
+keywords = ["freezer", "installer", "ship"]
+dependencies = [
+    "setuptools",
+    "wheel",
+    "ismain",
+    "balsa",
+    "requests",
+    "attrs",
+    "typeguard",
+    "toml",
+    "semver",
+    "python-dateutil",
+    "wheel-inspect",
+    "boto3",
+    "awsimple",
+    "platformdirs",
+    "pyshipupdate",
+]
+
+[project.urls]
+Homepage = "https://github.com/jamesabel/pyship"
+Download = "https://github.com/jamesabel/pyship"
+
+[tool.setuptools.packages.find]
+include = ["pyship", "pyship.*"]
+
+[tool.setuptools.package-data]
+pyship = ["*.ico", "py.typed"]
+
 [tool.pyship]
 # allow pyship to build itself as an app
 is_gui = false  # pyship itself is CLI
@@ -31,6 +72,9 @@ line-ending = "auto"
 
 [tool.ty.environment]
 python-version = "3.11"
+
+[tool.pytest.ini_options]
+norecursedirs = ["tstpyshipapp"]
 
 [tool.coverage.run]
 source = ["pyship"]

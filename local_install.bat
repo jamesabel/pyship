@@ -9,7 +9,7 @@ REM pyships's venv
 call make_venv.bat
 rmdir /S /Q dist
 rmdir /S /Q build
-venv\Scripts\python setup.py bdist_wheel
+venv\Scripts\python -m build --wheel
 venv\Scripts\pip.exe uninstall -y pyship
 venv\Scripts\pip.exe install pyship -f dist
 venv\Scripts\pip.exe uninstall -y pyshipupdate
