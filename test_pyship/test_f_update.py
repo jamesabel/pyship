@@ -18,8 +18,7 @@ log = get_logger(__application_name__)
 
 
 @pytest.mark.skipif(
-    os.environ.get(use_moto_mock_env_var, "1") == "1",
-    reason="Update test requires real AWS (subprocess can't share moto mock state). Set AWSIMPLE_USE_MOTO_MOCK=0 with valid credentials."
+    os.environ.get(use_moto_mock_env_var, "1") == "1", reason="Update test requires real AWS (subprocess can't share moto mock state). Set AWSIMPLE_USE_MOTO_MOCK=0 with valid credentials."
 )
 def test_update():
     """

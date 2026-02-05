@@ -116,8 +116,8 @@ class Program
 }}
 """
 
-CLI_ERROR_HANDLER = 'Console.Error.WriteLine(msg);'
-GUI_ERROR_HANDLER = 'System.Windows.Forms.MessageBox.Show(msg, appName, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);'
+CLI_ERROR_HANDLER = "Console.Error.WriteLine(msg);"
+GUI_ERROR_HANDLER = "System.Windows.Forms.MessageBox.Show(msg, appName, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);"
 
 
 @typechecked

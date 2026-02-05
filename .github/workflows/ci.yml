@@ -40,6 +40,7 @@ jobs:
 
       - name: Clone pyshipupdate dependency
         run: |
+          pip install typeguard balsa
           cd ..
           git clone https://github.com/jamesabel/pyshipupdate.git
           cd pyshipupdate
@@ -72,6 +73,7 @@ jobs:
 
       - name: Clone pyshipupdate dependency
         run: |
+          pip install typeguard balsa
           cd ..
           git clone https://github.com/jamesabel/pyshipupdate.git
           cd pyshipupdate

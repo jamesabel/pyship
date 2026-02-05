@@ -52,6 +52,7 @@ def find_or_bootstrap_uv(cache_dir: Path) -> Path:
     zip_path = Path(uv_cache_dir, zip_name)
 
     import requests
+
     response = requests.get(zip_url, stream=True)
     response.raise_for_status()
     with open(zip_path, "wb") as f:

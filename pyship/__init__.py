@@ -1,4 +1,4 @@
-""" pyship - ship python apps """
+"""pyship - ship python apps"""
 
 python_interpreter_exes = {True: "pythonw.exe", False: "python.exe"}  # True is GUI, False is CLI
 
