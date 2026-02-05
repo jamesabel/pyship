@@ -40,7 +40,7 @@ jobs:
 
       - name: Clone pyshipupdate dependency
         run: |
-          pip install typeguard balsa
+          pip install typeguard balsa semver requests attrs platformdirs
           cd ..
           git clone https://github.com/jamesabel/pyshipupdate.git
           cd pyshipupdate
@@ -73,7 +73,7 @@ jobs:
 
       - name: Clone pyshipupdate dependency
         run: |
-          pip install typeguard balsa
+          pip install typeguard balsa semver requests attrs platformdirs
           cd ..
           git clone https://github.com/jamesabel/pyshipupdate.git
           cd pyshipupdate
