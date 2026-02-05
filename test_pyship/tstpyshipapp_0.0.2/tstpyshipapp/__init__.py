@@ -1,4 +1,4 @@
-""" An app used to test pyship """
+"""An app used to test pyship"""
 
 __application_name__ = "tstpyshipapp"
 

@@ -10,7 +10,6 @@ from balsa import get_logger
 from pyshipupdate import mkdirs, get_target_os
 from pyship import __application_name__, AppInfo, subprocess_run, pyship_print, get_icon, PyshipLicenseFileDoesNotExist
 
-
 log = get_logger(__application_name__)
 
 

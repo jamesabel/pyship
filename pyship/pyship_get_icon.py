@@ -48,4 +48,6 @@ def get_icon(target_app_info: AppInfo, ui_print: Callable) -> Path:
         log.info(s)
         ui_print(s)
 
+    assert icon_path is not None
+
     return icon_path

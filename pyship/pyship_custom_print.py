@@ -16,7 +16,6 @@ window.withdraw()  # no main window
 def pyship_print(s: str, is_gui: bool = False):
     log.info(s)
     if is_gui:
-        global window
         label = Label(window, text=s)  # adds to the window each time
         label.grid()
         label.update()
