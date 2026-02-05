@@ -16,9 +16,8 @@ keyring
 # development
 wheel
 wheel-inspect
-black
-flake8
-mypy
+ruff
+ty
 boto3-stubs[s3]
 types-requests
 types-toml

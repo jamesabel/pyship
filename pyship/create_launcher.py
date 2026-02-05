@@ -13,7 +13,6 @@ from pyship.launcher import application_name as launcher_application_name
 from pyship.launcher import calculate_metadata, load_metadata, store_metadata
 from pyship.launcher_stub import compile_launcher_stub
 
-
 log = get_logger(launcher_application_name)
 
 
@@ -35,7 +34,7 @@ def create_pyship_launcher(target_app_info: AppInfo, app_path_output: Path):
 
         # find the launcher source directory (for metadata hashing)
         assert hasattr(pyship, "__path__")
-        pyship_path_list = pyship.__path__  # type: ignore
+        pyship_path_list = pyship.__path__
         if len(pyship_path_list) != 1:
             log.warning(f"not length of 1: {pyship_path_list}")
         pyship_path = Path(pyship_path_list[0])

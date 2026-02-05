@@ -24,7 +24,7 @@ def atomic_unzip(zip_file_path: Path, destination_dir: Path) -> bool:
 
     log.info(f'unzipping "{zip_file_path}" to "{destination_dir}"')
     success_flag = False
-    temp_dir = mkdtemp(dir=destination_dir.parent)
+    temp_dir = Path(mkdtemp(dir=destination_dir.parent))
     try:
         mkdirs(temp_dir, True)
 
@@ -33,7 +33,7 @@ def atomic_unzip(zip_file_path: Path, destination_dir: Path) -> bool:
         zip_ref.close()
 
         rmdir(destination_dir)  # in case dest already exists
-        os.rename(temp_dir, str(destination_dir))
+        os.rename(str(temp_dir), str(destination_dir))
         success_flag = True
     except IOError as e:
         log.info(f"{zip_file_path=} {destination_dir=} {e}")
