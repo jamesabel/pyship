@@ -143,3 +143,4 @@ backup/
 # videos
 *.mkv
 doc/flake8_report.txt
+nul
