@@ -1,0 +1,1 @@
+venv\Scripts\python.exe -m example_app

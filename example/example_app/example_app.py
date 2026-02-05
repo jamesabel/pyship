@@ -43,7 +43,7 @@ class MainWindow(QMainWindow):
         self.count_label.setText(f"Clicks: {self.click_count}")
 
 
-def pyshipexample():
+def example_app():
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
