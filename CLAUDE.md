@@ -7,19 +7,20 @@ pyship is a Windows application freezer, installer, and updater for Python appli
 ## Key Concepts
 
 - **CLIP** - A relocatable Python venv (created via `uv venv --relocatable`) containing the target app and all dependencies. Layout: `Scripts/python.exe`, `Lib/site-packages/`, `pyvenv.cfg`.
-- **Launcher** - A PyInstaller-frozen `.exe` that finds and runs the latest CLIP version.
+- **Launcher** - A small C# stub `.exe` (compiled via `csc.exe`) plus a standalone Python script that finds and runs the latest CLIP version.
 - **Target app** - The Python application being shipped.
 
 ## Project Structure
 
 ```
 pyship/              # Main package
-  launcher/          # Launcher subpackage (frozen into .exe via PyInstaller)
+  launcher/          # Launcher subpackage (standalone script + C# stub)
   uv_util.py         # uv bootstrap, venv creation, pip install, wheel building
   clip.py            # CLIP creation (uses uv_util)
   pyship.py          # PyShip class with ship() orchestrator
   app_info.py        # AppInfo dataclass, metadata from pyproject.toml + wheel
-  create_launcher.py # PyInstaller invocation for launcher
+  create_launcher.py # Compiles C# stub and copies standalone launcher script
+  launcher_stub.py   # C# source template and csc.exe compilation
   nsis.py            # NSIS installer script generation
   cloud.py           # AWS S3 upload
   download.py        # File download with caching and safe extraction
@@ -56,7 +57,7 @@ venv\Scripts\python.exe -m pytest test_pyship/ -v
 - Tests are ordered alphabetically by filename prefix (`test_a_`, `test_b_`, ..., `test_z_`).
 - `conftest.py` has a session fixture that builds the pyship wheel and sets up an ERROR-level log handler that fails tests on any ERROR log message.
 - `pytest.ini` excludes `tstpyshipapp` directories from recursive collection.
-- Some tests (test_e, test_y, test_z) require the test app to have a venv with pyinstaller installed.
+- Some tests (test_y, test_z) require the test app to have a venv set up.
 
 ## Code Conventions
 
@@ -72,7 +73,7 @@ venv\Scripts\python.exe -m pytest test_pyship/ -v
 ## Architecture Flow (PyShip.ship())
 
 1. `get_app_info()` - Read pyproject.toml + inspect wheel for metadata
-2. `create_pyship_launcher()` - Freeze launcher via PyInstaller (--onedir)
+2. `create_pyship_launcher()` - Compile C# stub via csc.exe + copy standalone launcher script
 3. `create_clip()` - Bootstrap uv, create relocatable venv, install target app
 4. `create_clip_file()` - Zip the CLIP directory (with `.clip` extension)
 5. `run_nsis()` - Generate and run NSIS installer script
@@ -85,7 +86,6 @@ venv\Scripts\python.exe -m pytest test_pyship/ -v
 | `pyshipupdate` | Sister package for app self-updates |
 | `balsa` | Logging framework |
 | `typeguard` | Runtime type checking (v2 API: `@typechecked`) |
-| `pyinstaller` | Freezes launcher into native .exe |
 | `semver` | Semantic version parsing |
 | `toml` | Parse pyproject.toml |
 | `wheel-inspect` | Extract metadata from .whl files |

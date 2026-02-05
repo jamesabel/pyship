@@ -27,7 +27,6 @@ types-toml
 sphinx
 #
 # installers/launchers
-pyinstaller
 semver
 #
 # testing

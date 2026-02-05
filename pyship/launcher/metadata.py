@@ -20,8 +20,13 @@ def calculate_metadata(target_app_name: str, target_app_author: str, target_app_
         "icon_sha256": get_file_sha256(icon_path),
         "is_gui": is_gui,
     }
+    # Hash launcher Python sources
     for p in launcher_source_dir.glob("*.py"):
         launcher_metadata[f"{p.name}_sha256"] = get_file_sha256(p)
+    # Hash the C# stub template (in the parent pyship package)
+    launcher_stub_path = launcher_source_dir.parent / "launcher_stub.py"
+    if launcher_stub_path.exists():
+        launcher_metadata["launcher_stub.py_sha256"] = get_file_sha256(launcher_stub_path)
     return launcher_metadata
 
 
