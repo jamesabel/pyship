@@ -30,8 +30,10 @@ def module_init():
 
 @pytest.fixture(scope="session", autouse=True)
 def session_init():
-    # todo: get all tests to work with moto. Currently there's an error when the tstpyshipapp apps run since they're trying to access a non-existent bucket (moto creates everything on the fly)
-    if False:
+    # Use moto mock by default unless AWSIMPLE_USE_MOTO_MOCK is explicitly set to "0"
+    # When moto is enabled, S3 buckets are created on demand and the test app's
+    # update check will find an empty bucket and return "no update available"
+    if os.environ.get(use_moto_mock_env_var, "1") != "0":
         os.environ[use_moto_mock_env_var] = "1"
 
     # delete any existing venvs, builds, etc. of the test apps

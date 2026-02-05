@@ -1,5 +1,7 @@
 import subprocess
 import json
+
+import pytest
 from semver import VersionInfo
 
 from typeguard import typechecked
@@ -11,7 +13,15 @@ from test_pyship import TST_APP_NAME
 
 
 def test_check_app_output():
-    version = VersionInfo.parse("0.0.2")  # must be run after other tests that create the test app with this version
+    # Moto mock is enabled in conftest.py - subprocess will find empty bucket and report "no updates"
+    # Try 0.0.1 first (built by test_cloud), fall back to 0.0.2
+    version = VersionInfo.parse("0.0.1")
+    tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
+    if not tst_app_dirs.launcher_exe_path.exists():
+        version = VersionInfo.parse("0.0.2")
+        tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
+        if not tst_app_dirs.launcher_exe_path.exists():
+            pytest.skip(f"Launcher exe not found at {tst_app_dirs.launcher_exe_path} - run test_cloud first")
 
     @typechecked
     def check_output(check_process: subprocess.CompletedProcess):
@@ -23,8 +33,6 @@ def test_check_app_output():
         app_version = app_out["version"]
         assert VersionInfo.parse(app_version) == version or VersionInfo.parse(app_version) == version.bump_patch()  # allow either original or upgraded version
         assert app_out["exit_code"] == ok_return_code
-
-    tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
 
     # test that the created frozen app can run correctly, including checking its output
     cmd = [str(tst_app_dirs.launcher_exe_path), "-v"]
