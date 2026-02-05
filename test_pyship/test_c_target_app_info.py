@@ -9,7 +9,7 @@ from test_pyship import TST_APP_NAME, TstAppDirs
 def test_target_app_info():
     version = VersionInfo.parse("0.0.1")
     tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
-    target_app_info = get_app_info(tst_app_dirs.project_dir, tst_app_dirs.dist_dir)
+    target_app_info = get_app_info(tst_app_dirs.project_dir, tst_app_dirs.dist_dir, tst_app_dirs.cache)
     assert target_app_info.name == TST_APP_NAME
     assert target_app_info.author == pyship_author
     assert target_app_info.is_gui is not None

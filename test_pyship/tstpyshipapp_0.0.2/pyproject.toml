@@ -1,5 +1,13 @@
 [project]
 name = "tstpyshipapp"
+version = "0.0.2"
+description = "pyship test app 0.0.2"
+requires-python = ">=3.10"
+dependencies = ["balsa", "pyshipupdate", "pyship", "moto", "sentry-sdk"]
+
+[[project.authors]]
+name = "abel"
+email = "j@abel.co"
 
 [tool.pyship]
 # while most apps will be GUI apps, for testing tstpyshipapp is a CLI app

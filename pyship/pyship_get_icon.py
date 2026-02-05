@@ -10,7 +10,7 @@ import pyship
 log = get_logger(__application_name__)
 
 
-@typechecked()
+@typechecked
 def get_icon(target_app_info: AppInfo, ui_print: Callable) -> Path:
     """
     find either the target project's icon or the provided icon from pyship
