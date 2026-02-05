@@ -1,5 +1,8 @@
 # PyShip
 
+[![CI](https://github.com/jamesabel/pyship/actions/workflows/ci.yml/badge.svg)](https://github.com/jamesabel/pyship/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/jamesabel/pyship/branch/main/graph/badge.svg)](https://codecov.io/gh/jamesabel/pyship)
+
 Enables shipping a python application to end users.
 
 ## PyShip's Major Features
