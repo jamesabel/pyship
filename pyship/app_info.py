@@ -107,6 +107,7 @@ def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path, cache_
         if len(wheel_list) < 1:
             # No wheel file exists - build it using uv
             from pyship.uv_util import find_or_bootstrap_uv, uv_build
+
             if cache_dir is not None:
                 uv_path = find_or_bootstrap_uv(cache_dir)
                 uv_build(uv_path, target_app_project_dir, target_app_dist_dir)

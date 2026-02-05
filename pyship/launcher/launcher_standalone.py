@@ -178,7 +178,7 @@ def launch(app_dir=None, additional_path=None):
     log.info(f"app_dir={app_dir}")
 
     if target_app_name is None:
-        log.error(f'could not derive target app name in {app_dir}')
+        log.error(f"could not derive target app name in {app_dir}")
         return ERROR_RETURN_CODE
 
     log.info(f"target_app_name={target_app_name}")

@@ -8,7 +8,6 @@ from balsa import get_logger
 from pyship import AppInfo, pyship_print, __application_name__, CLIP_EXT
 from pyship.uv_util import find_or_bootstrap_uv, uv_python_install, uv_venv_create, uv_pip_install
 
-
 log = get_logger(__application_name__)
 
 

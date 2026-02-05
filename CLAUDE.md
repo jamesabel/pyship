@@ -27,7 +27,7 @@ pyship/              # Main package
 test_pyship/         # Tests (alphabetically ordered: test_a_, test_b_, etc.)
   tstpyshipapp_0.0.1/  # Test application v0.0.1
   tstpyshipapp_0.0.2/  # Test application v0.0.2
-scripts/             # Developer utilities (black, flake8, mypy)
+scripts/             # Developer utilities (ruff, ty)
 ```
 
 ## Development Setup
@@ -66,7 +66,7 @@ venv\Scripts\python.exe -m pytest test_pyship/ -v
 - **Paths**: Use `pathlib.Path` exclusively, never `os.path`. `NullPath()` is used for uninitialized path fields.
 - **Data classes**: `@dataclass` for simple containers (`AppInfo`), `@attrs(auto_attribs=True)` for richer classes (`PyShip`).
 - **Docstrings**: Sphinx-style with `:param name:` and `:return:` tags.
-- **Formatting**: Black with line length 192. Flake8 ignores E402, F401, W503, E203, E501.
+- **Formatting**: Ruff format with line length 192. Ruff lint ignores E402, F401, E501. Type checking via ty.
 - **Imports**: stdlib, then third-party, then local. `__init__.py` uses explicit relative imports for all public API exports.
 - **Subprocess**: Use `subprocess_run()` wrapper from `pyship_subprocess.py` which clears PATH/PYTHONPATH for clean execution. For uv commands, use helpers in `uv_util.py`.
 

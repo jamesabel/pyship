@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint & Format Check
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Ruff check (lint)
+        run: ruff check pyship test_pyship
+
+      - name: Ruff format check
+        run: ruff format --check pyship test_pyship
+
+  typecheck:
+    name: Type Check
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install ty
+          pip install -r requirements-dev.txt
+
+      - name: Clone and install pyshipupdate
+        run: |
+          cd ..
+          git clone https://github.com/jamesabel/pyshipupdate.git
+          cd pyshipupdate
+          pip install --no-build-isolation -e .
+
+      - name: Install package
+        run: pip install --no-build-isolation -e .
+
+      - name: Run ty type checker
+        # Using --exit-zero as ty is still in early development (v0.x)
+        # Remove once ty matures and third-party stub resolution improves
+        run: ty check pyship --exit-zero
+
+  test:
+    name: Tests
+    runs-on: windows-latest
+    needs: [lint, typecheck]
+    continue-on-error: true  # Tests require NSIS and may fail in CI
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Clone and install pyshipupdate
+        run: |
+          cd ..
+          git clone https://github.com/jamesabel/pyshipupdate.git
+          cd pyshipupdate
+          pip install --no-build-isolation -e .
+
+      - name: Install package
+        run: pip install --no-build-isolation -e .
+
+      - name: Run tests
+        run: pytest test_pyship/ -v --tb=short

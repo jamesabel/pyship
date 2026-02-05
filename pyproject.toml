@@ -1,3 +1,33 @@
 [tool.pyship]
 # allow pyship to build itself as an app
 is_gui = false  # pyship itself is CLI
+
+[tool.ruff]
+line-length = 192
+target-version = "py311"
+exclude = [
+    "app",
+    "build",
+    "cache",
+    "dist",
+    "installers",
+    "venv",
+    ".venv",
+    "test_pyship/tstpyshipapp_*",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = [
+    "E402",  # module level import not at top of file
+    "F401",  # imported but unused
+    "E501",  # line too long (handled by formatter)
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.ty.environment]
+python-version = "3.11"
