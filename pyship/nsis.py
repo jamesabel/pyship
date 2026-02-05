@@ -7,8 +7,11 @@ import shutil
 from typeguard import typechecked
 from balsa import get_logger
 
+from typing import Union
+
 from pyshipupdate import mkdirs, get_target_os
 from pyship import __application_name__, AppInfo, subprocess_run, pyship_print, get_icon, PyshipLicenseFileDoesNotExist
+from pyship.constants import is_ci
 
 log = get_logger(__application_name__)
 
@@ -28,13 +31,13 @@ def get_folder_size(folder_path: Path) -> int:
 
 
 @typechecked
-def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir: Path) -> Path:
+def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir: Path) -> Union[Path, None]:
     """
     run nsis
     :param target_app_info: target app info
     :param target_app_version: target app version
     :param app_dir: application dir
-    :return: path to installer exe, or None if could not be created
+    :return: path to installer exe, or None if NSIS not available (e.g. in CI)
     """
 
     # basic format is from:
@@ -214,8 +217,12 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         if os.path.exists(make_nsis_path):
             subprocess_run([make_nsis_path, nsis_file_path], target_app_info.project_dir)
         else:
-            log.fatal(f"{make_nsis_path} not found - see http://nsis.sourceforge.net to get NSIS (Nullsoft Scriptable Install System)")
-            raise FileNotFoundError(make_nsis_path)
+            if is_ci():
+                log.warning(f"{make_nsis_path} not found - skipping installer creation (running in CI)")
+                return None
+            else:
+                log.fatal(f"{make_nsis_path} not found - see http://nsis.sourceforge.net to get NSIS (Nullsoft Scriptable Install System)")
+                raise FileNotFoundError(make_nsis_path)
 
     else:
         log.error(f"{license_file_name} file does not exist at {target_app_info.project_dir}")

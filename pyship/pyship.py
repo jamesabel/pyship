@@ -36,10 +36,10 @@ class PyShip:
     upload: bool = True  # set to False in order to tell pyship to not attempt to perform file upload to the cloud (e.g. installer, clip files to AWS S3)
 
     @typechecked
-    def ship(self) -> Path:
+    def ship(self) -> Union[Path, None]:
         """
         Perform all the steps to ship the app, including creating the installer.
-        :return: the path to the created installer or None if it could not be created
+        :return: the path to the created installer, or None if installer could not be created (e.g. NSIS not available in CI)
         """
 
         start_time = datetime.now()
@@ -65,9 +65,9 @@ class PyShip:
 
             clip_file_path = create_clip_file(clip_dir)  # create clip file
             assert isinstance(target_app_info.version, VersionInfo)
-            installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)  # create installer
+            installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)  # create installer (may be None in CI)
 
-            if self.upload:
+            if self.upload and installer_exe_path is not None:
                 if self.cloud_profile is None and self.cloud_id is None:
                     pyship_print("no cloud access provided - will not attempt upload")
                 else:
