@@ -33,7 +33,15 @@
       "Bash(python:*)",
       "Bash(venv/Scripts/python.exe -m pytest:*)",
       "Bash(venv/Scripts/python.exe setup.py:*)",
-      "Bash(venv/Scripts/pip install:*)"
+      "Bash(venv/Scripts/pip install:*)",
+      "Bash(venv\\\\Scripts\\\\python.exe -m pytest:*)",
+      "Bash(git restore:*)",
+      "Bash(venv/Scripts/python.exe:*)",
+      "Bash(git rm:*)",
+      "Bash(set AWSIMPLE_USE_MOTO_MOCK=0)",
+      "Bash(cmd /c \"set AWSIMPLE_USE_MOTO_MOCK=0 && venv\\\\Scripts\\\\python.exe -c \"\"import os; print\\(f''AWSIMPLE_USE_MOTO_MOCK={os.environ.get\\(chr\\(34\\)+''AWSIMPLE_USE_MOTO_MOCK''+chr\\(34\\), chr\\(34\\)+''not set''+chr\\(34\\)\\)}''\\)\"\"\")",
+      "Bash(AWSIMPLE_USE_MOTO_MOCK=0 venv/Scripts/python.exe:*)",
+      "Bash(gh pr create:*)"
     ]
   }
 }
