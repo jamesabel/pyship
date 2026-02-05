@@ -1,0 +1,6 @@
+PySide6
+ismain
+pyship
+setuptools
+build
+wheel
