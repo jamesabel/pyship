@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 from semver import VersionInfo
 import json
-import appdirs
+import platformdirs
 import re
 import logging
 import subprocess
@@ -129,7 +129,7 @@ def launch(additional_path: Union[Path, None] = None, app_dir: Union[Path, None]
             # todo: put finding the most recent app version in a function - I'll pretty sure this is done other places.  Also, it allows a unit test to be written for it.
             # find the most recent app version
 
-            search_dirs = [app_dir, Path(appdirs.user_data_dir(target_app_name, target_app_author))]
+            search_dirs = [app_dir, Path(platformdirs.user_data_dir(target_app_name, target_app_author))]
             if additional_path is not None:
                 search_dirs.append(additional_path)
 

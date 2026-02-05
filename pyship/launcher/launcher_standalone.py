@@ -194,7 +194,7 @@ def launch(app_dir=None, additional_path=None):
         if app_dir is not None:
             search_dirs.append(app_dir)
 
-        # Also search user data dir (matches appdirs.user_data_dir layout)
+        # Also search user data dir (matches platformdirs.user_data_dir layout)
         local_app_data = os.environ.get("LOCALAPPDATA")
         if local_app_data:
             user_data_dir = Path(local_app_data, target_app_author, target_app_name)
