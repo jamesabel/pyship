@@ -36,7 +36,7 @@ def find_or_bootstrap_uv(cache_dir: Path) -> Path:
         return uv_exe
 
     # download uv standalone binary
-    pyship_print("downloading uv...")
+    pyship_print("downloading uv")
     uv_cache_dir.mkdir(parents=True, exist_ok=True)
 
     machine = platform.machine().lower()
@@ -82,7 +82,7 @@ def uv_python_install(uv_path: Path, python_version: str) -> Path:
     :param python_version: Python version string (e.g. "3.12.4")
     :return: path to the installed Python interpreter
     """
-    pyship_print(f"installing Python {python_version} via uv...")
+    pyship_print(f"installing Python {python_version} via uv")
     subprocess.run([str(uv_path), "python", "install", python_version], check=True, capture_output=True, text=True)
 
     result = subprocess.run([str(uv_path), "python", "find", python_version], check=True, capture_output=True, text=True)
@@ -99,7 +99,7 @@ def uv_venv_create(uv_path: Path, venv_dir: Path, python_version: str) -> None:
     :param venv_dir: destination directory for the venv
     :param python_version: Python version string
     """
-    pyship_print(f"creating relocatable venv at {venv_dir}...")
+    pyship_print(f'creating relocatable venv at "{venv_dir}"')
     cmd = [str(uv_path), "venv", "--relocatable", "--python", python_version, str(venv_dir)]
     log.info(f"uv venv cmd: {cmd}")
     subprocess.run(cmd, check=True, capture_output=True, text=True)
@@ -142,7 +142,7 @@ def uv_build(uv_path: Path, project_dir: Path, output_dir: Path) -> Path:
     :param output_dir: directory for the built wheel
     :return: path to the built wheel
     """
-    pyship_print(f"building wheel via uv in {project_dir}...")
+    pyship_print(f'building wheel via uv in "{project_dir}"')
     output_dir.mkdir(parents=True, exist_ok=True)
     cmd = [str(uv_path), "build", "--wheel", "--out-dir", str(output_dir)]
     log.info(f"uv build cmd: {cmd}")

@@ -225,7 +225,7 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
                 raise FileNotFoundError(make_nsis_path)
 
     else:
-        log.error(f"{license_file_name} file does not exist at {target_app_info.project_dir}")
+        log.error(f'{license_file_name} file does not exist at "{target_app_info.project_dir}" ("{target_app_info.project_dir.resolve()}")')
         raise PyshipLicenseFileDoesNotExist(target_app_info.project_dir)
 
     # return the actual path to the installer (we cd'd to target_app_project_dir when we ran nsis)

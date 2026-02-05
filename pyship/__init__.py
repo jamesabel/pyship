@@ -7,7 +7,7 @@ CLIP_EXT = "clip"  # zipped clip file extension
 DEFAULT_DIST_DIR_NAME = "dist"
 
 from .pyship_path import NullPath
-from ._version_ import __version__, __author__, __application_name__, __title__, __description__, __url__, __author_email__, __download_url__
+from .__version__ import __version__, __author__, __application_name__, __title__, __description__, __url__, __author_email__, __download_url__
 from .logging import PyshipLog, log_process_output
 from .pyship_exceptions import PyshipException, PyshipNoProductDirectory, PyshipCouldNotGetVersion, PyshipLicenseFileDoesNotExist, PyshipInsufficientAppInfo, PyshipNoAppName
 from .pyship_exceptions import PyshipNoTargetAppInfo
