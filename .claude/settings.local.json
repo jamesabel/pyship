@@ -25,7 +25,15 @@
       "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyshipupdate\\\\venv\\\\Scripts\\\\python.exe\" -m pip install -U typeguard)",
       "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyshipupdate\\\\venv\\\\Scripts\\\\python.exe\" setup.py bdist_wheel)",
       "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -m pip install:*)",
-      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -c \"import pyship; print\\(''import ok''\\)\")"
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -c \"import pyship; print\\(''import ok''\\)\")",
+      "Bash(del \"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\pyship.spec\")",
+      "Bash(pip show:*)",
+      "Bash(python -m pip:*)",
+      "Bash(C:/Users/JamesAbel/projects/pyship/venv/Scripts/python.exe -m pip:*)",
+      "Bash(python:*)",
+      "Bash(venv/Scripts/python.exe -m pytest:*)",
+      "Bash(venv/Scripts/python.exe setup.py:*)",
+      "Bash(venv/Scripts/pip install:*)"
     ]
   }
 }
