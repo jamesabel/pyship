@@ -2,7 +2,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Union
 
-import appdirs
+import platformdirs
 from attr import attrs
 from typeguard import typechecked
 from awsimple import S3Access
@@ -25,7 +25,7 @@ class PyShip:
     project_dir: Path = Path()  # target app project dir, e.g. the "home" directory of the project.  If not set, current working directory is used.
     dist_dir: Path = Path(DEFAULT_DIST_DIR_NAME)  # many packaging tools (e.g filt, etc.) use "dist" as the package destination directory
     find_links: list = list()  # extra dirs for pip to use for packages not yet on PyPI (e.g. under local development)
-    cache_dir: Path = Path(appdirs.user_cache_dir(pyship_application_name, pyship_author))  # used to cache things like the embedded Python zip (to keep us off the python.org servers)
+    cache_dir: Path = Path(platformdirs.user_cache_dir(pyship_application_name, pyship_author))  # used to cache things like the embedded Python zip (to keep us off the python.org servers)
 
     # cloud credentials, locations, etc.
     cloud_bucket: Union[str, None] = None  # e.g. AWS S3 bucket

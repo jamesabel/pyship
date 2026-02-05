@@ -30,7 +30,8 @@ class PyShipCloud:
         :return: URL of uploaded file
         """
         s3_key = file_path.name
-        self.s3_access.set_public_readable(True)  # all uploads are public readable (disable upload to keep installers and clips private)
+        # Note: AWS S3 now defaults to BucketOwnerEnforced which disables ACLs
+        # Use bucket policies or pre-signed URLs for access control instead
         self.s3_access.create_bucket()
         self.s3_access.upload(file_path, s3_key)
         return self.s3_access.get_s3_object_url(s3_key)

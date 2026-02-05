@@ -5,7 +5,7 @@ import os
 import subprocess
 
 from balsa import Balsa
-from appdirs import user_data_dir
+from platformdirs import user_data_dir
 from awsimple import use_moto_mock_env_var
 
 from pyship import __application_name__ as pyship_application_name
