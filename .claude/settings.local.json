@@ -60,7 +60,9 @@
       "Bash(\"C:/Users/JamesAbel/projects/pyship/venv/Scripts/python.exe\" -m pytest \"C:/Users/JamesAbel/projects/pyship/test_pyship/\" -v)",
       "Bash(gh run list:*)",
       "Bash(gh run watch:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(C:UsersJamesAbelprojectspyshipvenvScriptspython.exe -m pytest test_pyship/ -v)",
+      "Bash(\"C:\\\\Users\\\\JamesAbel\\\\projects\\\\pyship\\\\venv\\\\Scripts\\\\python.exe\" -m pytest test_pyship/ -v)"
     ]
   }
 }
