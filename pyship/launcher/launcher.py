@@ -241,6 +241,20 @@ def launch(app_dir=None, additional_path=None):
                     std_out = target_process.stdout
                     std_err = target_process.stderr
 
+                    # When pythonw.exe fails silently (no stderr), re-run with python.exe to capture the actual error
+                    if is_gui and return_code not in (OK_RETURN_CODE, RESTART_RETURN_CODE) and not (std_err and std_err.strip()):
+                        log.warning(f"pythonw.exe exited with return_code={return_code} but produced no error output, re-running with python.exe for diagnostics")
+                        diag_python = Path(versions[latest_version], "Scripts", "python.exe")
+                        if diag_python.exists():
+                            diag_cmd = [str(diag_python)] + cmd[1:]
+                            log.info(f"diagnostic cmd={diag_cmd}")
+                            try:
+                                diag_process = subprocess.run(diag_cmd, cwd=str(python_exe_path.parent), capture_output=True, text=True)
+                                std_out = diag_process.stdout
+                                std_err = diag_process.stderr
+                            except Exception as diag_e:
+                                log.error(f"diagnostic re-run failed: {diag_e}")
+
                     if (std_err and std_err.strip()) or (return_code != OK_RETURN_CODE and return_code != RESTART_RETURN_CODE):
                         if std_out and std_out.strip():
                             log.warning(std_out)
