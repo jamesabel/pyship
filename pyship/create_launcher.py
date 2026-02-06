@@ -17,6 +17,63 @@ log = get_logger(launcher_application_name)
 
 
 @typechecked
+def _write_diagnostic_bat(app_name: str, bat_path: Path):
+    """
+    Write a diagnostic .bat file that runs the launcher script with python.exe (not pythonw.exe)
+    so that all console output is visible for troubleshooting.
+    :param app_name: target application name
+    :param bat_path: path where the .bat file will be written
+    """
+    bat_content = f"""@echo off
+REM Diagnostic launcher for {app_name}
+REM Runs the launcher script with python.exe (console) so output is always visible.
+
+setlocal
+
+set "LAUNCHER_DIR=%~dp0"
+REM Remove trailing backslash
+if "%LAUNCHER_DIR:~-1%"=="\\" set "LAUNCHER_DIR=%LAUNCHER_DIR:~0,-1%"
+
+REM app_dir is the parent of launcher_dir
+for %%I in ("%LAUNCHER_DIR%") do set "APP_DIR=%%~dpI"
+if "%APP_DIR:~-1%"=="\\" set "APP_DIR=%APP_DIR:~0,-1%"
+
+REM Find the latest CLIP directory containing Scripts\\python.exe
+set "PYTHON_EXE="
+for /d %%D in ("%APP_DIR%\\{app_name}_*") do (
+    if exist "%%D\\Scripts\\python.exe" (
+        set "PYTHON_EXE=%%D\\Scripts\\python.exe"
+    )
+)
+
+if not defined PYTHON_EXE (
+    echo ERROR: No Python environment found for {app_name} in %APP_DIR%
+    pause
+    exit /b 1
+)
+
+echo Using Python: %PYTHON_EXE%
+echo Running: %PYTHON_EXE% "%LAUNCHER_DIR%\\{app_name}_launcher.py" --app-dir "%APP_DIR%" %*
+echo.
+
+"%PYTHON_EXE%" "%LAUNCHER_DIR%\\{app_name}_launcher.py" --app-dir "%APP_DIR%" %*
+
+set "EXIT_CODE=%ERRORLEVEL%"
+echo.
+echo Exit code: %EXIT_CODE%
+if not "%EXIT_CODE%"=="0" (
+    echo.
+    echo ERROR: {app_name} exited with code %EXIT_CODE%
+    pause
+)
+
+endlocal
+exit /b %EXIT_CODE%
+"""
+    bat_path.write_text(bat_content, encoding="utf-8")
+
+
+@typechecked
 def create_pyship_launcher(target_app_info: AppInfo, app_path_output: Path):
     """
     Create the launcher executable using a compiled C# stub and standalone Python launcher script.
@@ -69,13 +126,18 @@ def create_pyship_launcher(target_app_info: AppInfo, app_path_output: Path):
             shutil.copy2(str(standalone_source), str(standalone_dest))
             log.info(f"copied launcher script to {standalone_dest}")
 
-            # 3. Copy the icon alongside
+            # 3. Generate diagnostic .bat launcher (always uses python.exe for console output)
+            bat_path = Path(launcher_dir, f"{target_app_info.name}.bat")
+            _write_diagnostic_bat(target_app_info.name, bat_path)
+            log.info(f"wrote diagnostic bat to {bat_path}")
+
+            # 4. Copy the icon alongside
             if icon_path.exists():
                 icon_dest = Path(launcher_dir, f"{target_app_info.name}.ico")
                 shutil.copy2(str(icon_path), str(icon_dest))
                 log.info(f"copied icon to {icon_dest}")
 
-            # 4. Store metadata for cache invalidation
+            # 5. Store metadata for cache invalidation
             store_metadata(app_path_output, metadata_filename, metadata)
 
             if launcher_exe_path.exists():

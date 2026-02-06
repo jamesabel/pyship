@@ -250,8 +250,15 @@ def launch(app_dir=None, additional_path=None):
                             log.info(f"diagnostic cmd={diag_cmd}")
                             try:
                                 diag_process = subprocess.run(diag_cmd, cwd=str(python_exe_path.parent), capture_output=True, text=True)
+                                diag_return_code = diag_process.returncode
                                 std_out = diag_process.stdout
                                 std_err = diag_process.stderr
+                                if std_err and std_err.strip():
+                                    log.info(f"diagnostic stderr captured (return_code={diag_return_code})")
+                                elif std_out and std_out.strip():
+                                    log.info(f"diagnostic stdout captured (return_code={diag_return_code})")
+                                else:
+                                    log.warning(f"diagnostic re-run with python.exe also produced no output (return_code={diag_return_code})")
                             except Exception as diag_e:
                                 log.error(f"diagnostic re-run failed: {diag_e}")
 
