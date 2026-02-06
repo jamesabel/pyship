@@ -1,6 +1,6 @@
 from ismain import is_main
 
-from .example_app import example_app
+from .exampleapp import exampleapp
 
 if is_main():
-    example_app()
+    exampleapp()

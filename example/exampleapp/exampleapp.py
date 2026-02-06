@@ -43,7 +43,7 @@ class MainWindow(QMainWindow):
         self.count_label.setText(f"Clicks: {self.click_count}")
 
 
-def example_app():
+def exampleapp():
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
