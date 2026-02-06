@@ -33,6 +33,7 @@ class PyShip:
     cloud_id: Union[str, None] = None  # e.g. AWS Access Key ID
     cloud_secret: Union[str, None] = None  # e.g. AWS Secret Access Key
     cloud_access: Union[PyShipCloud, None] = None  # making this accessible outside this class aids in testing, especially when mocking
+    name: Union[str, None] = None  # optional target application name (overrides pyproject.toml)
     upload: bool = True  # set to False in order to tell pyship to not attempt to perform file upload to the cloud (e.g. installer, clip files to AWS S3)
 
     @typechecked

@@ -4,7 +4,7 @@ from pyship import PyShip, __application_name__, __author__, PyshipLog, get_argu
 def main():
     args = get_arguments()
 
-    pyship_log = PyshipLog(__application_name__, __author__)
+    pyship_log = PyshipLog(__application_name__, __author__)  # type: ignore[unknown-argument]
     pyship_log.init_logger_from_args(args)
 
     pyship_print(f"log_path={pyship_log.log_path}")

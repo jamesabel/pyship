@@ -7,7 +7,7 @@ from ismain import is_main
 from pyshipupdate import rmdir
 
 from pyship.launcher import launch
-from pyship.launcher.launcher_standalone import OK_RETURN_CODE
+from pyship.launcher.launcher import OK_RETURN_CODE
 
 from test_pyship import TST_APP_NAME, TstAppDirs
 

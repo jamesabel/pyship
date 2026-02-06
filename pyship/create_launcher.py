@@ -64,7 +64,7 @@ def create_pyship_launcher(target_app_info: AppInfo, app_path_output: Path):
             )
 
             # 2. Copy the standalone launcher script alongside the stub
-            standalone_source = Path(launcher_module_dir, "launcher_standalone.py")
+            standalone_source = Path(launcher_module_dir, "launcher.py")
             standalone_dest = Path(launcher_dir, f"{target_app_info.name}_launcher.py")
             shutil.copy2(str(standalone_source), str(standalone_dest))
             log.info(f"copied launcher script to {standalone_dest}")
