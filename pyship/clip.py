@@ -60,8 +60,8 @@ def create_base_clip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path) -
     pyship_print(f'building clip {clip_dir_name} ("{clip_dir}")')
 
     uv_path = find_or_bootstrap_uv(cache_dir)
-    uv_python_install(uv_path, python_version)
-    uv_venv_create(uv_path, clip_dir, python_version)
+    python_path = uv_python_install(uv_path, python_version)
+    uv_venv_create(uv_path, clip_dir, str(python_path))
 
     return clip_dir
 
