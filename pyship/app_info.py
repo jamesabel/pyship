@@ -80,6 +80,15 @@ def get_app_info_wheel(app_info: AppInfo, dist_path: Path) -> AppInfo:
         app_info.name = metadata.get("name")
         app_info.version = VersionInfo.parse(metadata.get("version"))
         app_info.author = metadata.get("author")
+        if app_info.author is None:
+            # PEP 621 authors array produces "author_email" like "Name <email>" in metadata 2.4+
+            author_email = metadata.get("author_email")
+            if author_email is not None:
+                # extract name from "Name <email>" format
+                if "<" in author_email:
+                    app_info.author = author_email.split("<")[0].strip()
+                else:
+                    app_info.author = author_email
         app_info.description = metadata.get("summary", "")  # called description in setup.py
     return app_info
 
