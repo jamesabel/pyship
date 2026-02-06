@@ -144,3 +144,4 @@ backup/
 *.mkv
 doc/flake8_report.txt
 nul
+settings.local.json
