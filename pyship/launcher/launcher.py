@@ -246,7 +246,7 @@ def launch(app_dir=None, additional_path=None):
                         log.warning(f"pythonw.exe exited with return_code={return_code} but produced no error output, re-running with python.exe for diagnostics")
                         diag_python = Path(versions[latest_version], "Scripts", "python.exe")
                         if diag_python.exists():
-                            diag_cmd = [str(diag_python)] + cmd[1:]
+                            diag_cmd = [str(diag_python), "-X", "faulthandler"] + cmd[1:]
                             log.info(f"diagnostic cmd={diag_cmd}")
                             try:
                                 diag_process = subprocess.run(diag_cmd, cwd=str(python_exe_path.parent), capture_output=True, text=True)
