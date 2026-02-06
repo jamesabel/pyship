@@ -3,7 +3,7 @@ requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pyshipexample"
+name = "exampleapp"
 version = "0.0.1"
 description = "Example PySide6 GUI application for pyship"
 requires-python = ">=3.11"
@@ -17,4 +17,4 @@ dependencies = [
 is_gui = true
 
 [tool.setuptools.packages.find]
-include = ["pyshipexample"]
+include = ["exampleapp"]
