@@ -100,7 +100,7 @@ def uv_venv_create(uv_path: Path, venv_dir: Path, python_version_or_path: str) -
     :param python_version_or_path: Python version string (e.g. "3.11") or path to Python executable
     """
     pyship_print(f'creating relocatable venv at "{venv_dir}"')
-    cmd = [str(uv_path), "venv", "--relocatable", "--python", python_version_or_path, str(venv_dir)]
+    cmd = [str(uv_path), "venv", "--relocatable", "--clear", "--python", python_version_or_path, str(venv_dir)]
     log.info(f"uv venv cmd: {cmd}")
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.stdout:
