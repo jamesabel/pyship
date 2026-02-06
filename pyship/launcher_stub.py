@@ -117,7 +117,11 @@ class Program
 """
 
 CLI_ERROR_HANDLER = "Console.Error.WriteLine(msg);"
-GUI_ERROR_HANDLER = "System.Windows.Forms.MessageBox.Show(msg, appName, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);"
+GUI_ERROR_HANDLER = (
+    'string logPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), appName, "log", appName + "_launcher.log");'
+    ' msg += "\\n\\nLog file: " + logPath;'
+    " System.Windows.Forms.MessageBox.Show(msg, appName, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);"
+)
 
 
 @typechecked
