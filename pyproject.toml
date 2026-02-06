@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyship"
-version = "0.4.0"
+version = "0.4.1"
 description = "freezer, installer and updater for Python applications"
 readme = "readme.md"
 license = {text = "MIT"}
