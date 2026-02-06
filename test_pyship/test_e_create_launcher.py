@@ -28,6 +28,8 @@ def test_create_launcher():
         mkdirs(tst_app_dirs.app_dir, remove_first=True)
         create_pyship_launcher(target_app_info, tst_app_dirs.app_dir)
         assert tst_app_dirs.launcher_exe_path.exists()
+        launcher_bat_path = tst_app_dirs.launcher_exe_path.with_suffix(".bat")
+        assert launcher_bat_path.exists(), f"diagnostic .bat not found: {launcher_bat_path}"
 
 
 if is_main():
