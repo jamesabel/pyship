@@ -6,7 +6,7 @@ from balsa import get_logger
 
 from pyship import create_clip, AppInfo, PyshipLog, __author__
 
-from test_pyship import TstAppDirs, TST_APP_NAME, __application_name__, find_links
+from test_pyship import TstAppDirs, TST_APP_NAME, __application_name__
 
 log = get_logger(__application_name__)
 
@@ -16,7 +16,7 @@ def test_create_clip():
     tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
     app_info = AppInfo(TST_APP_NAME, __author__, version)
     app_info.setup_paths(tst_app_dirs.project_dir)
-    clip_dir = create_clip(app_info, tst_app_dirs.app_dir, tst_app_dirs.dist_dir, tst_app_dirs.cache, find_links)
+    clip_dir = create_clip(app_info, tst_app_dirs.app_dir, tst_app_dirs.dist_dir, tst_app_dirs.cache)
     log.info(f"{clip_dir=}")
     assert Path(clip_dir, "Scripts", "python.exe").exists()  # make sure base python created in venv layout
     assert Path(clip_dir, "Lib", "site-packages", "pyship").exists()  # make sure pyship has been installed (we're using pyship itself in this test)

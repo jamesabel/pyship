@@ -121,23 +121,21 @@ def uv_venv_create(uv_path: Path, venv_dir: Path, python_version_or_path: str) -
 
 
 @typechecked
-def uv_pip_install(uv_path: Path, target_python: Path, packages: list, find_links: list, upgrade: bool = True) -> None:
+def uv_pip_install(uv_path: Path, target_python: Path, packages: list, dist_dir: Path, upgrade: bool = True) -> None:
     """
     Install packages into a venv using uv pip.
     :param uv_path: path to uv executable
     :param target_python: path to the Python interpreter in the target venv
     :param packages: list of package names or paths to install
-    :param find_links: list of directories for --find-links
+    :param dist_dir: directory containing wheels to pass as --find-links
     :param upgrade: whether to pass -U flag
     """
     cmd = [str(uv_path), "pip", "install", "--python", str(target_python)]
     if upgrade:
         cmd.append("-U")
     cmd.extend(packages)
-    for link in find_links:
-        link_path = Path(link)
-        if link_path.exists():
-            cmd.extend(["-f", str(link_path)])
+    if dist_dir.exists():
+        cmd.extend(["-f", str(dist_dir)])
     log.info(f"uv pip install cmd: {cmd}")
     result = subprocess.run(cmd, capture_output=True, text=True)
     log.info(result.stdout)
