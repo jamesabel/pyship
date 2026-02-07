@@ -1,6 +1,7 @@
 import platform
 import shutil
 import subprocess
+import time
 import zipfile
 from pathlib import Path
 
@@ -12,12 +13,14 @@ from pyship import __application_name__, pyship_print
 log = get_logger(__application_name__)
 
 UV_GITHUB_RELEASE_URL = "https://github.com/astral-sh/uv/releases/latest/download"
+UV_CACHE_MAX_AGE_SECONDS = 7 * 24 * 60 * 60  # 7 days
 
 
 @typechecked
 def find_or_bootstrap_uv(cache_dir: Path) -> Path:
     """
-    Find uv on PATH, in cache, or download the standalone binary.
+    Find uv on PATH, in cache (if not stale), or download the standalone binary.
+    Cached uv binaries are re-downloaded after 7 days.
     :param cache_dir: directory to cache the uv binary
     :return: path to the uv executable
     """
@@ -28,12 +31,17 @@ def find_or_bootstrap_uv(cache_dir: Path) -> Path:
         log.info(f"found uv on PATH: {uv_path}")
         return uv_path
 
-    # check cache
+    # check cache (with TTL)
     uv_cache_dir = Path(cache_dir, "uv")
     uv_exe = Path(uv_cache_dir, "uv.exe")
     if uv_exe.exists():
-        log.info(f"found cached uv: {uv_exe}")
-        return uv_exe
+        age_seconds = time.time() - uv_exe.stat().st_mtime
+        age_days = age_seconds / 86400
+        if age_seconds < UV_CACHE_MAX_AGE_SECONDS:
+            log.info(f"found cached uv: {uv_exe} (age: {age_days:.1f} days)")
+            return uv_exe
+        else:
+            pyship_print(f"cached uv is stale ({age_days:.0f} days old), re-downloading")
 
     # download uv standalone binary
     pyship_print("downloading uv")
