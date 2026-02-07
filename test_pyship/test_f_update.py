@@ -12,7 +12,7 @@ from awsimple import use_moto_mock_env_var
 from pyshipupdate import UpdaterAwsS3
 
 from pyship import PyShip, subprocess_run, __application_name__, pyship_print, PyShipCloud, __author__
-from test_pyship import TST_APP_NAME, TstAppDirs, find_links
+from test_pyship import TST_APP_NAME, TstAppDirs
 
 log = get_logger(__application_name__)
 
@@ -32,7 +32,7 @@ def test_update():
 
     def do_pyship(tst_app_dirs: TstAppDirs):
         pyship_print(f"{tst_app_dirs.target_app_version=}")
-        _ps = PyShip(tst_app_dirs.project_dir, dist_dir=tst_app_dirs.dist_dir, cloud_profile="pyshiptest", find_links=find_links)  # the local pyship under development
+        _ps = PyShip(tst_app_dirs.project_dir, dist_dir=tst_app_dirs.dist_dir, cloud_profile="pyshiptest")  # the local pyship under development
         _ps.cloud_access = pyship_cloud
         inst = _ps.ship()
         return _ps, inst

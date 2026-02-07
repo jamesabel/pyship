@@ -19,13 +19,6 @@ def get_arguments() -> Any:
     parser.add_argument("--noupload", default=False, action="store_true", help="do not upload files to the cloud (e.g. installer and clip files)")
     parser.add_argument("--public-readable", default=False, action="store_true", help="make uploaded S3 objects publicly readable")
     parser.add_argument("-d", "--dist", default=DEFAULT_DIST_DIR_NAME, help="distribution directory for this target application (i.e. directory that contains the wheel)")
-    parser.add_argument(
-        "-f",
-        "--findlinks",
-        nargs="+",
-        default=[],
-        help="one or more directories to pass to pip when creating the clip (similar to pip's --find-links except only specify once for multiple directories)",
-    )
 
     parser.add_argument("--version", action="store_true", help="display version")
     parser.add_argument("-v", f"--{verbose_arg_string}", action="store_true", help="increase output verbosity")

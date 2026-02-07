@@ -1,4 +1,3 @@
-from pathlib import Path
 from pprint import pprint
 
 from semver import VersionInfo
@@ -65,7 +64,6 @@ profile = "myprofile"
 upload = false
 public_readable = true
 dist = "output"
-find_links = ["../dep1/dist", "../dep2/dist"]
 """
     pyproject_path = tmp_path / "pyproject.toml"
     pyproject_path.write_text(pyproject_content)
@@ -77,7 +75,6 @@ find_links = ["../dep1/dist", "../dep2/dist"]
     assert config["upload"] is False
     assert config["public_readable"] is True
     assert config["dist"] == "output"
-    assert config["find_links"] == ["../dep1/dist", "../dep2/dist"]
 
 
 def test_read_pyship_config_empty(tmp_path, monkeypatch):
