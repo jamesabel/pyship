@@ -19,7 +19,7 @@ def read_pyship_config() -> dict:
         tool_section = pyproject.get("tool", {})
         pyship_section = tool_section.get("pyship", {})
         # Only extract PyShip-level keys (not AppInfo-level keys like is_gui, run_on_startup)
-        for key in ("name", "profile", "upload", "public_readable", "dist", "find_links"):
+        for key in ("name", "profile", "upload", "public_readable", "dist"):
             if key in pyship_section:
                 config[key] = pyship_section[key]
     return config
@@ -47,14 +47,10 @@ def main():
         pyship.public_readable = config["public_readable"]
     if "dist" in config:
         pyship.dist_dir = Path(config["dist"])
-    if "find_links" in config:
-        pyship.find_links = config["find_links"]
 
     # CLI args override pyproject.toml values
     if args.name is not None:
         pyship.name = args.name
-    if args.findlinks is not None and len(args.findlinks) > 0:
-        pyship.find_links = args.findlinks
     if args.profile is not None:
         pyship.cloud_profile = args.profile
     if args.id is not None:

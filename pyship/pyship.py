@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Union
 
 import platformdirs
+import toml
 from attr import attrs
 from typeguard import typechecked
 from awsimple import S3Access
@@ -24,7 +25,6 @@ log = get_logger(pyship_application_name)
 class PyShip:
     project_dir: Path = Path()  # target app project dir, e.g. the "home" directory of the project.  If not set, current working directory is used.
     dist_dir: Path = Path(DEFAULT_DIST_DIR_NAME)  # many packaging tools (e.g filt, etc.) use "dist" as the package destination directory
-    find_links: list = list()  # extra dirs for pip to use for packages not yet on PyPI (e.g. under local development)
     cache_dir: Path = Path(platformdirs.user_cache_dir(pyship_application_name, pyship_author))  # used to cache things like the embedded Python zip (to keep us off the python.org servers)
 
     # cloud credentials, locations, etc.
@@ -63,7 +63,15 @@ class PyShip:
 
             create_pyship_launcher(target_app_info, app_dir)  # create the OS specific launcher executable
 
-            clip_dir = create_clip(target_app_info, app_dir, Path(self.project_dir, self.dist_dir), self.cache_dir, self.find_links)
+            # read find_links from [tool.pyship] in the project's pyproject.toml
+            find_links = []
+            pyproject_path = Path(self.project_dir, "pyproject.toml")
+            if pyproject_path.exists():
+                with pyproject_path.open() as f:
+                    pyproject = toml.load(f)
+                find_links = pyproject.get("tool", {}).get("pyship", {}).get("find_links", [])
+
+            clip_dir = create_clip(target_app_info, app_dir, Path(self.project_dir, self.dist_dir), self.cache_dir, find_links)
 
             clip_file_path = create_clip_file(clip_dir)  # create clip file
             assert isinstance(target_app_info.version, VersionInfo)
