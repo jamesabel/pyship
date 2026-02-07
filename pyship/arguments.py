@@ -17,6 +17,7 @@ def get_arguments() -> Any:
     parser.add_argument("-s", "--secret", help="cloud secret")
 
     parser.add_argument("--noupload", default=False, action="store_true", help="do not upload files to the cloud (e.g. installer and clip files)")
+    parser.add_argument("--public-readable", default=False, action="store_true", help="make uploaded S3 objects publicly readable")
     parser.add_argument("-d", "--dist", default=DEFAULT_DIST_DIR_NAME, help="distribution directory for this target application (i.e. directory that contains the wheel)")
     parser.add_argument(
         "-f",
