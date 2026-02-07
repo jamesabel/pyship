@@ -35,6 +35,7 @@ class PyShip:
     cloud_access: Union[PyShipCloud, None] = None  # making this accessible outside this class aids in testing, especially when mocking
     name: Union[str, None] = None  # optional target application name (overrides pyproject.toml)
     upload: bool = True  # set to False in order to tell pyship to not attempt to perform file upload to the cloud (e.g. installer, clip files to AWS S3)
+    public_readable: bool = False  # set to True to make uploaded S3 objects publicly readable (sets ACL=public-read)
 
     @typechecked
     def ship(self) -> Union[Path, None]:
@@ -44,7 +45,7 @@ class PyShip:
         """
 
         start_time = datetime.now()
-        pyship_print(f"{pyship_application_name} starting (pyship={str(pyship_version)},pyshipupdate={str(pyshipupdate_version)})")
+        pyship_print(f"{pyship_application_name} starting (pyship={str(pyship_version)},pyshipupdate={str(pyshipupdate_version)},upload={self.upload},public_readable={self.public_readable})")
 
         target_app_info = get_app_info(self.project_dir, self.dist_dir, self.cache_dir)
 
@@ -88,6 +89,7 @@ class PyShip:
                         s3_access = S3Access(bucket, profile_name=self.cloud_profile)
 
                     if s3_access is not None:
+                        s3_access.public_readable = self.public_readable
                         self.cloud_access = PyShipCloud(target_app_info.name, s3_access)
 
                         installer_url = self.cloud_access.upload(installer_exe_path)  # upload installer file
