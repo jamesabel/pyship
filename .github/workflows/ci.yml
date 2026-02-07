@@ -40,6 +40,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          pip install setuptools wheel
           pip install ty
           pip install -r requirements-dev.txt
 
@@ -72,7 +73,9 @@ jobs:
           python-version: "3.13"
 
       - name: Install dependencies
-        run: pip install -r requirements-dev.txt
+        run: |
+          pip install setuptools wheel
+          pip install -r requirements-dev.txt
 
       - name: Clone and install pyshipupdate
         run: |
