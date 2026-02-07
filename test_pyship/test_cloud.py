@@ -4,7 +4,7 @@ from semver import VersionInfo
 from balsa import get_logger
 
 from pyship import PyShip, CLIP_EXT
-from pyship.constants import is_ci
+from pyship.ci import is_ci
 from pyship.main import read_pyship_config
 from test_pyship import TstAppDirs, TST_APP_NAME
 

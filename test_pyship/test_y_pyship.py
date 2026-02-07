@@ -4,7 +4,7 @@ from ismain import is_main
 from balsa import get_logger
 
 from pyship import PyShip
-from pyship.constants import is_ci
+from pyship.ci import is_ci
 from test_pyship import TST_APP_NAME, TstAppDirs
 
 log = get_logger(TST_APP_NAME)
