@@ -11,7 +11,7 @@ from typing import Union
 
 from pyshipupdate import mkdirs, get_target_os
 from pyship import __application_name__, AppInfo, subprocess_run, pyship_print, get_icon, PyshipLicenseFileDoesNotExist
-from pyship.constants import is_ci
+from pyship.ci import is_ci
 
 log = get_logger(__application_name__)
 
