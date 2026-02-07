@@ -32,9 +32,6 @@ pyship settings can be configured in your project's `pyproject.toml` under `[too
 is_gui = false           # true if the app is a GUI application (default: false)
 run_on_startup = false   # true to run the app on OS startup (default: false)
 
-# Build settings
-dist = "dist"            # directory containing the wheel (default: "dist")
-
 # Cloud upload settings
 profile = "default"      # AWS IAM profile for S3 uploads
 upload = true            # upload installer and clip to S3 (default: true)
@@ -46,7 +43,6 @@ public_readable = false  # make uploaded S3 objects publicly readable (default: 
 | Argument | pyproject.toml key | Description |
 |----------|-------------------|-------------|
 | `-p`, `--profile` | `profile` | AWS IAM profile for S3 uploads |
-| `-d`, `--dist` | `dist` | Distribution directory containing the wheel |
 | `--noupload` | `upload` | Disable cloud upload (CLI flag inverts the toml boolean) |
 | `--public-readable` | `public_readable` | Make uploaded S3 objects publicly readable |
 | `-i`, `--id` | *(CLI only)* | AWS Access Key ID |

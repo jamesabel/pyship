@@ -4,14 +4,12 @@ python_interpreter_exes = {True: "pythonw.exe", False: "python.exe"}  # True is 
 
 APP_DIR_NAME = "app"  # analogous to a "Program Files" or "Applications" directory
 CLIP_EXT = "clip"  # zipped clip file extension
-DEFAULT_DIST_DIR_NAME = "dist"
 
 from .pyship_path import NullPath
 from .__version__ import __version__, __author__, __application_name__, __title__, __description__, __url__, __author_email__, __download_url__
 from .logging import PyshipLog, log_process_output
 from .pyship_exceptions import PyshipException, PyshipNoProductDirectory, PyshipCouldNotGetVersion, PyshipLicenseFileDoesNotExist, PyshipInsufficientAppInfo, PyshipNoAppName
 from .pyship_exceptions import PyshipNoTargetAppInfo
-from .constants import dist_dir
 from .pyship_custom_print import pyship_print
 from .arguments import get_arguments
 from .pyship_subprocess import subprocess_run

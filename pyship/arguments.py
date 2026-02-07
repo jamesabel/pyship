@@ -4,7 +4,7 @@ from typing import Any
 
 from balsa import verbose_arg_string, delete_existing_arg_string, log_dir_arg_string
 
-from pyship import __name__, __version__, DEFAULT_DIST_DIR_NAME
+from pyship import __name__, __version__
 
 
 def get_arguments() -> Any:
@@ -16,7 +16,6 @@ def get_arguments() -> Any:
 
     parser.add_argument("--noupload", default=False, action="store_true", help="do not upload files to the cloud (e.g. installer and clip files)")
     parser.add_argument("--public-readable", default=False, action="store_true", help="make uploaded S3 objects publicly readable")
-    parser.add_argument("-d", "--dist", default=DEFAULT_DIST_DIR_NAME, help="distribution directory for this target application (i.e. directory that contains the wheel)")
 
     parser.add_argument("--version", action="store_true", help="display version")
     parser.add_argument("-v", f"--{verbose_arg_string}", action="store_true", help="increase output verbosity")

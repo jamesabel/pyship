@@ -2,7 +2,7 @@ from pathlib import Path
 
 import toml
 
-from pyship import PyShip, __application_name__, __author__, PyshipLog, get_arguments, pyship_print, DEFAULT_DIST_DIR_NAME
+from pyship import PyShip, __application_name__, __author__, PyshipLog, get_arguments, pyship_print
 
 
 def read_pyship_config() -> dict:
@@ -19,7 +19,7 @@ def read_pyship_config() -> dict:
         tool_section = pyproject.get("tool", {})
         pyship_section = tool_section.get("pyship", {})
         # Only extract PyShip-level keys (not AppInfo-level keys like is_gui, run_on_startup)
-        for key in ("profile", "upload", "public_readable", "dist"):
+        for key in ("profile", "upload", "public_readable"):
             if key in pyship_section:
                 config[key] = pyship_section[key]
     return config
@@ -43,8 +43,6 @@ def main():
         pyship.upload = config["upload"]
     if "public_readable" in config:
         pyship.public_readable = config["public_readable"]
-    if "dist" in config:
-        pyship.dist_dir = Path(config["dist"])
 
     # CLI args override pyproject.toml values
     if args.profile is not None:
@@ -57,6 +55,4 @@ def main():
         pyship.upload = False
     if args.public_readable:
         pyship.public_readable = True
-    if args.dist != DEFAULT_DIST_DIR_NAME:
-        pyship.dist_dir = Path(args.dist)
     pyship.ship()
