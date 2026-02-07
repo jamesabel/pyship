@@ -1,7 +1,5 @@
 pushd .
 cd ..
-call local_install.bat
-set PYTHONPATH=%CD%
-venv\Scripts\pytest.exe --rootdir="." -s test_pyship
+venv\Scripts\python.exe -m pytest
 set PYTHONPATH=
-pushd
+popd

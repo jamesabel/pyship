@@ -1,5 +1,5 @@
 pushd .
 cd ..
 set PYTHONPATH=%CD%
-venv\Scripts\pytest.exe --cov-report=html --cov
-pushd
+venv\Scripts\python.exe -m pytest --cov-report=html --cov
+popd
