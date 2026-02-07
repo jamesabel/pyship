@@ -62,7 +62,6 @@ name = "myapp"
 profile = "myprofile"
 upload = false
 public_readable = true
-dist = "output"
 """
     pyproject_path = tmp_path / "pyproject.toml"
     pyproject_path.write_text(pyproject_content)
@@ -72,7 +71,6 @@ dist = "output"
     assert config["profile"] == "myprofile"
     assert config["upload"] is False
     assert config["public_readable"] is True
-    assert config["dist"] == "output"
 
 
 def test_read_pyship_config_empty(tmp_path, monkeypatch):

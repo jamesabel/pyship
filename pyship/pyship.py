@@ -12,7 +12,7 @@ from semver import VersionInfo
 from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
 from pyship import __version__ as pyship_version
-from pyship import run_nsis, create_clip, create_pyship_launcher, pyship_print, APP_DIR_NAME, create_clip_file, DEFAULT_DIST_DIR_NAME, get_app_info, PyShipCloud
+from pyship import run_nsis, create_clip, create_pyship_launcher, pyship_print, APP_DIR_NAME, create_clip_file, get_app_info, PyShipCloud
 from pyship import PyshipNoProductDirectory, PyshipNoAppName, PyshipNoTargetAppInfo
 from pyshipupdate import mkdirs, create_bucket_name
 from pyshipupdate import __version__ as pyshipupdate_version
@@ -23,7 +23,7 @@ log = get_logger(pyship_application_name)
 @attrs(auto_attribs=True)
 class PyShip:
     project_dir: Path = Path()  # target app project dir, e.g. the "home" directory of the project.  If not set, current working directory is used.
-    dist_dir: Path = Path(DEFAULT_DIST_DIR_NAME)  # many packaging tools (e.g filt, etc.) use "dist" as the package destination directory
+    dist_dir: Path = Path("dist")  # many packaging tools (e.g filt, etc.) use "dist" as the package destination directory
 
     # cloud credentials, locations, etc.
     cloud_bucket: Union[str, None] = None  # e.g. AWS S3 bucket

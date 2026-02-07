@@ -1,7 +1,5 @@
 import os
 
-dist_dir = "dist"
-
 
 def is_ci() -> bool:
     """Check if running in a CI environment (GitHub Actions, etc.)."""
