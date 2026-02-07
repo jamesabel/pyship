@@ -84,6 +84,7 @@ class Program
         psi.Arguments = arguments;
         psi.UseShellExecute = false;
         psi.WorkingDirectory = launcherDir;
+        {hide_window}
 
         try
         {{
@@ -155,10 +156,12 @@ def compile_launcher_stub(app_name: str, icon_path: Union[Path, None], is_gui: b
         raise FileNotFoundError("Could not find csc.exe (.NET Framework C# compiler). Ensure .NET Framework 4.x is installed.")
 
     error_handler = GUI_ERROR_HANDLER if is_gui else CLI_ERROR_HANDLER
+    hide_window = "psi.CreateNoWindow = true;" if is_gui else ""
 
     cs_source = CS_LAUNCHER_TEMPLATE.format(
         app_name=app_name,
         error_handler=error_handler,
+        hide_window=hide_window,
     )
 
     output_path.mkdir(parents=True, exist_ok=True)
