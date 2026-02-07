@@ -12,7 +12,7 @@ log = get_logger(__application_name__)
 
 
 @typechecked
-def create_clip(target_app_info: AppInfo, app_dir: Path, target_app_package_dist_dir: Path, cache_dir: Path, find_links: list) -> Path:
+def create_clip(target_app_info: AppInfo, app_dir: Path, target_app_package_dist_dir: Path, cache_dir: Path) -> Path:
     """
     create clip (Complete Location Independent Python) environment
     clip is a stand-alone, relocatable directory that contains the entire python environment (including all libraries and the target app) needed to execute the target python application
@@ -20,13 +20,12 @@ def create_clip(target_app_info: AppInfo, app_dir: Path, target_app_package_dist
     :param app_dir: app gets built here (i.e. the output of this function)
     :param target_app_package_dist_dir: target app module dist dir (as a package)
     :param cache_dir: cache dir
-    :param find_links: a (potentially empty) list of "find links" to add to pip invocation
     :return: path to the clip dir
     """
 
     clip_dir = create_base_clip(target_app_info, app_dir, cache_dir)
     assert isinstance(target_app_info.name, str)
-    install_target_app(target_app_info.name, clip_dir, target_app_package_dist_dir, cache_dir, find_links)
+    install_target_app(target_app_info.name, clip_dir, target_app_package_dist_dir, cache_dir)
     return clip_dir
 
 
@@ -67,14 +66,13 @@ def create_base_clip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path) -
 
 
 @typechecked
-def install_target_app(module_name: str, clip_dir: Path, target_app_package_dist_dir: Path, cache_dir: Path, find_links: list):
+def install_target_app(module_name: str, clip_dir: Path, target_app_package_dist_dir: Path, cache_dir: Path):
     """
     install target app as a module (and its dependencies) into clip
     :param module_name: module name
     :param clip_dir: clip dir (a relocatable venv)
     :param target_app_package_dist_dir: target app module dist dir (as a package)
     :param cache_dir: cache dir
-    :param find_links: a list of "find links" to add to pip invocation
     """
 
     log.info(f"installing {module_name}")
@@ -82,7 +80,4 @@ def install_target_app(module_name: str, clip_dir: Path, target_app_package_dist
     uv_path = find_or_bootstrap_uv(cache_dir)
     target_python = Path(clip_dir, "Scripts", "python.exe")
 
-    all_find_links = list(find_links)  # copy to avoid mutating caller's list
-    all_find_links.append(str(target_app_package_dist_dir.absolute()))
-
-    uv_pip_install(uv_path, target_python, [module_name], all_find_links, upgrade=True)
+    uv_pip_install(uv_path, target_python, [module_name], target_app_package_dist_dir.absolute(), upgrade=True)

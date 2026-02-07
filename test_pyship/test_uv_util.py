@@ -51,7 +51,7 @@ def test_uv_pip_install():
         uv_venv_create(uv_path, venv_dir, python_version)
 
         target_python = Path(venv_dir, "Scripts", "python.exe")
-        uv_pip_install(uv_path, target_python, ["ismain"], [], upgrade=True)
+        uv_pip_install(uv_path, target_python, ["ismain"], Path(tmp, "dist"), upgrade=True)
 
         assert Path(venv_dir, "Lib", "site-packages", "ismain").exists()
 

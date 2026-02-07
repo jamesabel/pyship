@@ -33,9 +33,7 @@ is_gui = false           # true if the app is a GUI application (default: false)
 run_on_startup = false   # true to run the app on OS startup (default: false)
 
 # Build settings
-name = "myapp"           # target application name (overrides [project] name)
 dist = "dist"            # directory containing the wheel (default: "dist")
-find_links = ["../otherproject/dist"]  # extra directories for pip --find-links
 
 # Cloud upload settings
 profile = "default"      # AWS IAM profile for S3 uploads
@@ -47,7 +45,6 @@ public_readable = false  # make uploaded S3 objects publicly readable (default: 
 
 | Argument | pyproject.toml key | Description |
 |----------|-------------------|-------------|
-| `-n`, `--name` | `name` | Target application name |
 | `-p`, `--profile` | `profile` | AWS IAM profile for S3 uploads |
 | `-d`, `--dist` | `dist` | Distribution directory containing the wheel |
 | `--noupload` | `upload` | Disable cloud upload (CLI flag inverts the toml boolean) |

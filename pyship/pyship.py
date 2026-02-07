@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Union
 
 import platformdirs
-import toml
 from attr import attrs
 from typeguard import typechecked
 from awsimple import S3Access
@@ -63,15 +62,7 @@ class PyShip:
 
             create_pyship_launcher(target_app_info, app_dir)  # create the OS specific launcher executable
 
-            # read find_links from [tool.pyship] in the project's pyproject.toml
-            find_links = []
-            pyproject_path = Path(self.project_dir, "pyproject.toml")
-            if pyproject_path.exists():
-                with pyproject_path.open() as f:
-                    pyproject = toml.load(f)
-                find_links = pyproject.get("tool", {}).get("pyship", {}).get("find_links", [])
-
-            clip_dir = create_clip(target_app_info, app_dir, Path(self.project_dir, self.dist_dir), cache_dir, find_links)
+            clip_dir = create_clip(target_app_info, app_dir, Path(self.project_dir, self.dist_dir), cache_dir)
 
             clip_file_path = create_clip_file(clip_dir)  # create clip file
             assert isinstance(target_app_info.version, VersionInfo)

@@ -59,7 +59,6 @@ def test_read_pyship_config(tmp_path, monkeypatch):
 name = "myapp"
 
 [tool.pyship]
-name = "myapp"
 profile = "myprofile"
 upload = false
 public_readable = true
@@ -70,7 +69,6 @@ dist = "output"
     monkeypatch.chdir(tmp_path)
 
     config = read_pyship_config()
-    assert config["name"] == "myapp"
     assert config["profile"] == "myprofile"
     assert config["upload"] is False
     assert config["public_readable"] is True
