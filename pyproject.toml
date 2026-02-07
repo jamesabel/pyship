@@ -7,7 +7,7 @@ name = "pyship"
 version = "0.4.3"
 description = "freezer, installer and updater for Python applications"
 readme = "readme.md"
-license = "MIT"
+license = {text = "MIT"}
 requires-python = ">=3.11"
 authors = [{name = "abel", email = "j@abel.co"}]
 keywords = ["freezer", "installer", "ship"]
