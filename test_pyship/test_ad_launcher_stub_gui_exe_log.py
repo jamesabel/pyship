@@ -20,7 +20,7 @@ def _compile_fake_python_exe(output_path: Path) -> Path:
     csc_exe = _find_csc_exe()
     assert csc_exe is not None, "csc.exe not found"
 
-    cs_source = 'class P { static int Main(string[] args) { return 0; } }\n'
+    cs_source = "class P { static int Main(string[] args) { return 0; } }\n"
     cs_file = output_path / "_fake_python.cs"
     cs_file.write_text(cs_source, encoding="utf-8")
 
