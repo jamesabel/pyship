@@ -18,6 +18,7 @@ def test_launcher_stub_exe_writes_log():
     local_app_data = Path(os.environ["LOCALAPPDATA"])
     log_dir = local_app_data / APP_NAME / "log"
     log_file = log_dir / f"{APP_NAME}_launcher.log"
+    print(f'log file path: "{log_file}"')
 
     # Clean up any leftover log directory from a previous run
     app_data_dir = local_app_data / APP_NAME
@@ -67,7 +68,8 @@ def test_launcher_stub_exe_writes_log():
     finally:
         # Clean up the log directory from %LOCALAPPDATA%
         if app_data_dir.exists():
-            shutil.rmtree(app_data_dir, ignore_errors=True)
+            pass
+            # shutil.rmtree(app_data_dir, ignore_errors=True)
 
 
 if is_main():
