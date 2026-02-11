@@ -22,23 +22,81 @@ using System.Reflection;
 
 class Program
 {{
+    static string logFilePath = null;
+
+    static void InitLogging(string appName)
+    {{
+        try
+        {{
+            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            if (!string.IsNullOrEmpty(localAppData))
+            {{
+                string logDir = Path.Combine(localAppData, appName, "log");
+                Directory.CreateDirectory(logDir);
+                logFilePath = Path.Combine(logDir, appName + "_launcher.log");
+            }}
+        }}
+        catch (Exception)
+        {{
+            // logging init failure must not crash the stub
+        }}
+    }}
+
+    static void Log(string level, string message)
+    {{
+        if (logFilePath == null) return;
+        try
+        {{
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss,fff");
+            string appName = "{app_name}";
+            string line = timestamp + " - " + appName + "_stub - " + level + " - " + message + Environment.NewLine;
+            File.AppendAllText(logFilePath, line);
+        }}
+        catch (Exception)
+        {{
+            // logging failure must not crash the stub
+        }}
+    }}
+
     static int Main(string[] args)
     {{
         string appName = "{app_name}";
+        InitLogging(appName);
+
         string exePath = Assembly.GetEntryAssembly().Location;
+        Log("INFO", "stub starting - exe=" + exePath + " CLR=" + Environment.Version + " OS=" + Environment.OSVersion);
+
+        if (args.Length > 0)
+        {{
+            Log("INFO", "arguments: " + string.Join(" ", args));
+        }}
+        else
+        {{
+            Log("INFO", "no command-line arguments");
+        }}
+
         string launcherDir = Path.GetDirectoryName(exePath);
         string appDir = Directory.GetParent(launcherDir).FullName;
+        Log("INFO", "appName=" + appName + " launcherDir=" + launcherDir + " appDir=" + appDir);
 
         // Find CLIP directories matching appName_version pattern
         string searchPattern = appName + "_*";
+        Log("INFO", "searching for CLIP directories: pattern=" + searchPattern + " in " + appDir);
         string[] clipDirs;
         try
         {{
             clipDirs = Directory.GetDirectories(appDir, searchPattern);
         }}
-        catch (Exception)
+        catch (Exception ex)
         {{
+            Log("ERROR", "failed to search directories: " + ex.Message);
             clipDirs = new string[0];
+        }}
+
+        Log("INFO", "candidate directories found: " + clipDirs.Length);
+        foreach (string d in clipDirs)
+        {{
+            Log("INFO", "  candidate: " + d);
         }}
 
         // Filter to directories that contain Scripts\python.exe
@@ -46,9 +104,16 @@ class Program
             .Where(d => File.Exists(Path.Combine(d, "Scripts", "python.exe")))
             .ToArray();
 
+        Log("INFO", "valid CLIPs (with Scripts\\python.exe): " + validClips.Length);
+        foreach (string d in validClips)
+        {{
+            Log("INFO", "  valid: " + d);
+        }}
+
         if (validClips.Length == 0)
         {{
             string msg = "No Python environment found for " + appName + " in " + appDir;
+            Log("ERROR", msg);
             {error_handler}
             return 1;
         }}
@@ -62,12 +127,17 @@ class Program
         }});
 
         string latestClip = validClips[validClips.Length - 1];
+        string latestVersion = Path.GetFileName(latestClip).Substring(appName.Length + 1);
+        Log("INFO", "selected latest CLIP: " + latestClip + " (version " + latestVersion + ")");
+
         string pythonExe = Path.Combine(latestClip, "Scripts", "python.exe");
         string launcherScript = Path.Combine(launcherDir, appName + "_launcher.py");
+        Log("INFO", "pythonExe=" + pythonExe + " launcherScript=" + launcherScript);
 
         if (!File.Exists(launcherScript))
         {{
             string msg = "Launcher script not found: " + launcherScript;
+            Log("ERROR", msg);
             {error_handler}
             return 1;
         }}
@@ -79,6 +149,8 @@ class Program
             arguments += " \"" + arg + "\"";
         }}
 
+        Log("INFO", "command: " + pythonExe + " " + arguments);
+
         ProcessStartInfo psi = new ProcessStartInfo();
         psi.FileName = pythonExe;
         psi.Arguments = arguments;
@@ -88,13 +160,18 @@ class Program
 
         try
         {{
+            Log("INFO", "starting process");
             Process process = Process.Start(psi);
+            Log("INFO", "process started - PID=" + process.Id);
             process.WaitForExit();
-            return process.ExitCode;
+            int exitCode = process.ExitCode;
+            Log("INFO", "process exited - exitCode=" + exitCode);
+            return exitCode;
         }}
         catch (Exception ex)
         {{
             string msg = "Failed to start: " + ex.Message;
+            Log("ERROR", msg);
             {error_handler}
             return 1;
         }}
