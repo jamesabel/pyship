@@ -128,6 +128,23 @@ def copy_standalone_python(uv_path: Path, python_version: str, dest_dir: Path) -
     if not dest_python.exists():
         raise FileNotFoundError(f"python.exe not found at {dest_python} after copying standalone Python")
 
+    # Create a ._pth file so Python finds its stdlib without looking for pyvenv.cfg.
+    # Python 3.14+ may fail with "failed to locate pyvenv.cfg" (exit 106) without this.
+    # The ._pth file puts Python in isolated path mode, bypassing venv detection entirely.
+    pth_pattern = "python3*._pth"
+    existing_pth = list(dest_dir.glob(pth_pattern))
+    if not existing_pth:
+        # Derive the ._pth filename from the Python DLL (e.g. python314.dll -> python314._pth)
+        python_dlls = list(dest_dir.glob("python3*.dll"))
+        python_dlls = [d for d in python_dlls if d.stem != "python3"]  # exclude python3.dll
+        if python_dlls:
+            pth_name = python_dlls[0].stem + "._pth"
+        else:
+            pth_name = "python._pth"
+        pth_path = Path(dest_dir, pth_name)
+        pth_path.write_text(".\nLib\nDLLs\nimport site\n", encoding="utf-8")
+        log.info(f"created {pth_path}")
+
     # Verify the copied Python interpreter actually works
     verify_result = subprocess.run([str(dest_python), "-c", "import sys; print(sys.version)"], capture_output=True, text=True)
     if verify_result.returncode != 0:
