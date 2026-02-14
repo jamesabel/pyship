@@ -128,6 +128,13 @@ def copy_standalone_python(uv_path: Path, python_version: str, dest_dir: Path) -
     if not dest_python.exists():
         raise FileNotFoundError(f"python.exe not found at {dest_python} after copying standalone Python")
 
+    # Verify the copied Python interpreter actually works
+    verify_result = subprocess.run([str(dest_python), "-c", "import sys; print(sys.version)"], capture_output=True, text=True)
+    if verify_result.returncode != 0:
+        log.error(f"copied Python at {dest_python} failed verification (exit {verify_result.returncode}): {verify_result.stderr}")
+        raise RuntimeError(f"copied Python interpreter at {dest_python} does not work (exit code {verify_result.returncode}): {verify_result.stderr}")
+    log.info(f"copied Python verified: {verify_result.stdout.strip()}")
+
     log.info(f"standalone Python copied to {dest_dir}")
     return dest_python
 
