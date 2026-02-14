@@ -60,16 +60,15 @@ def test_launcher_stub_gui_exe_writes_log():
             # Directory layout the stub expects:
             #   appDir = tmp/
             #   launcherDir = tmp/tstloggui/       (contains the .exe and launcher script)
-            #   clipDir     = tmp/tstloggui_0.0.1/ (contains Scripts/python.exe)
+            #   clipDir     = tmp/tstloggui_0.0.1/ (contains python.exe)
             launcher_dir = tmp_path / APP_NAME
             exe_path = compile_launcher_stub(APP_NAME, icon_path=None, is_gui=True, output_path=launcher_dir)
             assert exe_path.exists(), f"compiled exe not found at {exe_path}"
 
             # Create a fake CLIP directory with a minimal python.exe that exits 0
             clip_dir = tmp_path / f"{APP_NAME}_0.0.1"
-            scripts_dir = clip_dir / "Scripts"
-            scripts_dir.mkdir(parents=True)
-            _compile_fake_python_exe(scripts_dir)
+            clip_dir.mkdir(parents=True)
+            _compile_fake_python_exe(clip_dir)
 
             # Create a minimal launcher script (the fake python.exe ignores it, but it must exist)
             launcher_script = launcher_dir / f"{APP_NAME}_launcher.py"

@@ -166,7 +166,7 @@ def launch(app_dir=None, additional_path=None):
             for d in app_dir.iterdir():
                 if d.is_dir():
                     m = clip_regex.match(d.name)
-                    if m and Path(d, "Scripts", "python.exe").exists():
+                    if m and Path(d, "python.exe").exists():
                         target_app_name = m.group(1)
                         break
 
@@ -225,7 +225,7 @@ def launch(app_dir=None, additional_path=None):
             latest_version = sorted(versions.keys())[-1]
             log.info(f"latest_version={'.'.join(str(v) for v in latest_version)}")
 
-            python_exe_path = Path(versions[latest_version], "Scripts", PYTHON_INTERPRETER_EXES[is_gui])
+            python_exe_path = Path(versions[latest_version], PYTHON_INTERPRETER_EXES[is_gui])
 
             if python_exe_path.exists():
                 cmd = [str(python_exe_path), "-m", target_app_name]
@@ -244,7 +244,7 @@ def launch(app_dir=None, additional_path=None):
                     # When pythonw.exe fails silently (no stderr), re-run with python.exe to capture the actual error
                     if is_gui and return_code not in (OK_RETURN_CODE, RESTART_RETURN_CODE) and not (std_err and std_err.strip()):
                         log.warning(f"pythonw.exe exited with return_code={return_code} but produced no error output, re-running with python.exe for diagnostics")
-                        diag_python = Path(versions[latest_version], "Scripts", "python.exe")
+                        diag_python = Path(versions[latest_version], "python.exe")
                         if diag_python.exists():
                             diag_cmd = [str(diag_python), "-X", "faulthandler"] + cmd[1:]
                             log.info(f"diagnostic cmd={diag_cmd}")

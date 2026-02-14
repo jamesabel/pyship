@@ -6,7 +6,7 @@ from typeguard import typechecked
 from balsa import get_logger
 
 from pyship import AppInfo, pyship_print, __application_name__, CLIP_EXT
-from pyship.uv_util import find_or_bootstrap_uv, uv_python_install, uv_venv_create, uv_pip_install
+from pyship.uv_util import find_or_bootstrap_uv, copy_standalone_python, uv_pip_install
 
 log = get_logger(__application_name__)
 
@@ -59,8 +59,7 @@ def create_base_clip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path) -
     pyship_print(f'building clip {clip_dir_name} ("{clip_dir}")')
 
     uv_path = find_or_bootstrap_uv(cache_dir)
-    python_path = uv_python_install(uv_path, python_version)
-    uv_venv_create(uv_path, clip_dir, str(python_path))
+    copy_standalone_python(uv_path, python_version, clip_dir)
 
     return clip_dir
 
@@ -78,6 +77,6 @@ def install_target_app(module_name: str, clip_dir: Path, target_app_package_dist
     log.info(f"installing {module_name}")
 
     uv_path = find_or_bootstrap_uv(cache_dir)
-    target_python = Path(clip_dir, "Scripts", "python.exe")
+    target_python = Path(clip_dir, "python.exe")
 
-    uv_pip_install(uv_path, target_python, [module_name], target_app_package_dist_dir.absolute(), upgrade=True)
+    uv_pip_install(uv_path, target_python, [module_name], target_app_package_dist_dir.absolute(), upgrade=True, system=True)

@@ -19,7 +19,7 @@ from .nsis import run_nsis
 from .download import file_download, extract
 from .create_launcher import create_pyship_launcher
 from .clip import create_base_clip, install_target_app, create_clip, create_clip_file
-from .uv_util import find_or_bootstrap_uv, uv_python_install, uv_venv_create, uv_pip_install, uv_build
+from .uv_util import find_or_bootstrap_uv, uv_python_install, copy_standalone_python, uv_pip_install, uv_build
 from .cloud import PyShipCloud
 from .pyship import PyShip
 from .main import main

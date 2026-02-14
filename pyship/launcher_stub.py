@@ -99,12 +99,12 @@ class Program
             Log("INFO", "  candidate: " + d);
         }}
 
-        // Filter to directories that contain Scripts\python.exe
+        // Filter to directories that contain python.exe
         var validClips = clipDirs
-            .Where(d => File.Exists(Path.Combine(d, "Scripts", "python.exe")))
+            .Where(d => File.Exists(Path.Combine(d, "python.exe")))
             .ToArray();
 
-        Log("INFO", "valid CLIPs (with Scripts\\python.exe): " + validClips.Length);
+        Log("INFO", "valid CLIPs (with python.exe): " + validClips.Length);
         foreach (string d in validClips)
         {{
             Log("INFO", "  valid: " + d);
@@ -130,7 +130,7 @@ class Program
         string latestVersion = Path.GetFileName(latestClip).Substring(appName.Length + 1);
         Log("INFO", "selected latest CLIP: " + latestClip + " (version " + latestVersion + ")");
 
-        string pythonExe = Path.Combine(latestClip, "Scripts", "python.exe");
+        string pythonExe = Path.Combine(latestClip, "python.exe");
         string launcherScript = Path.Combine(launcherDir, appName + "_launcher.py");
         Log("INFO", "pythonExe=" + pythonExe + " launcherScript=" + launcherScript);
 

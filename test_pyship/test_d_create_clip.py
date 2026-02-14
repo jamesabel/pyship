@@ -18,7 +18,7 @@ def test_create_clip():
     app_info.setup_paths(tst_app_dirs.project_dir)
     clip_dir = create_clip(app_info, tst_app_dirs.app_dir, tst_app_dirs.dist_dir, tst_app_dirs.cache)
     log.info(f"{clip_dir=}")
-    assert Path(clip_dir, "Scripts", "python.exe").exists()  # make sure base python created in venv layout
+    assert Path(clip_dir, "python.exe").exists()  # make sure standalone python copied to clip root
     assert Path(clip_dir, "Lib", "site-packages", "pyship").exists()  # make sure pyship has been installed (we're using pyship itself in this test)
 
 

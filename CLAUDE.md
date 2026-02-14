@@ -6,7 +6,7 @@ pyship is a Windows application freezer, installer, and updater for Python appli
 
 ## Key Concepts
 
-- **CLIP** - A relocatable Python venv (created via `uv venv --relocatable`) containing the target app and all dependencies. Layout: `Scripts/python.exe`, `Lib/site-packages/`, `pyvenv.cfg`.
+- **CLIP** - A standalone Python environment (copied from uv-managed python-build-standalone) containing the target app and all dependencies. Layout: `python.exe` at root, `Lib/site-packages/`.
 - **Launcher** - A small C# stub `.exe` (compiled via `csc.exe`) plus a standalone Python script that finds and runs the latest CLIP version.
 - **Target app** - The Python application being shipped.
 
@@ -74,7 +74,7 @@ venv\Scripts\python.exe -m pytest test_pyship/ -v
 
 1. `get_app_info()` - Read pyproject.toml + inspect wheel for metadata
 2. `create_pyship_launcher()` - Compile C# stub via csc.exe + copy standalone launcher script
-3. `create_clip()` - Bootstrap uv, create relocatable venv, install target app
+3. `create_clip()` - Bootstrap uv, copy standalone Python, install target app
 4. `create_clip_file()` - Zip the CLIP directory (with `.clip` extension)
 5. `run_nsis()` - Generate and run NSIS installer script
 6. Upload installer + clip to S3 (optional)
@@ -97,4 +97,4 @@ venv\Scripts\python.exe -m pytest test_pyship/ -v
 
 - Windows-only currently. Paths and scripts assume Windows.
 - The `pyshipupdate` package is a sibling project (not on PyPI); its wheel is expected at `../pyshipupdate/dist/` for local development.
-- CLIP uses `uv venv --relocatable` so `python.exe` is at `<clip_dir>/Scripts/python.exe`.
+- CLIP uses a standalone Python (from python-build-standalone via uv) so `python.exe` is at `<clip_dir>/python.exe`.

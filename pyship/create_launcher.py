@@ -38,11 +38,11 @@ REM app_dir is the parent of launcher_dir
 for %%I in ("%LAUNCHER_DIR%") do set "APP_DIR=%%~dpI"
 if "%APP_DIR:~-1%"=="\\" set "APP_DIR=%APP_DIR:~0,-1%"
 
-REM Find the latest CLIP directory containing Scripts\\python.exe
+REM Find the latest CLIP directory containing python.exe
 set "PYTHON_EXE="
 for /d %%D in ("%APP_DIR%\\{app_name}_*") do (
-    if exist "%%D\\Scripts\\python.exe" (
-        set "PYTHON_EXE=%%D\\Scripts\\python.exe"
+    if exist "%%D\\python.exe" (
+        set "PYTHON_EXE=%%D\\python.exe"
     )
 )
 

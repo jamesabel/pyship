@@ -100,37 +100,52 @@ def uv_python_install(uv_path: Path, python_version: str) -> Path:
 
 
 @typechecked
-def uv_venv_create(uv_path: Path, venv_dir: Path, python_version_or_path: str) -> None:
+def copy_standalone_python(uv_path: Path, python_version: str, dest_dir: Path) -> Path:
     """
-    Create a relocatable venv using uv.
+    Copy a full standalone Python installation into dest_dir.
+    Uses uv python install to ensure the Python is available, then copies the
+    entire installation directory so the CLIP has no dependency on the base Python path.
     :param uv_path: path to uv executable
-    :param venv_dir: destination directory for the venv
-    :param python_version_or_path: Python version string (e.g. "3.11") or path to Python executable
+    :param python_version: Python version string (e.g. "3.12")
+    :param dest_dir: destination directory to copy the Python installation into
+    :return: path to python.exe inside dest_dir
     """
-    pyship_print(f'creating relocatable venv at "{venv_dir}"')
-    cmd = [str(uv_path), "venv", "--relocatable", "--clear", "--python", python_version_or_path, str(venv_dir)]
-    log.info(f"uv venv cmd: {cmd}")
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.stdout:
-        log.info(result.stdout)
-    if result.stderr:
-        log.info(result.stderr)
-    if result.returncode != 0:
-        log.error(f"uv venv failed (exit {result.returncode}): {result.stderr}")
-        result.check_returncode()
+    python_path = uv_python_install(uv_path, python_version)
+    python_install_dir = python_path.parent  # standalone Python has python.exe at root
+
+    pyship_print(f'copying standalone Python from "{python_install_dir}" to "{dest_dir}"')
+    if dest_dir.exists():
+        shutil.rmtree(dest_dir)
+    shutil.copytree(str(python_install_dir), str(dest_dir))
+
+    # Remove EXTERNALLY-MANAGED marker so uv pip install works
+    externally_managed = Path(dest_dir, "Lib", "EXTERNALLY-MANAGED")
+    if externally_managed.exists():
+        externally_managed.unlink()
+        log.info(f"removed {externally_managed}")
+
+    dest_python = Path(dest_dir, "python.exe")
+    if not dest_python.exists():
+        raise FileNotFoundError(f"python.exe not found at {dest_python} after copying standalone Python")
+
+    log.info(f"standalone Python copied to {dest_dir}")
+    return dest_python
 
 
 @typechecked
-def uv_pip_install(uv_path: Path, target_python: Path, packages: list, dist_dir: Path, upgrade: bool = True) -> None:
+def uv_pip_install(uv_path: Path, target_python: Path, packages: list, dist_dir: Path, upgrade: bool = True, system: bool = False) -> None:
     """
-    Install packages into a venv using uv pip.
+    Install packages into a Python environment using uv pip.
     :param uv_path: path to uv executable
-    :param target_python: path to the Python interpreter in the target venv
+    :param target_python: path to the Python interpreter in the target environment
     :param packages: list of package names or paths to install
     :param dist_dir: directory containing wheels to pass as --find-links
     :param upgrade: whether to pass -U flag
+    :param system: whether to pass --system flag (required for non-venv Python installations)
     """
     cmd = [str(uv_path), "pip", "install", "--python", str(target_python)]
+    if system:
+        cmd.append("--system")
     if upgrade:
         cmd.append("-U")
     cmd.extend(packages)
