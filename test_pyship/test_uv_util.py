@@ -1,12 +1,12 @@
-import platform
 import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import pytest
 from ismain import is_main
 from balsa import get_logger
 
-from pyship import PyshipLog, __author__
+from pyship import PyshipLog, __author__, SUPPORTED_PYTHON_VERSIONS
 from pyship.uv_util import find_or_bootstrap_uv, uv_python_install, copy_standalone_python, uv_pip_install
 
 from test_pyship import __application_name__
@@ -22,10 +22,8 @@ def test_find_or_bootstrap_uv():
         log.info(f"{uv_path=}")
 
 
-def test_copy_standalone_python():
-    python_ver_tuple = platform.python_version_tuple()
-    python_version = f"{python_ver_tuple[0]}.{python_ver_tuple[1]}"
-
+@pytest.mark.parametrize("python_version", SUPPORTED_PYTHON_VERSIONS)
+def test_copy_standalone_python(python_version):
     with TemporaryDirectory() as tmp:
         cache_dir = Path(tmp, "cache")
         dest_dir = Path(tmp, "test_python")
@@ -39,10 +37,8 @@ def test_copy_standalone_python():
         assert not Path(dest_dir, "Lib", "EXTERNALLY-MANAGED").exists()
 
 
-def test_uv_pip_install():
-    python_ver_tuple = platform.python_version_tuple()
-    python_version = f"{python_ver_tuple[0]}.{python_ver_tuple[1]}"
-
+@pytest.mark.parametrize("python_version", SUPPORTED_PYTHON_VERSIONS)
+def test_uv_pip_install(python_version):
     with TemporaryDirectory() as tmp:
         cache_dir = Path(tmp, "cache")
         dest_dir = Path(tmp, "test_python")
@@ -59,5 +55,5 @@ if is_main():
     pyship_log = PyshipLog(__application_name__, __author__, log_directory="log", delete_existing_log_files=True, verbose=True)
     pyship_log.init_logger()
     test_find_or_bootstrap_uv()
-    test_copy_standalone_python()
-    test_uv_pip_install()
+    test_copy_standalone_python("3.13")
+    test_uv_pip_install("3.13")

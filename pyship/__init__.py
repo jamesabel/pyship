@@ -4,6 +4,7 @@ python_interpreter_exes = {True: "pythonw.exe", False: "python.exe"}  # True is 
 
 APP_DIR_NAME = "app"  # analogous to a "Program Files" or "Applications" directory
 CLIP_EXT = "clip"  # zipped clip file extension
+SUPPORTED_PYTHON_VERSIONS = ("3.11", "3.12", "3.13", "3.14")
 
 from .path import NullPath
 from .__version__ import __version__, __author__, __application_name__, __title__, __description__, __url__, __author_email__, __download_url__

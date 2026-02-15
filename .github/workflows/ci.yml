@@ -60,17 +60,20 @@ jobs:
         run: ty check pyship --exit-zero
 
   test:
-    name: Tests
+    name: Tests (Python ${{ matrix.python-version }})
     runs-on: windows-latest
     needs: [lint, typecheck]
     continue-on-error: true  # Tests require NSIS and may fail in CI
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |

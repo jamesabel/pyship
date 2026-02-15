@@ -1,6 +1,7 @@
 import platform
 import shutil
 from pathlib import Path
+from typing import Union
 
 from typeguard import typechecked
 from balsa import get_logger
@@ -12,7 +13,7 @@ log = get_logger(__application_name__)
 
 
 @typechecked
-def create_clip(target_app_info: AppInfo, app_dir: Path, target_app_package_dist_dir: Path, cache_dir: Path) -> Path:
+def create_clip(target_app_info: AppInfo, app_dir: Path, target_app_package_dist_dir: Path, cache_dir: Path, python_version: Union[str, None] = None) -> Path:
     """
     create clip (Complete Location Independent Python) environment
     clip is a stand-alone, relocatable directory that contains the entire python environment (including all libraries and the target app) needed to execute the target python application
@@ -20,10 +21,11 @@ def create_clip(target_app_info: AppInfo, app_dir: Path, target_app_package_dist
     :param app_dir: app gets built here (i.e. the output of this function)
     :param target_app_package_dist_dir: target app module dist dir (as a package)
     :param cache_dir: cache dir
+    :param python_version: Python version string (e.g. "3.12"). Defaults to running Python's major.minor version.
     :return: path to the clip dir
     """
 
-    clip_dir = create_base_clip(target_app_info, app_dir, cache_dir)
+    clip_dir = create_base_clip(target_app_info, app_dir, cache_dir, python_version=python_version)
     assert isinstance(target_app_info.name, str)
     install_target_app(target_app_info.name, clip_dir, target_app_package_dist_dir, cache_dir)
     return clip_dir
@@ -41,18 +43,20 @@ def create_clip_file(clip_dir: Path) -> Path:
 
 
 @typechecked
-def create_base_clip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path) -> Path:
+def create_base_clip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path, python_version: Union[str, None] = None) -> Path:
     """
     create pyship python environment called clip using uv
 
     :param target_app_info: target app info
     :param app_dir: app gets built here (i.e. the output of this function)
     :param cache_dir: cache dir
+    :param python_version: Python version string (e.g. "3.12"). Defaults to running Python's major.minor version.
     :return absolute path to created clip
     """
 
-    python_ver_tuple = platform.python_version_tuple()
-    python_version = f"{python_ver_tuple[0]}.{python_ver_tuple[1]}"
+    if python_version is None:
+        python_ver_tuple = platform.python_version_tuple()
+        python_version = f"{python_ver_tuple[0]}.{python_ver_tuple[1]}"
 
     clip_dir_name = f"{target_app_info.name}_{str(target_app_info.version)}"
     clip_dir = Path(app_dir, clip_dir_name).absolute()
