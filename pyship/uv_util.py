@@ -132,7 +132,8 @@ def copy_standalone_python(uv_path: Path, python_version: str, dest_dir: Path) -
     # Python 3.14+ may fail with "failed to locate pyvenv.cfg" (exit 106) without this.
     pyvenv_cfg = Path(dest_dir, "pyvenv.cfg")
     if not pyvenv_cfg.exists():
-        pyvenv_cfg.write_text("include-system-site-packages = false\n", encoding="utf-8")
+        abs_dest = str(dest_dir.resolve())
+        pyvenv_cfg.write_text(f"home = {abs_dest}\ninclude-system-site-packages = false\n", encoding="utf-8")
         log.info(f"created {pyvenv_cfg}")
 
     # Create a ._pth file so Python uses isolated path mode.
