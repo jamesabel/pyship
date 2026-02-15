@@ -35,7 +35,7 @@ def test_copy_standalone_python():
 
         assert python_exe.exists()
         assert python_exe == Path(dest_dir, "python.exe")
-        assert list(dest_dir.glob("python3*._pth"))  # ._pth file created for Python 3.14+ compatibility
+        assert Path(dest_dir, "pyvenv.cfg").exists()  # created for Python 3.14+ compatibility
         assert not Path(dest_dir, "Lib", "EXTERNALLY-MANAGED").exists()
 
 
