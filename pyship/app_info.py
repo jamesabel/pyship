@@ -1,6 +1,7 @@
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Optional, Union
+from copy import deepcopy
 
 import toml
 from semver import VersionInfo
@@ -39,6 +40,8 @@ class AppInfo:
 
 @typechecked
 def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path) -> AppInfo:
+
+    app_info = deepcopy(app_info)
     pyproject_toml_file_name = "pyproject.toml"
     pyproject_toml_file_path = Path(target_app_project_dir, pyproject_toml_file_name)
 

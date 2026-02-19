@@ -18,14 +18,11 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install ruff
-        run: pip install ruff
+      - name: Install tox
+        run: pip install tox tox-uv
 
-      - name: Ruff check (lint)
-        run: ruff check pyship test_pyship
-
-      - name: Ruff format check
-        run: ruff format --check pyship test_pyship
+      - name: Run lint
+        run: tox -e lint
 
   typecheck:
     name: Type Check
@@ -38,26 +35,11 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install dependencies
-        run: |
-          pip install setuptools wheel
-          pip install ty
-          pip install -r requirements-dev.txt
+      - name: Install tox
+        run: pip install tox tox-uv
 
-      - name: Clone and install pyshipupdate
-        run: |
-          cd ..
-          git clone https://github.com/jamesabel/pyshipupdate.git
-          cd pyshipupdate
-          pip install --no-build-isolation -e .
-
-      - name: Install package
-        run: pip install --no-build-isolation -e .
-
-      - name: Run ty type checker
-        # Using --exit-zero as ty is still in early development (v0.x)
-        # Remove once ty matures and third-party stub resolution improves
-        run: ty check pyship --exit-zero
+      - name: Run type check
+        run: tox -e typecheck
 
   test:
     name: Tests (Python ${{ matrix.python-version }})
@@ -67,6 +49,13 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
+        include:
+          - python-version: "3.11"
+            tox-env: py311
+          - python-version: "3.12"
+            tox-env: py312
+          - python-version: "3.13"
+            tox-env: py313
     steps:
       - uses: actions/checkout@v4
 
@@ -75,23 +64,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: |
-          pip install setuptools wheel
-          pip install -r requirements-dev.txt
+      - name: Install tox
+        run: pip install tox tox-uv
 
-      - name: Clone and install pyshipupdate
-        run: |
-          cd ..
-          git clone https://github.com/jamesabel/pyshipupdate.git
-          cd pyshipupdate
-          pip install --no-build-isolation -e .
-
-      - name: Install package
-        run: pip install --no-build-isolation -e .
-
-      - name: Run tests with coverage
-        run: pytest test_pyship/ -v --tb=short --cov=pyship --cov-report=xml --cov-report=term
+      - name: Run tests
+        run: tox -e ${{ matrix.tox-env }}
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5

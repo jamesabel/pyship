@@ -1,5 +1,0 @@
-ismain
-balsa
-pyship
-moto
-sentry-sdk

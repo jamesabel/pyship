@@ -8,7 +8,7 @@ version = "0.4.6"
 description = "freezer, installer and updater for Python applications"
 readme = "readme.md"
 license = "MIT"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 authors = [{name = "abel", email = "j@abel.co"}]
 keywords = ["freezer", "installer", "ship"]
 dependencies = [
@@ -45,7 +45,7 @@ is_gui = false  # pyship itself is CLI
 
 [tool.ruff]
 line-length = 192
-target-version = "py311"
+target-version = "py313"
 exclude = [
     "app",
     "build",
@@ -71,10 +71,67 @@ indent-style = "space"
 line-ending = "auto"
 
 [tool.ty.environment]
-python-version = "3.11"
+python-version = "3.13"
 
 [tool.pytest.ini_options]
 norecursedirs = ["tstpyshipapp"]
+timeout = 120
+timeout_method = "thread"
+
+[tool.tox]
+env_list = ["py313", "py314", "lint", "typecheck"]
+
+[tool.tox.env_run_base]
+deps = [
+    "setuptools",
+    "wheel",
+    "build",
+    "pyshipupdate @ git+https://github.com/jamesabel/pyshipupdate.git",
+    "-r requirements-dev.txt",
+]
+commands = [
+    ["python", "-m", "pytest", "test_pyship/", "-v", "--tb=short", "--cov=pyship", "--cov-report=term", "--cov-report=xml"],
+]
+pass_env = [
+    "SYSTEMROOT",
+    "WINDIR",
+    "PATH",
+    "COMSPEC",
+    "TEMP",
+    "TMP",
+    "PATHEXT",
+    "CI",
+    "GITHUB_ACTIONS",
+    "LOCALAPPDATA",
+    "APPDATA",
+    "AWSIMPLE_USE_MOTO_MOCK",
+    "PROGRAMFILES",
+    "PROGRAMFILES(X86)",
+    "USERPROFILE",
+]
+
+[tool.tox.env.lint]
+deps = ["ruff"]
+commands = [
+    ["ruff", "check", "pyship", "test_pyship"],
+    ["ruff", "format", "--check", "pyship", "test_pyship"],
+]
+skip_install = true
+
+[tool.tox.env.typecheck]
+deps = [
+    "ty",
+    "setuptools",
+    "wheel",
+    "pyshipupdate @ git+https://github.com/jamesabel/pyshipupdate.git",
+    "-r requirements-dev.txt",
+]
+commands = [
+    ["ty", "check", "pyship", "--exit-zero"],
+]
+
+[tool.uv.extra-build-dependencies]
+pyshipupdate = ["balsa", "requests", "attrs", "typeguard", "semver", "python-dateutil", "boto3", "awsimple"]
 
 [tool.coverage.run]
 source = ["pyship"]

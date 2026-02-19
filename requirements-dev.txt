@@ -34,4 +34,7 @@ build
 # testing
 pytest
 pytest-cov
+pytest-timeout
 moto
+tox
+tox-uv

@@ -184,12 +184,15 @@ def uv_pip_install(uv_path: Path, target_python: Path, packages: list, dist_dir:
     if dist_dir.exists():
         cmd.extend(["-f", str(dist_dir)])
     log.info(f"uv pip install cmd: {cmd}")
+    pyship_print(" ".join(cmd))
     result = subprocess.run(cmd, capture_output=True, text=True)
     log.info(result.stdout)
     if result.stderr:
         log.info(result.stderr)
     if result.returncode != 0:
-        log.error(f"uv pip install failed (exit {result.returncode}): {result.stderr}")
+        error_string = f"uv pip install failed (exit {result.returncode}): {result.stderr}"
+        pyship_print(error_string)
+        log.info(error_string)
         result.check_returncode()
 
 
