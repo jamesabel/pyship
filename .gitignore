@@ -145,3 +145,4 @@ backup/
 doc/flake8_report.txt
 nul
 settings.local.json
+uv.lock
