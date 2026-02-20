@@ -8,7 +8,7 @@ version = "0.5.0"
 description = "freezer, installer and updater for Python applications"
 readme = "readme.md"
 license = "MIT"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 authors = [{name = "abel", email = "j@abel.co"}]
 keywords = ["freezer", "installer", "ship"]
 dependencies = [
@@ -45,7 +45,7 @@ is_gui = false  # pyship itself is CLI
 
 [tool.ruff]
 line-length = 192
-target-version = "py313"
+target-version = "py311"
 exclude = [
     "app",
     "build",
@@ -79,7 +79,7 @@ timeout = 1800
 timeout_method = "thread"
 
 [tool.tox]
-env_list = ["py313", "py314", "lint", "typecheck"]
+env_list = ["py311", "py312", "py313", "py314", "lint", "typecheck"]
 
 [tool.tox.env_run_base]
 deps = [
