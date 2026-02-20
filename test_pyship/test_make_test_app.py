@@ -2,6 +2,7 @@ from pathlib import Path
 
 from .make_test_app import make_test_app
 
+
 def test_make_test_app():
 
     test_name = "test_make_test_app"

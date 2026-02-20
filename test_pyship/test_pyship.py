@@ -9,6 +9,7 @@ from pyship import __application_name__ as pyship_application_name
 
 from .make_test_app import make_test_app
 
+
 @pytest.mark.parametrize("python_version", SUPPORTED_PYTHON_VERSIONS)
 def test_create_clip(python_version):
 
@@ -20,4 +21,3 @@ def test_create_clip(python_version):
         make_test_app(project_dir, application_name, version, python_version, False)  # dynamically create the test app
         pyship = PyShip(project_dir, upload=False, python_version=python_version)
         pyship.ship()
-

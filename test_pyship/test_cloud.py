@@ -11,6 +11,7 @@ from pyship import __application_name__ as pyship_application_name
 
 from .make_test_app import make_test_app
 
+
 def test_cloud():
     # Moto mock is enabled in conftest.py session fixture
 

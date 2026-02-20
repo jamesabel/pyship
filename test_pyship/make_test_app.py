@@ -42,6 +42,7 @@ def app():
     sys.exit(exit_code)
 """
 
+
 def make_test_app(destination_path: Path, app_name: str, app_version: str | VersionInfo, minimum_python_version: str, updater: bool):
     """
     Given a destination path, this function creates a simple Python application that can be used for testing purposes.
@@ -83,7 +84,7 @@ def make_test_app(destination_path: Path, app_name: str, app_version: str | Vers
     pyproject_toml.append(f'requires-python = ">={minimum_python_version}"')
     pyproject_toml.append('dependencies = ["ismain", "pyshipupdate", "sentry-sdk"]')
     pyproject_toml.append("")
-    pyproject_toml.append('[[project.authors]]')
+    pyproject_toml.append("[[project.authors]]")
     pyproject_toml.append('name = "abel"')
     pyproject_toml.append('email = "noreply@abel.co"')
     pyproject_toml.append("")

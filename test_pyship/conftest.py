@@ -5,6 +5,7 @@ import pytest
 
 from awsimple import use_moto_mock_env_var
 
+
 class TestPyshipLoggingHandler(logging.Handler):
     def emit(self, record):
         print(record.getMessage())

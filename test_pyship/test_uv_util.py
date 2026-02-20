@@ -45,6 +45,3 @@ def test_uv_pip_install(python_version):
         uv_pip_install(uv_path, target_python, ["ismain"], Path(tmp, "dist"), upgrade=True, system=True)
 
         assert Path(dest_dir, "Lib", "site-packages", "ismain").exists()
-
-
-
