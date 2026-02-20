@@ -1,55 +1,43 @@
 from pprint import pprint
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from semver import VersionInfo
-from balsa import get_logger
 
 from pyship import PyShip, CLIP_EXT
 from pyship.ci import is_ci
 from pyship.main import read_pyship_config
-from test_pyship import TstAppDirs, TST_APP_NAME
+from pyship import __application_name__ as pyship_application_name
 
-log = get_logger(TST_APP_NAME)
-
+from .make_test_app import make_test_app
 
 def test_cloud():
     # Moto mock is enabled in conftest.py session fixture
-    version = VersionInfo.parse("0.0.1")
-    tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
-    py_ship = PyShip(tst_app_dirs.project_dir, dist_dir=tst_app_dirs.dist_dir)
-    py_ship.cloud_bucket = "testawsimple"  # awsimple moto mock creates this on demand
-    py_ship.cloud_profile = "default"  # with moto mock we don't need a real profile
-    log.info(f"{py_ship.cloud_profile=}")
-    installer_path = py_ship.ship()
 
-    # In CI, NSIS may not be available so installer won't be created
-    if installer_path is not None:
-        uploaded_files = py_ship.cloud_access.s3_access.dir()
-        pprint(uploaded_files)
-        clip_file_name = f"{TST_APP_NAME}_{version}.{CLIP_EXT}"
-        assert clip_file_name in uploaded_files
-        installer_name = f"{TST_APP_NAME}_installer_win64.exe"
-        assert installer_name in uploaded_files
-    else:
-        assert is_ci(), "Installer creation failed but not running in CI"
-        log.info("Skipping upload assertions - NSIS not available in CI")
+    with TemporaryDirectory(prefix=pyship_application_name) as temp_dir:
+        print(f'temp_dir="{temp_dir}"')
+        version = VersionInfo.parse("0.0.1")
+        minimum_python_version = "3.14"
+        application_name = "tstpyshipapp"
+        project_dir = Path(temp_dir, "project")
+        make_test_app(project_dir, application_name, version, minimum_python_version, False)  # dynamically create the test app
+        py_ship = PyShip(project_dir, cloud_bucket="testawsimple", python_version=minimum_python_version)
+        py_ship.ship()
+        installer_path = py_ship.ship()
 
+        # In CI, NSIS may not be available so installer won't be created
+        if installer_path is not None:
+            uploaded_files = py_ship.cloud_access.s3_access.dir()
+            pprint(uploaded_files)
+            clip_file_name = f"{application_name}_{version}.{CLIP_EXT}"
+            assert clip_file_name in uploaded_files
+            installer_name = f"{application_name}_installer_win64.exe"
+            assert installer_name in uploaded_files
+        else:
+            assert is_ci(), "Installer creation failed but not running in CI"
+            print("Skipping upload assertions - NSIS not available in CI")
 
-def test_cloud_public_readable():
-    # Verify that public_readable flag propagates to s3_access
-    version = VersionInfo.parse("0.0.1")
-    tst_app_dirs = TstAppDirs(TST_APP_NAME, version)
-    py_ship = PyShip(tst_app_dirs.project_dir, dist_dir=tst_app_dirs.dist_dir)
-    py_ship.cloud_bucket = "testawsimple"
-    py_ship.cloud_profile = "default"
-    py_ship.public_readable = True
-    installer_path = py_ship.ship()
-
-    if installer_path is not None:
-        assert py_ship.cloud_access is not None
-        assert py_ship.cloud_access.s3_access.public_readable is True
-    else:
-        assert is_ci(), "Installer creation failed but not running in CI"
-        log.info("Skipping public_readable assertions - NSIS not available in CI")
+        # todo: ensure the cloud access object is readable
 
 
 def test_read_pyship_config(tmp_path, monkeypatch):

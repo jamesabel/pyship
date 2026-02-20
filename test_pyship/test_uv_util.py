@@ -1,17 +1,13 @@
-import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
-from ismain import is_main
 from balsa import get_logger
 
-from pyship import PyshipLog, __author__, SUPPORTED_PYTHON_VERSIONS
-from pyship.uv_util import find_or_bootstrap_uv, uv_python_install, copy_standalone_python, uv_pip_install
+from pyship import SUPPORTED_PYTHON_VERSIONS
+from pyship.uv_util import find_or_bootstrap_uv, copy_standalone_python, uv_pip_install
 
-from test_pyship import __application_name__
-
-log = get_logger(__application_name__)
+log = get_logger(__name__)
 
 
 def test_find_or_bootstrap_uv():
@@ -51,9 +47,4 @@ def test_uv_pip_install(python_version):
         assert Path(dest_dir, "Lib", "site-packages", "ismain").exists()
 
 
-if is_main():
-    pyship_log = PyshipLog(__application_name__, __author__, log_directory="log", delete_existing_log_files=True, verbose=True)
-    pyship_log.init_logger()
-    test_find_or_bootstrap_uv()
-    test_copy_standalone_python("3.13")
-    test_uv_pip_install("3.13")
+

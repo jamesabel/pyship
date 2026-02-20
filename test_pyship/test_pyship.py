@@ -18,6 +18,6 @@ def test_create_clip(python_version):
         application_name = "tstpyshipapp"
         project_dir = Path(temp_dir, "project")
         make_test_app(project_dir, application_name, version, python_version, False)  # dynamically create the test app
-        pyship = PyShip(project_dir, upload=False)
+        pyship = PyShip(project_dir, upload=False, python_version=python_version)
         pyship.ship()
 

@@ -34,6 +34,7 @@ class PyShip:
     name: Union[str, None] = None  # optional target application name (overrides pyproject.toml)
     upload: bool = True  # set to False in order to tell pyship to not attempt to perform file upload to the cloud (e.g. installer, clip files to AWS S3)
     public_readable: bool = False  # set to True to make uploaded S3 objects publicly readable (sets ACL=public-read)
+    python_version: Union[str, None] = None  # Python version for CLIP (e.g. "3.12"). Defaults to running Python's major.minor version.
 
     @typechecked
     def ship(self) -> Union[Path, None]:
@@ -62,7 +63,7 @@ class PyShip:
 
             create_pyship_launcher(target_app_info, app_dir)  # create the OS specific launcher executable
 
-            clip_dir = create_clip(target_app_info, app_dir, Path(self.project_dir, self.dist_dir), cache_dir)
+            clip_dir = create_clip(target_app_info, app_dir, Path(self.project_dir, self.dist_dir), cache_dir, python_version=self.python_version)
 
             clip_file_path = create_clip_file(clip_dir)  # create clip file
             assert isinstance(target_app_info.version, VersionInfo)
