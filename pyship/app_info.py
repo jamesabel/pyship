@@ -19,7 +19,7 @@ log = get_logger(pyship_application_name)
 class AppInfo:
     name: Union[str, None] = None
     author: Union[str, None] = None
-    version: VersionInfo = None
+    version: Union[VersionInfo, None] = None
     is_gui: Union[bool, None] = None
     url: Union[str, None] = None
     description: Union[str, None] = None
