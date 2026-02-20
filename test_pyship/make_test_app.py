@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import shutil
@@ -100,8 +101,17 @@ def make_test_app(destination_path: Path, app_name: str, app_version: str | Vers
     Path(test_app_package_directory, "app.py").write_text(app_code)
 
     # make venv
-    make_venv = []
-    make_venv.append(f'"\\Program Files\\Python{python_version_no_dots}\python.exe" -m venv venv')
-    make_venv.append("venv\\Scripts\\python.exe -m pip install --upgrade pip")
-    make_venv.append("venv\\Scripts\\pip install .")
-    Path(destination_path, "make_venv.bat").write_text("\n".join(make_venv))
+    if sys.platform == "win32":
+        make_venv = []
+        make_venv.append(f'"\\Program Files\\Python{python_version_no_dots}\\python.exe" -m venv venv')
+        make_venv.append("venv\\Scripts\\python.exe -m pip install --upgrade pip")
+        make_venv.append("venv\\Scripts\\pip install .")
+        Path(destination_path, "make_venv.bat").write_text("\n".join(make_venv))
+    else:
+        make_venv = ["#!/bin/bash"]
+        make_venv.append(f"python{minimum_python_version} -m venv venv")
+        make_venv.append("venv/bin/python -m pip install --upgrade pip")
+        make_venv.append("venv/bin/pip install .")
+        script_path = Path(destination_path, "make_venv.sh")
+        script_path.write_text("\n".join(make_venv))
+        script_path.chmod(0o755)
