@@ -68,7 +68,9 @@ def test_safe_extract_valid_archive(tmp_path):
     assert (dest / "subdir" / "file.txt").read_bytes() == b"hello content"
 
 
-@pytest.mark.skipif(sys.version_info < (3, 14), reason="tarfile built-in path traversal filter enforced in Python 3.14+; safe_extract's own Windows check uses absolute() which doesn't resolve '..'")
+@pytest.mark.skipif(
+    sys.version_info < (3, 14), reason="tarfile built-in path traversal filter enforced in Python 3.14+; safe_extract's own Windows check uses absolute() which doesn't resolve '..'"
+)
 def test_safe_extract_path_traversal_raises(tmp_path):
     archive_path = tmp_path / "evil.tgz"
     archive_path.write_bytes(_make_tar_gz(b"malicious", "../../../evil.txt"))
