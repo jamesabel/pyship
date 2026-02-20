@@ -19,7 +19,7 @@ log = get_logger(pyship_application_name)
 class AppInfo:
     name: Union[str, None] = None
     author: Union[str, None] = None
-    version: Union[VersionInfo, None] = None
+    version: VersionInfo = None
     is_gui: Union[bool, None] = None
     url: Union[str, None] = None
     description: Union[str, None] = None
@@ -53,7 +53,15 @@ def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path) -> 
             project_section = pyproject.get("project")
             if project_section is not None:
                 app_info.name = project_section.get("name")
-                app_info.author = project_section.get("author")  # app author
+                version_str = project_section.get("version")
+                if version_str is not None:
+                    app_info.version = VersionInfo.parse(version_str)
+                # PEP 621 uses [[project.authors]] (list of tables), legacy uses project.author (string)
+                authors = project_section.get("authors")
+                if authors and isinstance(authors, list) and len(authors) > 0:
+                    app_info.author = authors[0].get("name")
+                else:
+                    app_info.author = project_section.get("author")
 
             tool_section = pyproject.get("tool")
             if tool_section is not None:
@@ -109,7 +117,7 @@ def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path, cache_
     app_info = AppInfo()
     app_info.setup_paths(target_app_project_dir)
 
-    get_app_info_py_project(app_info, target_app_project_dir)
+    app_info = get_app_info_py_project(app_info, target_app_project_dir)
 
     if app_info.name is None:
         log.error(f"{app_info.name=} {target_app_project_dir=}")

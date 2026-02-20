@@ -86,6 +86,8 @@ def find_or_bootstrap_uv(cache_dir: Path) -> Path:
 def uv_python_install(uv_path: Path, python_version: str) -> Path:
     """
     Install a Python version via uv and return its path.
+    Uses uv python dir to locate the managed installation directly,
+    avoiding uv python find which may return a venv Python.
     :param uv_path: path to uv executable
     :param python_version: Python version string (e.g. "3.12.4")
     :return: path to the installed Python interpreter
@@ -93,10 +95,26 @@ def uv_python_install(uv_path: Path, python_version: str) -> Path:
     pyship_print(f"installing Python {python_version} via uv")
     subprocess.run([str(uv_path), "python", "install", python_version], check=True, capture_output=True, text=True)
 
-    result = subprocess.run([str(uv_path), "python", "find", python_version], check=True, capture_output=True, text=True)
-    python_path = Path(result.stdout.strip())
-    log.info(f"uv python find {python_version} -> {python_path}")
-    return python_path
+    # Use uv python dir to find managed installations directly.
+    # uv python find can return a venv Python when running inside a venv.
+    result = subprocess.run([str(uv_path), "python", "dir"], check=True, capture_output=True, text=True)
+    uv_python_dir = Path(result.stdout.strip())
+    log.info(f"uv python dir -> {uv_python_dir}")
+
+    # Look for a directory matching the requested version (e.g. cpython-3.14* or cpython-3.14.2*)
+    best_match = None
+    for candidate in sorted(uv_python_dir.iterdir(), reverse=True):
+        if candidate.is_dir() and candidate.name.startswith(f"cpython-{python_version}"):
+            python_exe = Path(candidate, "python.exe")
+            if python_exe.exists():
+                best_match = python_exe
+                break
+
+    if best_match is None:
+        raise FileNotFoundError(f"no managed Python {python_version} found in {uv_python_dir}")
+
+    log.info(f"found managed Python {python_version} -> {best_match}")
+    return best_match
 
 
 @typechecked
@@ -154,7 +172,7 @@ def copy_standalone_python(uv_path: Path, python_version: str, dest_dir: Path) -
         log.info(f"created {pth_path}")
 
     # Verify the copied Python interpreter actually works
-    verify_result = subprocess.run([str(dest_python), "-c", "import sys; print(sys.version)"], capture_output=True, text=True)
+    verify_result = subprocess.run([str(dest_python), "-c", "import sys; print(sys.version)"], capture_output=True, text=True, timeout=30)
     if verify_result.returncode != 0:
         log.error(f'copied Python at "{dest_python}" failed verification (exit {verify_result.returncode}): {verify_result.stderr}')
         raise RuntimeError(f"copied Python interpreter at {dest_python} does not work (exit code {verify_result.returncode}): {verify_result.stderr}")
@@ -209,7 +227,14 @@ def uv_build(uv_path: Path, project_dir: Path, output_dir: Path) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
     cmd = [str(uv_path), "build", "--wheel", "--out-dir", str(output_dir)]
     log.info(f"uv build cmd: {cmd}")
-    result = subprocess.run(cmd, cwd=str(project_dir), check=True, capture_output=True, text=True)
+    pyship_print(" ".join(cmd))
+    try:
+        result = subprocess.run(cmd, cwd=str(project_dir), check=True, capture_output=True, text=True)
+    except subprocess.SubprocessError as e:
+        s = f"uv build failed: {e}"
+        pyship_print(s)
+        log.error(s)
+        raise
     log.info(result.stdout)
 
     # find the wheel that was just built

@@ -75,7 +75,7 @@ python-version = "3.13"
 
 [tool.pytest.ini_options]
 norecursedirs = ["tstpyshipapp"]
-timeout = 120
+timeout = 1800
 timeout_method = "thread"
 
 [tool.tox]

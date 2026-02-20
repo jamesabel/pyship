@@ -91,6 +91,10 @@ def make_test_app(destination_path: Path, app_name: str, app_version: str | Vers
     pyproject_toml.append("is_gui = false")
     Path(destination_path, "pyproject.toml").write_text("\n".join(pyproject_toml))
 
+    # LICENSE file
+    license_text = "MIT License"
+    Path(destination_path, "LICENSE").write_text(license_text)
+
     # app
     app_code = app_code_updater if updater else app_code_basic
     Path(test_app_package_directory, "app.py").write_text(app_code)
