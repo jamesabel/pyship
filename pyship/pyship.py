@@ -47,7 +47,7 @@ class PyShip:
         pyship_print(f"{pyship_application_name} starting (pyship={str(pyship_version)},pyshipupdate={str(pyshipupdate_version)},upload={self.upload},public_readable={self.public_readable})")
 
         cache_dir = Path(platformdirs.user_cache_dir(pyship_application_name, pyship_author))
-        target_app_info = get_app_info(self.project_dir, self.dist_dir, cache_dir)
+        target_app_info = get_app_info(self.project_dir, Path(self.project_dir, self.dist_dir), cache_dir)
 
         if self.project_dir is None:
             assert isinstance(self.project_dir, Path)
