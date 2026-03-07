@@ -15,6 +15,7 @@ from pyship import __author__ as pyship_author
 from pyship import __version__ as pyship_version
 from pyship import run_nsis, create_clip, create_pyship_launcher, pyship_print, APP_DIR_NAME, create_clip_file, get_app_info, PyShipCloud
 from pyship.signing import sign_if_configured
+from pyship.msix import create_msix
 from pyship import PyshipNoAppName
 from pyshipupdate import mkdirs, create_bucket_name
 from pyshipupdate import __version__ as pyshipupdate_version
@@ -42,6 +43,10 @@ class PyShip:
     certificate_password_env_var: Union[str, None] = None  # env var name holding PFX password (CI-safe)
     timestamp_url: str = "http://timestamp.digicert.com"  # RFC 3161 timestamp server
     signtool_path: Union[Path, None] = None  # explicit signtool.exe; auto-discovered if None
+    msix: bool = False  # also produce an MSIX package (for Microsoft Store or sideloading)
+    msix_publisher: Union[str, None] = None  # certificate subject DN for MSIX Identity/@Publisher (e.g. "CN=My Co, O=My Co LLC, C=US")
+    store_assets_dir: Union[Path, None] = None  # directory with Store logo PNGs; placeholder 1x1 PNGs used if None
+    makeappx_path: Union[Path, None] = None  # explicit makeappx.exe; auto-discovered from Windows SDK if None
 
     @typechecked
     def ship(self) -> Union[Path, None]:
@@ -81,6 +86,14 @@ class PyShip:
             installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)  # create installer (may be None in CI)
             if installer_exe_path is not None:
                 sign_if_configured(installer_exe_path, self.pfx_path, effective_password, self.timestamp_url, self.signtool_path)
+
+            if self.msix:
+                if self.msix_publisher is None:
+                    log.error("msix=True but msix_publisher is not set; skipping MSIX creation")
+                else:
+                    msix_path = create_msix(target_app_info, app_dir, self.msix_publisher, self.store_assets_dir, self.makeappx_path)
+                    if msix_path is not None:
+                        sign_if_configured(msix_path, self.pfx_path, effective_password, self.timestamp_url, self.signtool_path)
 
             if self.upload and installer_exe_path is not None:
                 if self.cloud_profile is None and self.cloud_id is None:
