@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from datetime import datetime
 from typing import Union
@@ -13,6 +14,7 @@ from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
 from pyship import __version__ as pyship_version
 from pyship import run_nsis, create_clip, create_pyship_launcher, pyship_print, APP_DIR_NAME, create_clip_file, get_app_info, PyShipCloud
+from pyship.signing import sign_if_configured
 from pyship import PyshipNoAppName
 from pyshipupdate import mkdirs, create_bucket_name
 from pyshipupdate import __version__ as pyshipupdate_version
@@ -35,6 +37,11 @@ class PyShip:
     upload: bool = True  # set to False in order to tell pyship to not attempt to perform file upload to the cloud (e.g. installer, clip files to AWS S3)
     public_readable: bool = False  # set to True to make uploaded S3 objects publicly readable (sets ACL=public-read)
     python_version: Union[str, None] = None  # Python version for CLIP (e.g. "3.12"). Defaults to running Python's major.minor version.
+    pfx_path: Union[Path, None] = None  # path to PFX certificate file
+    certificate_password: Union[str, None] = None  # PFX password (plaintext)
+    certificate_password_env_var: Union[str, None] = None  # env var name holding PFX password (CI-safe)
+    timestamp_url: str = "http://timestamp.digicert.com"  # RFC 3161 timestamp server
+    signtool_path: Union[Path, None] = None  # explicit signtool.exe; auto-discovered if None
 
     @typechecked
     def ship(self) -> Union[Path, None]:
@@ -47,6 +54,14 @@ class PyShip:
         pyship_print(f"{pyship_application_name} starting (pyship={str(pyship_version)},pyshipupdate={str(pyshipupdate_version)},upload={self.upload},public_readable={self.public_readable})")
 
         cache_dir = Path(platformdirs.user_cache_dir(pyship_application_name, pyship_author))
+
+        # Resolve certificate password (env var takes lower priority than explicit value)
+        effective_password = self.certificate_password
+        if effective_password is None and self.certificate_password_env_var is not None:
+            effective_password = os.environ.get(self.certificate_password_env_var)
+            if effective_password is None:
+                log.warning(f"certificate_password_env_var={self.certificate_password_env_var!r} is set but the env var is not defined")
+
         target_app_info = get_app_info(self.project_dir, Path(self.project_dir, self.dist_dir), cache_dir)
 
         if target_app_info.name is None:
@@ -56,13 +71,16 @@ class PyShip:
 
             mkdirs(app_dir, remove_first=True)
 
-            create_pyship_launcher(target_app_info, app_dir)  # create the OS specific launcher executable
+            launcher_exe_path = create_pyship_launcher(target_app_info, app_dir)  # create the OS specific launcher executable
+            sign_if_configured(launcher_exe_path, self.pfx_path, effective_password, self.timestamp_url, self.signtool_path)
 
             clip_dir = create_clip(target_app_info, app_dir, Path(self.project_dir, self.dist_dir), cache_dir, python_version=self.python_version)
 
             clip_file_path = create_clip_file(clip_dir)  # create clip file
             assert isinstance(target_app_info.version, VersionInfo)
             installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)  # create installer (may be None in CI)
+            if installer_exe_path is not None:
+                sign_if_configured(installer_exe_path, self.pfx_path, effective_password, self.timestamp_url, self.signtool_path)
 
             if self.upload and installer_exe_path is not None:
                 if self.cloud_profile is None and self.cloud_id is None:

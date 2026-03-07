@@ -1,5 +1,6 @@
 import shutil
 from pathlib import Path
+from typing import Union
 
 from typeguard import typechecked
 from balsa import get_logger
@@ -74,18 +75,17 @@ exit /b %EXIT_CODE%
 
 
 @typechecked
-def create_pyship_launcher(target_app_info: AppInfo, app_path_output: Path):
+def create_pyship_launcher(target_app_info: AppInfo, app_path_output: Path) -> Union[Path, None]:
     """
     Create the launcher executable using a compiled C# stub and standalone Python launcher script.
     :param target_app_info: target app info
     :param app_path_output: app gets built here
-    :return: True if launcher was built
+    :return: path to the launcher exe if built or already present, None on failure
     """
-
-    built_it = False
 
     if target_app_info.name is None or len(target_app_info.name) < 1:
         log.error(f"{target_app_info.name=}")
+        return None
     else:
         metadata_filename = f"{target_app_info.name}_metadata.json"
 
@@ -141,11 +141,11 @@ def create_pyship_launcher(target_app_info: AppInfo, app_path_output: Path):
             store_metadata(app_path_output, metadata_filename, metadata)
 
             if launcher_exe_path.exists():
-                built_it = True
                 log.info(f"launcher built ({launcher_exe_path})")
+                return launcher_exe_path
             else:
                 log.error(f"launcher exe not found after build: {launcher_exe_path}")
+                return None
         else:
             log.info(f"{launcher_exe_path} already built - no need to rebuild")
-
-    return built_it
+            return launcher_exe_path
