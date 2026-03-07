@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Optional, Union
@@ -13,6 +14,28 @@ from pyship import __application_name__ as pyship_application_name
 from pyship import pyship_print, PyshipInsufficientAppInfo, NullPath
 
 log = get_logger(pyship_application_name)
+
+_PEP440_PRE = re.compile(r"^(\d+\.\d+\.\d+)(a|b|rc)(\.?\d+)$")
+_PEP440_DEV = re.compile(r"^(\d+\.\d+\.\d+)\.dev(\d+)$")
+_PEP440_PRE_MAP = {"a": "alpha", "b": "beta", "rc": "rc"}
+
+
+def _pep440_to_semver(version_str: str) -> str:
+    """
+    Convert a PEP 440 version string to a SemVer-compatible string.
+    e.g. "0.6.0a0" -> "0.6.0-alpha.0", "0.6.0b1" -> "0.6.0-beta.1",
+         "0.6.0rc2" -> "0.6.0-rc.2", "0.6.0.dev0" -> "0.6.0-dev.0"
+    Plain versions (e.g. "0.6.0") are returned unchanged.
+    """
+    m = _PEP440_PRE.match(version_str)
+    if m:
+        base, pre_type, pre_num = m.groups()
+        return f"{base}-{_PEP440_PRE_MAP[pre_type]}.{pre_num.lstrip('.')}"
+    m = _PEP440_DEV.match(version_str)
+    if m:
+        base, dev_num = m.groups()
+        return f"{base}-dev.{dev_num}"
+    return version_str
 
 
 @dataclass
@@ -55,7 +78,7 @@ def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path) -> 
                 app_info.name = project_section.get("name")
                 version_str = project_section.get("version")
                 if version_str is not None:
-                    app_info.version = VersionInfo.parse(version_str)
+                    app_info.version = VersionInfo.parse(_pep440_to_semver(version_str))
                 # PEP 621 uses [[project.authors]] (list of tables), legacy uses project.author (string)
                 authors = project_section.get("authors")
                 if authors and isinstance(authors, list) and len(authors) > 0:
@@ -89,7 +112,7 @@ def get_app_info_wheel(app_info: AppInfo, dist_path: Path) -> AppInfo:
         wheel_info = inspect_wheel(dist_path)
         metadata = wheel_info["dist_info"]["metadata"]
         app_info.name = metadata.get("name")
-        app_info.version = VersionInfo.parse(metadata.get("version"))
+        app_info.version = VersionInfo.parse(_pep440_to_semver(metadata.get("version")))
         app_info.author = metadata.get("author")
         if app_info.author is None:
             # PEP 621 authors array produces "author_email" like "Name <email>" in metadata 2.4+
