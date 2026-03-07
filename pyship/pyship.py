@@ -13,7 +13,7 @@ from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
 from pyship import __version__ as pyship_version
 from pyship import run_nsis, create_clip, create_pyship_launcher, pyship_print, APP_DIR_NAME, create_clip_file, get_app_info, PyShipCloud
-from pyship import PyshipNoProductDirectory, PyshipNoAppName, PyshipNoTargetAppInfo
+from pyship import PyshipNoAppName
 from pyshipupdate import mkdirs, create_bucket_name
 from pyshipupdate import __version__ as pyshipupdate_version
 
@@ -49,12 +49,7 @@ class PyShip:
         cache_dir = Path(platformdirs.user_cache_dir(pyship_application_name, pyship_author))
         target_app_info = get_app_info(self.project_dir, Path(self.project_dir, self.dist_dir), cache_dir)
 
-        if self.project_dir is None:
-            assert isinstance(self.project_dir, Path)
-            raise PyshipNoProductDirectory(self.project_dir)
-        elif target_app_info is None:
-            raise PyshipNoTargetAppInfo
-        elif target_app_info.name is None:
+        if target_app_info.name is None:
             raise PyshipNoAppName
         else:
             app_dir = Path(self.project_dir, APP_DIR_NAME, target_app_info.name).absolute()
@@ -98,8 +93,10 @@ class PyShip:
                         clip_url = self.cloud_access.upload(clip_file_path)  # upload clip file
                         pyship_print(f'uploaded "{clip_file_path}" to {clip_url}')
 
-            else:
+            elif not self.upload:
                 pyship_print("no upload requested")
+            else:
+                pyship_print("installer not created (NSIS not available) - skipping upload")
 
             elapsed_time = datetime.now() - start_time
             pyship_print(f"{pyship_application_name} done (elapsed_time={str(elapsed_time)})")

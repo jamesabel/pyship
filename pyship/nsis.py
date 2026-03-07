@@ -1,5 +1,5 @@
-import os
 import datetime
+import os
 from pathlib import Path
 from semver import VersionInfo
 import shutil
@@ -24,9 +24,9 @@ def get_folder_size(folder_path: Path) -> int:
     :return: folder size in bytes
     """
     total_size = 0
-    for d, _, fns in os.walk(str(folder_path)):
-        for f in fns:
-            total_size += os.path.getsize(os.path.join(d, f))
+    for f in folder_path.rglob("*"):
+        if f.is_file():
+            total_size += f.stat().st_size
     return total_size
 
 
@@ -85,7 +85,7 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         nsis_lines.append(f"!define UPDATEURL {target_app_info.url}")  # "Product Updates" link
         nsis_lines.append(f"!define ABOUTURL {target_app_info.url}")  # "Publisher" link
 
-        installed_size = get_folder_size(app_dir) / 1024  # EstimatedSize is in KB
+        installed_size = int(get_folder_size(app_dir) / 1024)  # EstimatedSize is in KB
         nsis_lines.append(f"!define INSTALLSIZE {installed_size}")
 
         nsis_lines.append("")
@@ -213,8 +213,8 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
             nsis_file.write("\n".join(nsis_lines))
 
         # run nsis
-        make_nsis_path = os.environ.get("MAKE_NSIS_PATH", default=os.path.join("c:", os.sep, "Program Files (x86)", "NSIS", "makensis.exe"))
-        if os.path.exists(make_nsis_path):
+        make_nsis_path = Path(os.environ.get("MAKE_NSIS_PATH", r"C:\Program Files (x86)\NSIS\makensis.exe"))
+        if make_nsis_path.exists():
             subprocess_run([make_nsis_path, nsis_file_path], target_app_info.project_dir)
         else:
             if is_ci():
