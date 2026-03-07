@@ -50,7 +50,7 @@ public_readable = false  # make uploaded S3 objects publicly readable (default: 
 
 `--id` and `--secret` are intentionally CLI-only since `pyproject.toml` is typically version-controlled.
 
-## Code Signing
+## Microsoft Windows Code Signing
 
 Signing your executables suppresses the Windows SmartScreen "Unknown Publisher" warning. pyship signs two files: the launcher stub (`{app_name}.exe`) and the NSIS installer (`{app_name}_installer_*.exe`). The launcher is signed before NSIS packages it, so the signed binary ends up inside the installer.
 
