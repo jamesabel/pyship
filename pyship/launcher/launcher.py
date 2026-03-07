@@ -235,11 +235,12 @@ def launch(app_dir=None, additional_path=None):
 
                 log.info(f"cmd={cmd}")
                 try:
-                    target_process = subprocess.run(cmd, cwd=str(python_exe_path.parent), capture_output=True, text=True)
+                    # GUI apps need output captured (no console); CLI apps stream output in real time
+                    target_process = subprocess.run(cmd, cwd=str(python_exe_path.parent), capture_output=is_gui, text=True)
                     return_code = target_process.returncode
 
-                    std_out = target_process.stdout
-                    std_err = target_process.stderr
+                    std_out = target_process.stdout  # None for CLI apps (streamed directly)
+                    std_err = target_process.stderr  # None for CLI apps (streamed directly)
 
                     # When pythonw.exe fails silently (no stderr), re-run with python.exe to capture the actual error
                     if is_gui and return_code not in (OK_RETURN_CODE, RESTART_RETURN_CODE) and not (std_err and std_err.strip()):

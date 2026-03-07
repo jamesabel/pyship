@@ -38,8 +38,9 @@ def create_clip_file(clip_dir: Path) -> Path:
     :return: path to the clip file
     """
     clip_dir_string = str(clip_dir)
-    archive_name = shutil.make_archive(clip_dir_string, "zip", clip_dir_string)  # create a "zip" file of the clip dir
-    return Path(clip_dir, archive_name).rename(Path(clip_dir, f"{archive_name[:-3]}{CLIP_EXT}"))  # make_archive creates a .zip, but we want a .lip
+    archive_path = Path(shutil.make_archive(clip_dir_string, "zip", clip_dir_string))  # create a "zip" file of the clip dir
+    clip_path = archive_path.with_suffix("").with_suffix(f".{CLIP_EXT}")  # make_archive creates a .zip, but we want a .clip
+    return archive_path.rename(clip_path)
 
 
 @typechecked

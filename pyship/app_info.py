@@ -85,7 +85,7 @@ def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path) -> 
 
 @typechecked
 def get_app_info_wheel(app_info: AppInfo, dist_path: Path) -> AppInfo:
-    if dist_path is not None and dist_path.exists():
+    if dist_path.exists():
         wheel_info = inspect_wheel(dist_path)
         metadata = wheel_info["dist_info"]["metadata"]
         app_info.name = metadata.get("name")

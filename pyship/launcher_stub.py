@@ -143,10 +143,10 @@ class Program
         }}
 
         // Build arguments: launcher script path + forwarded args
-        string arguments = "\"" + launcherScript + "\" --app-dir \"" + appDir + "\"";
+        string arguments = EscapeArg(launcherScript) + " --app-dir " + EscapeArg(appDir);
         foreach (string arg in args)
         {{
-            arguments += " \"" + arg + "\"";
+            arguments += " " + EscapeArg(arg);
         }}
 
         Log("INFO", "command: " + pythonExe + " " + arguments);
@@ -175,6 +175,24 @@ class Program
             {error_handler}
             return 1;
         }}
+    }}
+
+    static string EscapeArg(string arg)
+    {{
+        // Implements Windows command-line escaping compatible with CommandLineToArgvW.
+        if (arg.Length == 0) return "\"\"";
+        if (arg.IndexOfAny(new char[] {{ ' ', '\t', '"', '\\' }}) < 0) return arg;
+        var sb = new System.Text.StringBuilder("\"");
+        int backslashes = 0;
+        foreach (char c in arg)
+        {{
+            if (c == '\\') {{ backslashes++; }}
+            else if (c == '"') {{ sb.Append('\\', backslashes * 2 + 1); sb.Append('"'); backslashes = 0; }}
+            else {{ sb.Append('\\', backslashes); sb.Append(c); backslashes = 0; }}
+        }}
+        sb.Append('\\', backslashes * 2);
+        sb.Append('"');
+        return sb.ToString();
     }}
 
     static int CompareVersions(string a, string b)

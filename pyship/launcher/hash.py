@@ -38,12 +38,11 @@ def _get_file_hash(file_path, hash_function):
     hash_object = hash_function()
 
     bucket_size = 4096  # for speed
-    f = open(file_path, "rb")
-    val = f.read(bucket_size)
-    while len(val) > 0:
-        hash_object.update(val)
+    with open(file_path, "rb") as f:
         val = f.read(bucket_size)
-    f.close()
+        while len(val) > 0:
+            hash_object.update(val)
+            val = f.read(bucket_size)
 
     hash_str = hash_object.hexdigest().lower()
 

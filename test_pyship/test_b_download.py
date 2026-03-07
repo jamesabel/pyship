@@ -43,6 +43,14 @@ def test_is_within_directory_traversal_attempt():
     assert is_within_directory(base, target) is False
 
 
+def test_is_within_directory_prefix_sibling_not_within():
+    # CVE-2007-4559: /foo/bar2 must NOT be considered inside /foo/bar.
+    # The old commonprefix-based check returned True here (false positive).
+    base = Path("/foo/bar")
+    target = Path("/foo/bar2/evil.txt")
+    assert is_within_directory(base, target) is False
+
+
 # --- safe_extract ---
 
 
