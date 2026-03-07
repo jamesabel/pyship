@@ -7,12 +7,14 @@ Enables shipping a python application to end users.
 
 ## PyShip's Major Features
 
-* Freeze practically any Python application
-* Code Signed (avoid Windows "Unknown Publisher" warning)
-* Installs via Microsoft Windows App Store or self-hosted installers (entirely outside the app store)
-* Automatic application updating in the background (no user intervention)
-* OS native application (e.g. .exe for Windows)
-* Run on OS startup option
+* Freeze practically any Python application.
+* Optional Code Signing (avoid Windows "Unknown Publisher" warning). This is not required, and you can ship your
+  application for free, but code signing is supported if you have a Code Signing certificate (typically an additional
+  cost).
+* Installs via Microsoft Windows App Store or self-hosted installers entirely outside the app store.
+* Automatic application updating in the background (no user intervention).
+* OS native application (e.g., .exe for Windows).
+* Run on OS startup option.
 
 Currently only for Windows. May be extended to other Operating Systems in the future.
 
@@ -50,7 +52,88 @@ Signing your executables suppresses the Windows SmartScreen "Unknown Publisher" 
 launcher stub (`{app_name}.exe`) and the NSIS installer (`{app_name}_installer_*.exe`). The launcher is signed before
 NSIS packages it, so the signed binary ends up inside the installer.
 
-You need an Authenticode certificate in PFX format and signtool.exe from the Windows SDK.
+You need an Authenticode code-signing certificate in PFX format, a password for that PFX file, and signtool.exe from
+the Windows SDK.
+
+### Getting a code-signing certificate
+
+An Authenticode certificate identifies you (or your organisation) as the publisher of the software. Windows uses it to
+suppress SmartScreen warnings and to display your name in UAC prompts and Add/Remove Programs.
+
+**Certificate types**
+
+| Type                         | SmartScreen behaviour                                                                             | Typical cost | Notes                                                                                                  |
+|------------------------------|---------------------------------------------------------------------------------------------------|--------------|--------------------------------------------------------------------------------------------------------|
+| OV (Organisation Validation) | Builds reputation over time; new certs still trigger SmartScreen until enough installs accumulate | ~$200–400/yr | Issued to a verified company or individual. Most common for open-source and small commercial projects. |
+| EV (Extended Validation)     | Immediate SmartScreen reputation from the first install                                           | ~$400–600/yr | Requires a hardware token (USB) or cloud HSM. Strongest trust signal.                                  |
+
+Self-signed certificates work for local development and testing but will **not** suppress SmartScreen and are rejected
+by the Microsoft Store.
+
+**Where to buy**
+
+***tldr:***
+
+[Sectigo Code Signing Certificate for ~$300-400/year](https://www.ssl2buy.com/sectigo-code-signing-certificate.php)
+
+***Other options***
+
+Certificates are issued by Certificate Authorities (CAs). Common options include:
+
+- **SSL.com** — offers OV and EV code-signing certificates; EV certificates can be stored on their cloud-based eSigner
+  HSM, making them usable in CI without a physical USB token.
+- **DigiCert** — popular for EV certificates; offers KeyLocker (cloud HSM) for CI integration.
+- **Sectigo (formerly Comodo)** — widely used OV and EV code-signing certificates.
+- **SignPath** — free certificates for open-source projects via their Foundation programme.
+
+The purchase process typically involves:
+
+1. Choose a CA and certificate type (OV or EV).
+2. Complete identity verification (business registration documents for OV; additional legal vetting for EV).
+3. The CA issues a `.pfx` (PKCS #12) file containing your private key and certificate chain, or provides access via a
+   hardware token / cloud HSM.
+
+Verification usually takes 1–5 business days for OV, and 1–2 weeks for EV.
+
+### The PFX file and password
+
+The `.pfx` file (also called `.p12`) is an encrypted archive that bundles your private signing key with the certificate.
+The **PFX password** (also called the export password) protects this file — anyone with both the file and the password
+can sign software as you.
+
+**Creating a PFX from separate files**
+
+If your CA provided a `.crt` certificate and a `.key` private key separately (common with some CAs), combine them into
+a PFX:
+
+```batch
+openssl pkcs12 -export -out certificate.pfx -inkey private.key -in certificate.crt -certfile ca_chain.crt
+```
+
+OpenSSL will prompt you to set a password — this becomes your PFX password.
+
+**Extracting certificate info from a PFX**
+
+To view the certificate subject (needed for `msix_publisher`):
+
+```batch
+certutil -dump certificate.pfx
+```
+
+**Security best practices**
+
+- Never commit the `.pfx` file to your source repository. Add `*.pfx` to `.gitignore`.
+- Store the PFX password in a secrets manager or CI secrets — not in source code, environment files, or scripts.
+- For CI, base64-encode the PFX file and store it as a CI secret, then decode it at build time:
+  ```yaml
+  - name: Decode signing certificate
+    run: echo "${{ secrets.PFX_BASE64 }}" | base64 --decode > certificate.pfx
+  - name: Ship
+    env:
+      PFX_PASSWORD: ${{ secrets.PFX_PASSWORD }}
+    run: python ship.py
+  ```
+- Rotate certificates before expiry. Most code-signing certificates are valid for 1–3 years.
 
 ### Getting signtool.exe
 
