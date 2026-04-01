@@ -26,9 +26,19 @@ pyship settings are configured in your project's `pyproject.toml` under `[tool.p
 
 ```toml
 [tool.pyship]
-is_gui = false           # true if the app is a GUI application (default: false)
+ui = "cli"               # "cli" (default), "tui", or "gui"
 run_on_startup = false   # true to run the app on OS startup (default: false)
 ```
+
+#### UI Modes
+
+| Value   | Description                                                                                                  | Python interpreter |
+|---------|--------------------------------------------------------------------------------------------------------------|--------------------|
+| `"cli"` | Standard command-line application. Output streams directly to the console.                                   | `python.exe`       |
+| `"tui"` | Text User Interface (e.g. textual, curses, prompt_toolkit). Unbuffered I/O with direct console access.       | `python.exe`       |
+| `"gui"` | Graphical application (e.g. PyQt, tkinter). Runs without a console window; output captured for diagnostics.  | `pythonw.exe`      |
+
+> **Legacy**: `is_gui = true` is still accepted and maps to `ui = "gui"`, but emits a deprecation warning.
 
 ### AWS Keys in CLI Arguments
 
