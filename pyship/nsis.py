@@ -216,6 +216,7 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         make_nsis_path = Path(os.environ.get("MAKE_NSIS_PATH", r"C:\Program Files (x86)\NSIS\makensis.exe"))
         if make_nsis_path.exists():
             subprocess_run([make_nsis_path, nsis_file_path], target_app_info.project_dir)
+            nsis_file_path.unlink(missing_ok=True)  # remove generated .nsi file from project root
         else:
             if is_ci():
                 log.warning(f"{make_nsis_path} not found - skipping installer creation (running in CI)")

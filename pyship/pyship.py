@@ -58,6 +58,11 @@ class PyShip:
         start_time = datetime.now()
         pyship_print(f"{pyship_application_name} starting (pyship={str(pyship_version)},pyshipupdate={str(pyshipupdate_version)},upload={self.upload},public_readable={self.public_readable})")
 
+        # Clean dist directory to avoid stale wheels (multiple wheels cause metadata extraction to fail)
+        dist_dir = Path(self.project_dir, self.dist_dir)
+        if dist_dir.exists():
+            mkdirs(dist_dir, remove_first=True)
+
         cache_dir = Path(platformdirs.user_cache_dir(pyship_application_name, pyship_author))
 
         # Resolve certificate password (env var takes lower priority than explicit value)
