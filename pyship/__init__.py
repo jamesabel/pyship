@@ -1,6 +1,6 @@
 """pyship - ship python apps"""
 
-python_interpreter_exes = {True: "pythonw.exe", False: "python.exe"}  # True is GUI, False is CLI
+python_interpreter_exes = {"gui": "pythonw.exe", "cli": "python.exe", "tui": "python.exe"}
 
 APP_DIR_NAME = "app"  # analogous to a "Program Files" or "Applications" directory
 CLIP_EXT = "clip"  # zipped clip file extension

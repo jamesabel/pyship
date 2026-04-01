@@ -11,14 +11,14 @@ from typeguard import typechecked
 
 
 @typechecked
-def calculate_metadata(target_app_name: str, target_app_author: str, target_app_version: VersionInfo, launcher_source_dir: Path, icon_path: Path, is_gui: bool) -> dict:
+def calculate_metadata(target_app_name: str, target_app_author: str, target_app_version: VersionInfo, launcher_source_dir: Path, icon_path: Path, ui: str) -> dict:
     launcher_metadata = {
         "app": target_app_name,
         "version": str(target_app_version),
         "author": target_app_author,
         "pyship_version": pyship_version,
         "icon_sha256": get_file_sha256(icon_path),
-        "is_gui": is_gui,
+        "ui": ui,
     }
     # Hash launcher Python sources
     for p in launcher_source_dir.glob("*.py"):

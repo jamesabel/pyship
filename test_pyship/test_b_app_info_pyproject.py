@@ -36,22 +36,51 @@ def test_pep621_author_string_fallback(tmp_path):
     assert app_info.author == "John Smith"
 
 
-def test_tool_pyship_is_gui_true(tmp_path):
+def test_tool_pyship_ui_gui(tmp_path):
+    _write_pyproject(
+        tmp_path,
+        '[project]\nname = "myapp"\nversion = "1.0.0"\n\n[tool.pyship]\nui = "gui"\n',
+    )
+    app_info = get_app_info_py_project(AppInfo(), tmp_path)
+    assert app_info.ui == "gui"
+
+
+def test_tool_pyship_ui_cli(tmp_path):
+    _write_pyproject(
+        tmp_path,
+        '[project]\nname = "myapp"\nversion = "1.0.0"\n\n[tool.pyship]\nui = "cli"\n',
+    )
+    app_info = get_app_info_py_project(AppInfo(), tmp_path)
+    assert app_info.ui == "cli"
+
+
+def test_tool_pyship_ui_tui(tmp_path):
+    _write_pyproject(
+        tmp_path,
+        '[project]\nname = "myapp"\nversion = "1.0.0"\n\n[tool.pyship]\nui = "tui"\n',
+    )
+    app_info = get_app_info_py_project(AppInfo(), tmp_path)
+    assert app_info.ui == "tui"
+
+
+def test_tool_pyship_legacy_is_gui_true(tmp_path):
+    """Legacy is_gui = true should map to ui = 'gui'."""
     _write_pyproject(
         tmp_path,
         '[project]\nname = "myapp"\nversion = "1.0.0"\n\n[tool.pyship]\nis_gui = true\n',
     )
     app_info = get_app_info_py_project(AppInfo(), tmp_path)
-    assert app_info.is_gui is True
+    assert app_info.ui == "gui"
 
 
-def test_tool_pyship_is_gui_false(tmp_path):
+def test_tool_pyship_legacy_is_gui_false(tmp_path):
+    """Legacy is_gui = false should map to ui = 'cli'."""
     _write_pyproject(
         tmp_path,
         '[project]\nname = "myapp"\nversion = "1.0.0"\n\n[tool.pyship]\nis_gui = false\n',
     )
     app_info = get_app_info_py_project(AppInfo(), tmp_path)
-    assert app_info.is_gui is False
+    assert app_info.ui == "cli"
 
 
 def test_tool_pyship_run_on_startup(tmp_path):

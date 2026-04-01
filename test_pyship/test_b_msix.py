@@ -23,7 +23,7 @@ def _make_app_info(project_dir: Path) -> AppInfo:
     app_info.description = "A test application"
     app_info.project_dir = project_dir
     app_info.run_on_startup = False
-    app_info.is_gui = False
+    app_info.ui = "cli"
     return app_info
 
 

@@ -24,8 +24,8 @@ ERROR_RETURN_CODE = 1
 CAN_NOT_FIND_FILE_RETURN_CODE = 2
 RESTART_RETURN_CODE = 13
 
-# Python interpreter executables by GUI mode
-PYTHON_INTERPRETER_EXES = {True: "pythonw.exe", False: "python.exe"}
+# Python interpreter executables by UI mode
+PYTHON_INTERPRETER_EXES = {"gui": "pythonw.exe", "cli": "python.exe", "tui": "python.exe"}
 
 
 class RestartMonitor:
@@ -68,11 +68,11 @@ def _compare_versions(version_str):
     return tuple(parts)
 
 
-def _setup_logging(app_name, is_gui):
+def _setup_logging(app_name, ui):
     """
     Set up stdlib logging for the launcher.
     :param app_name: application name for the log
-    :param is_gui: True for GUI app
+    :param ui: UI mode ("cli", "tui", or "gui")
     """
     log_dir = None
     local_app_data = os.environ.get("LOCALAPPDATA")
@@ -97,7 +97,7 @@ def _setup_logging(app_name, is_gui):
         except OSError:
             pass
 
-    if not is_gui:
+    if ui != "gui":
         ch = logging.StreamHandler()
         ch.setLevel(logging.ERROR)
         ch.setFormatter(formatter)
@@ -139,7 +139,7 @@ def launch(app_dir=None, additional_path=None):
     clip_regex = re.compile(r"([_a-z0-9]*)_([.0-9]+)", flags=re.IGNORECASE)
 
     # Default values in case metadata file is not found
-    is_gui = False
+    ui = "cli"
     report_exceptions = True
     target_app_name = None
     target_app_author = "unknown"
@@ -155,7 +155,10 @@ def launch(app_dir=None, additional_path=None):
                     metadata = json.load(metadata_file)
                     target_app_name = metadata.get("app")
                     target_app_author = metadata.get("author", target_app_author)
-                    is_gui = metadata.get("is_gui", is_gui)
+                    ui = metadata.get("ui", ui)
+                    # Legacy metadata compatibility
+                    if "ui" not in metadata and "is_gui" in metadata:
+                        ui = "gui" if metadata["is_gui"] else "cli"
                     report_exceptions = metadata.get("report_exceptions", report_exceptions)
             except (json.JSONDecodeError, OSError):
                 pass
@@ -170,7 +173,7 @@ def launch(app_dir=None, additional_path=None):
                         target_app_name = m.group(1)
                         break
 
-    log = _setup_logging(target_app_name or "pyship", is_gui)
+    log = _setup_logging(target_app_name or "pyship", ui)
 
     if report_exceptions:
         _init_sentry()
@@ -225,7 +228,7 @@ def launch(app_dir=None, additional_path=None):
             latest_version = sorted(versions.keys())[-1]
             log.info(f"latest_version={'.'.join(str(v) for v in latest_version)}")
 
-            python_exe_path = Path(versions[latest_version], PYTHON_INTERPRETER_EXES[is_gui])
+            python_exe_path = Path(versions[latest_version], PYTHON_INTERPRETER_EXES[ui])
 
             if python_exe_path.exists():
                 cmd = [str(python_exe_path), "-m", target_app_name]
@@ -235,47 +238,65 @@ def launch(app_dir=None, additional_path=None):
 
                 log.info(f"cmd={cmd}")
                 try:
-                    # GUI apps need output captured (no console); CLI apps stream output in real time
-                    target_process = subprocess.run(cmd, cwd=str(python_exe_path.parent), capture_output=is_gui, text=True)
-                    return_code = target_process.returncode
+                    if ui == "tui":
+                        # TUI: direct console access, unbuffered, no capture, no text wrapping
+                        import signal
 
-                    std_out = target_process.stdout  # None for CLI apps (streamed directly)
-                    std_err = target_process.stderr  # None for CLI apps (streamed directly)
+                        tui_cmd = [cmd[0], "-u"] + cmd[1:]  # -u = unbuffered stdout/stderr
+                        old_sigint = signal.signal(signal.SIGINT, signal.SIG_IGN)
+                        try:
+                            target_process = subprocess.Popen(tui_cmd, cwd=str(python_exe_path.parent))
+                            return_code = target_process.wait()
+                        finally:
+                            signal.signal(signal.SIGINT, old_sigint)
 
-                    # When pythonw.exe fails silently (no stderr), re-run with python.exe to capture the actual error
-                    if is_gui and return_code not in (OK_RETURN_CODE, RESTART_RETURN_CODE) and not (std_err and std_err.strip()):
-                        log.warning(f"pythonw.exe exited with return_code={return_code} but produced no error output, re-running with python.exe for diagnostics")
-                        diag_python = Path(versions[latest_version], "python.exe")
-                        if diag_python.exists():
-                            diag_cmd = [str(diag_python), "-X", "faulthandler"] + cmd[1:]
-                            log.info(f"diagnostic cmd={diag_cmd}")
-                            try:
-                                diag_process = subprocess.run(diag_cmd, cwd=str(python_exe_path.parent), capture_output=True, text=True)
-                                diag_return_code = diag_process.returncode
-                                std_out = diag_process.stdout
-                                std_err = diag_process.stderr
-                                if std_err and std_err.strip():
-                                    log.info(f"diagnostic stderr captured (return_code={diag_return_code})")
-                                elif std_out and std_out.strip():
-                                    log.info(f"diagnostic stdout captured (return_code={diag_return_code})")
-                                else:
-                                    log.warning(f"diagnostic re-run with python.exe also produced no output (return_code={diag_return_code})")
-                            except Exception as diag_e:
-                                log.error(f"diagnostic re-run failed: {diag_e}")
+                    elif ui == "gui":
+                        # GUI: capture output for diagnostics, use pythonw.exe
+                        target_process = subprocess.run(cmd, cwd=str(python_exe_path.parent), capture_output=True, text=True)
+                        return_code = target_process.returncode
 
-                    if (std_err and std_err.strip()) or (return_code != OK_RETURN_CODE and return_code != RESTART_RETURN_CODE):
-                        if std_out and std_out.strip():
-                            log.warning(std_out)
-                        if std_err and std_err.strip():
-                            log.error(std_err)
+                        std_out = target_process.stdout
+                        std_err = target_process.stderr
 
-                    for name, std_x, sys_f in [("stdout", std_out, sys.stdout), ("stderr", std_err, sys.stderr)]:
-                        if std_x and std_x.strip():
-                            for so_line in std_x.splitlines():
-                                so_line_strip = so_line.strip()
-                                if so_line_strip:
-                                    log.info(f"{name}:{so_line_strip}")
-                            print(std_x, file=sys_f)
+                        # When pythonw.exe fails silently (no stderr), re-run with python.exe to capture the actual error
+                        if return_code not in (OK_RETURN_CODE, RESTART_RETURN_CODE) and not (std_err and std_err.strip()):
+                            log.warning(f"pythonw.exe exited with return_code={return_code} but produced no error output, re-running with python.exe for diagnostics")
+                            diag_python = Path(versions[latest_version], "python.exe")
+                            if diag_python.exists():
+                                diag_cmd = [str(diag_python), "-X", "faulthandler"] + cmd[1:]
+                                log.info(f"diagnostic cmd={diag_cmd}")
+                                try:
+                                    diag_process = subprocess.run(diag_cmd, cwd=str(python_exe_path.parent), capture_output=True, text=True)
+                                    diag_return_code = diag_process.returncode
+                                    std_out = diag_process.stdout
+                                    std_err = diag_process.stderr
+                                    if std_err and std_err.strip():
+                                        log.info(f"diagnostic stderr captured (return_code={diag_return_code})")
+                                    elif std_out and std_out.strip():
+                                        log.info(f"diagnostic stdout captured (return_code={diag_return_code})")
+                                    else:
+                                        log.warning(f"diagnostic re-run with python.exe also produced no output (return_code={diag_return_code})")
+                                except Exception as diag_e:
+                                    log.error(f"diagnostic re-run failed: {diag_e}")
+
+                        if (std_err and std_err.strip()) or (return_code != OK_RETURN_CODE and return_code != RESTART_RETURN_CODE):
+                            if std_out and std_out.strip():
+                                log.warning(std_out)
+                            if std_err and std_err.strip():
+                                log.error(std_err)
+
+                        for name, std_x, sys_f in [("stdout", std_out, sys.stdout), ("stderr", std_err, sys.stderr)]:
+                            if std_x and std_x.strip():
+                                for so_line in std_x.splitlines():
+                                    so_line_strip = so_line.strip()
+                                    if so_line_strip:
+                                        log.info(f"{name}:{so_line_strip}")
+                                print(std_x, file=sys_f)
+
+                    else:
+                        # CLI: inherited handles, no capture
+                        target_process = subprocess.run(cmd, cwd=str(python_exe_path.parent))
+                        return_code = target_process.returncode
 
                     log.info(f"return_code={return_code}")
 
