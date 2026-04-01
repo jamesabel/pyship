@@ -26,14 +26,8 @@ pyship settings are configured in your project's `pyproject.toml` under `[tool.p
 
 ```toml
 [tool.pyship]
-# App metadata
 is_gui = false           # true if the app is a GUI application (default: false)
 run_on_startup = false   # true to run the app on OS startup (default: false)
-
-# Cloud upload settings
-profile = "default"      # AWS IAM profile for S3 uploads
-upload = true            # upload installer and clip to S3 (default: true)
-public_readable = false  # make uploaded S3 objects publicly readable (default: false)
 ```
 
 ### AWS Keys in CLI Arguments
@@ -62,19 +56,19 @@ suppress SmartScreen warnings and to display your name in UAC prompts and Add/Re
 
 **Certificate types**
 
-| Type                         | SmartScreen behaviour                                                                             | Typical cost | Notes                                                                                                  |
-|------------------------------|---------------------------------------------------------------------------------------------------|--------------|--------------------------------------------------------------------------------------------------------|
-| OV (Organisation Validation) | Builds reputation over time; new certs still trigger SmartScreen until enough installs accumulate | ~$200–400/yr | Issued to a verified company or individual. Most common for open-source and small commercial projects. |
-| EV (Extended Validation)     | Immediate SmartScreen reputation from the first install                                           | ~$400–600/yr | Requires a hardware token (USB) or cloud HSM. Strongest trust signal.                                  |
-
-Self-signed certificates work for local development and testing but will **not** suppress SmartScreen and are rejected
-by the Microsoft Store.
+| Type                         | SmartScreen behaviour                                                                             | Typical cost | Notes                                                                                                                   |
+|------------------------------|---------------------------------------------------------------------------------------------------|--------------|-------------------------------------------------------------------------------------------------------------------------|
+| OV (Organisation Validation) | Builds reputation over time; new certs still trigger SmartScreen until enough installs accumulate | ~$200–400/yr | Issued to a verified company or individual. Most common for open-source and small commercial projects.                  |
+| EV (Extended Validation)     | Immediate SmartScreen reputation from the first install                                           | ~$400–600/yr | Only for registered organizations (Corporations). Requires a hardware token (USB) or cloud HSM. Strongest trust signal. |
 
 **Where to buy**
 
 ***tldr:***
 
-[Sectigo Code Signing Certificate for ~$300-400/year](https://www.ssl2buy.com/sectigo-code-signing-certificate.php)
+Individuals, ~$300-400/year: [Sectigo Code Signing Certificate](https://www.ssl2buy.com/sectigo-code-signing-certificate.php) .
+
+Existing organizations (registered LLCs, Corporations, etc.), ~$400-500/year:
+[Sectigo EV Code Signing Certificate](https://www.ssl2buy.com/sectigo-ev-code-signing.php) .
 
 ***Other options***
 
@@ -184,7 +178,7 @@ If signtool.exe is not in the default Windows SDK location, point pyship directl
 ```python
 ps = PyShip(
     ...
-signtool_path = Path(r"C:\custom\path\signtool.exe"),
+    signtool_path=Path(r"C:\custom\path\signtool.exe"),
 )
 ```
 
@@ -196,7 +190,7 @@ By default pyship uses DigiCert's RFC 3161 server (`http://timestamp.digicert.co
 ```python
 ps = PyShip(
     ...
-timestamp_url = "http://timestamp.sectigo.com",
+    timestamp_url="http://timestamp.sectigo.com",
 )
 ```
 
@@ -278,9 +272,9 @@ Point pyship at a directory containing these files with `store_assets_dir`:
 ```python
 ps = PyShip(
     ...
-msix = True,
-msix_publisher = "CN=My Company, O=My Company LLC, C=US",
-store_assets_dir = Path("store_assets"),
+    msix=True,
+    msix_publisher="CN=My Company, O=My Company LLC, C=US",
+    store_assets_dir=Path("store_assets"),
 )
 ```
 
@@ -293,7 +287,7 @@ If `makeappx.exe` is not in the default Windows SDK location:
 ```python
 ps = PyShip(
     ...
-makeappx_path = Path(r"C:\custom\path\makeappx.exe"),
+    makeappx_path=Path(r"C:\custom\path\makeappx.exe"),
 )
 ```
 
