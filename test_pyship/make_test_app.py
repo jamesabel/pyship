@@ -90,7 +90,7 @@ def make_test_app(destination_path: Path, app_name: str, app_version: str | Vers
     pyproject_toml.append("")
     pyproject_toml.append("[tool.pyship]")
     pyproject_toml.append("# while most apps will be GUI apps, for testing tstpyshipapp is a CLI app")
-    pyproject_toml.append("is_gui = false")
+    pyproject_toml.append('ui = "cli"')
     Path(destination_path, "pyproject.toml").write_text("\n".join(pyproject_toml))
 
     # LICENSE file

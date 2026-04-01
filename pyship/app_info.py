@@ -43,7 +43,7 @@ class AppInfo:
     name: Union[str, None] = None
     author: Union[str, None] = None
     version: Union[VersionInfo, None] = None
-    is_gui: Union[bool, None] = None
+    ui: Union[str, None] = None  # "cli", "tui", or "gui"
     url: Union[str, None] = None
     description: Union[str, None] = None
     run_on_startup: Union[bool, None] = None
@@ -101,7 +101,13 @@ def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path) -> 
                 # [tool.pyship]
                 pyship_app_info = tool_section.get("pyship")
                 if pyship_app_info is not None:
-                    app_info.is_gui = pyship_app_info.get("is_gui")  # False if CLI
+                    app_info.ui = pyship_app_info.get("ui")
+                    # Legacy deprecation: honor is_gui but warn
+                    legacy_is_gui = pyship_app_info.get("is_gui")
+                    if legacy_is_gui is not None:
+                        log.warning('is_gui is deprecated in [tool.pyship] — use ui = "gui" or ui = "cli" instead')
+                        if app_info.ui is None:
+                            app_info.ui = "gui" if legacy_is_gui else "cli"
                     app_info.run_on_startup = pyship_app_info.get("run_on_startup")
     return app_info
 
@@ -165,12 +171,12 @@ def get_app_info(target_app_project_dir: Path, target_app_dist_dir: Path, cache_
         else:
             app_info = get_app_info_wheel(app_info, wheel_list[0])
 
-            if app_info.is_gui is None:
-                # todo: automatically guess if the app is a GUI app by looking for PyQt, etc.
-                is_gui_guess = False
-
-                log.warning(f"is_gui has not been set by the user (e.g. in pyproject.toml) - assuming {is_gui_guess}")
-                app_info.is_gui = is_gui_guess
+            if app_info.ui is None:
+                app_info.ui = "cli"
+                log.warning(f'ui has not been set by the user (e.g. in pyproject.toml) - assuming "{app_info.ui}"')
+            if app_info.ui not in ("cli", "tui", "gui"):
+                log.error(f"invalid ui value: {app_info.ui!r} (must be cli, tui, or gui)")
+                raise PyshipInsufficientAppInfo
 
             # check that we have the minimum fields filled in
             for required_field in ["name", "author", "version"]:

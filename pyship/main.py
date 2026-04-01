@@ -8,7 +8,7 @@ from pyship import PyShip, __application_name__, __author__, PyshipLog, get_argu
 def read_pyship_config() -> dict:
     """
     Read [tool.pyship] section from pyproject.toml in the current working directory.
-    Returns only PyShip-level keys (not AppInfo-level keys like is_gui, run_on_startup).
+    Returns only PyShip-level keys (not AppInfo-level keys like ui, run_on_startup).
     :return: dict of PyShip-level config values
     """
     pyproject_path = Path("pyproject.toml")
@@ -18,7 +18,7 @@ def read_pyship_config() -> dict:
             pyproject = toml.load(f)
         tool_section = pyproject.get("tool", {})
         pyship_section = tool_section.get("pyship", {})
-        # Only extract PyShip-level keys (not AppInfo-level keys like is_gui, run_on_startup)
+        # Only extract PyShip-level keys (not AppInfo-level keys like ui, run_on_startup)
         for key in ("profile", "upload", "public_readable"):
             if key in pyship_section:
                 config[key] = pyship_section[key]

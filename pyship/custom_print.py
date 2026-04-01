@@ -13,9 +13,9 @@ window.withdraw()  # no main window
 
 
 @typechecked
-def pyship_print(s: str, is_gui: bool = False):
+def pyship_print(s: str, ui: str = "cli"):
     log.info(s)
-    if is_gui:
+    if ui == "gui":
         label = Label(window, text=s)  # adds to the window each time
         label.grid()
         label.update()

@@ -15,7 +15,7 @@ def test_a_create_launcher_for_pyship():
     # subprocess.run("local_install.bat", cwd=project_dir)
 
     # create a launcher for pyship itself
-    target_app_info = AppInfo(__application_name__, __author__, VersionInfo.parse(_pep440_to_semver(__version__)), False, project_dir=project_dir)
+    target_app_info = AppInfo(__application_name__, __author__, VersionInfo.parse(_pep440_to_semver(__version__)), "cli", project_dir=project_dir)
     app_path = Path("app")
     rmdir(app_path)  # for the full app, this is done in the overall pyship infrastructure
     create_pyship_launcher(target_app_info, app_path)
