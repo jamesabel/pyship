@@ -14,7 +14,11 @@ dependencies = [
 ]
 
 [tool.pyship]
-is_gui = true
+ui = "gui"
+code_sign = true                     # enable code signing
+certificate_auto_select = true       # sign with the best certificate from the Windows Certificate Store (hardware token)
+# certificate_sha1 = "AABBCCDD..."  # or specify a SHA1 thumbprint for a specific certificate
+# Set the PYSHIP_SIGNING_CERTIFICATE_PIN env var to provide the hardware token PIN for unattended/CI builds
 
 [tool.setuptools.packages.find]
 include = ["exampleapp"]

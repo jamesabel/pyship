@@ -28,6 +28,7 @@ pyship settings are configured in your project's `pyproject.toml` under `[tool.p
 [tool.pyship]
 ui = "cli"               # "cli" (default), "tui", or "gui"
 run_on_startup = false   # true to run the app on OS startup (default: false)
+code_sign = false        # true to enable code signing (default: false)
 ```
 
 #### UI Modes
@@ -56,20 +57,27 @@ Signing your executables suppresses the Windows SmartScreen "Unknown Publisher" 
 launcher stub (`{app_name}.exe`) and the NSIS installer (`{app_name}_installer_*.exe`). The launcher is signed before
 NSIS packages it, so the signed binary ends up inside the installer.
 
-You need an Authenticode code-signing certificate in PFX format, a password for that PFX file, and signtool.exe from
-the Windows SDK.
+pyship supports two signing modes:
+
+- **PFX file** — a `.pfx` certificate file with a password (traditional software certificates)
+- **Hardware token** — a USB security key (e.g. Sectigo OV, SafeNet eToken, YubiKey) whose certificate is in the Windows Certificate Store
+
+You need signtool.exe from the Windows SDK for either mode.
+
+While Code Signing is fairly common, it does involve a few steps. The instructions below should help, and pyship 
+will try to help you through the process by flagging any issues it sees.
 
 ### Getting a code-signing certificate
 
-An Authenticode certificate identifies you (or your organisation) as the publisher of the software. Windows uses it to
+An Authenticode certificate identifies you (or your organization) as the publisher of the software. Windows uses it to
 suppress SmartScreen warnings and to display your name in UAC prompts and Add/Remove Programs.
 
 **Certificate types**
 
-| Type                         | SmartScreen behaviour                                                                             | Typical cost | Notes                                                                                                                   |
-|------------------------------|---------------------------------------------------------------------------------------------------|--------------|-------------------------------------------------------------------------------------------------------------------------|
-| OV (Organisation Validation) | Builds reputation over time; new certs still trigger SmartScreen until enough installs accumulate | ~$200–400/yr | Issued to a verified company or individual. Most common for open-source and small commercial projects.                  |
-| EV (Extended Validation)     | Immediate SmartScreen reputation from the first install                                           | ~$400–600/yr | Only for registered organizations (Corporations). Requires a hardware token (USB) or cloud HSM. Strongest trust signal. |
+| Type                         | SmartScreen behaviour                                                                             | Typical cost | Notes                                                                                                                                            |
+|------------------------------|---------------------------------------------------------------------------------------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| OV (Organisation Validation) | Builds reputation over time; new certs still trigger SmartScreen until enough installs accumulate | ~$200–400/yr | Issued to a verified company or individual. Most common for open-source and small commercial projects.                                           |
+| EV (Extended Validation)     | Immediate SmartScreen reputation from the first install                                           | ~$400–600/yr | **ONLY** for registered organizations (Corporations). NOT for individuals. Requires a hardware token (USB) or cloud HSM. Strongest trust signal. |
 
 **Where to buy**
 
@@ -93,7 +101,7 @@ Certificates are issued by Certificate Authorities (CAs). Common options include
 The purchase process typically involves:
 
 1. Choose a CA and certificate type (OV or EV).
-2. Complete identity verification (business registration documents for OV; additional legal vetting for EV).
+2. Complete identity verification (business or personal registration documents for OV; additional legal vetting for EV).
 3. The CA issues a `.pfx` (PKCS #12) file containing your private key and certificate chain, or provides access via a
    hardware token / cloud HSM.
 
@@ -134,7 +142,7 @@ certutil -dump certificate.pfx
     run: echo "${{ secrets.PFX_BASE64 }}" | base64 --decode > certificate.pfx
   - name: Ship
     env:
-      PFX_PASSWORD: ${{ secrets.PFX_PASSWORD }}
+      PYSHIP_SIGNING_CERTIFICATE_PIN: ${{ secrets.PFX_PASSWORD }}
     run: python ship.py
   ```
 - Rotate certificates before expiry. Most code-signing certificates are valid for 1–3 years.
@@ -145,7 +153,13 @@ Install the [Windows SDK](https://developer.microsoft.com/en-us/windows/download
 Signing Tools for Desktop Apps**. pyship auto-discovers the newest version under
 `C:\Program Files (x86)\Windows Kits\10\bin\`.
 
-### Basic usage
+### Enabling code signing
+
+Set `code_sign=True` to enable signing. pyship runs a pre-flight check (verifies the PFX file exists or the
+hardware token is plugged in) and raises `PyshipSigningUnavailable` if signing infrastructure is missing or if
+any file fails to sign. When `code_sign=False` (the default), signing is skipped entirely.
+
+### PFX basic usage
 
 ```python
 from pathlib import Path
@@ -153,6 +167,7 @@ from pyship import PyShip
 
 ps = PyShip(
     project_dir=Path("path/to/your/app"),
+    code_sign=True,
     pfx_path=Path("path/to/certificate.pfx"),
     certificate_password="your-pfx-password",
 )
@@ -161,13 +176,15 @@ ps.ship()
 
 ### CI / environment variable password
 
-Avoid storing the PFX password in source code. Pass it via an environment variable instead:
+Avoid storing the PFX password in source code. Set the `PYSHIP_SIGNING_CERTIFICATE_PIN` environment variable instead —
+pyship reads it automatically when `certificate_password` is not set:
 
 ```python
 ps = PyShip(
     project_dir=Path("path/to/your/app"),
+    code_sign=True,
     pfx_path=Path("path/to/certificate.pfx"),
-    certificate_password_env_var="PFX_PASSWORD",  # reads os.environ["PFX_PASSWORD"] at ship() time
+    # password read from PYSHIP_SIGNING_CERTIFICATE_PIN env var at ship() time
 )
 ps.ship()
 ```
@@ -177,7 +194,7 @@ Set the secret in your CI system (e.g. GitHub Actions → Settings → Secrets) 
 ```yaml
 - name: Ship
   env:
-    PFX_PASSWORD: ${{ secrets.PFX_PASSWORD }}
+    PYSHIP_SIGNING_CERTIFICATE_PIN: ${{ secrets.PFX_PASSWORD }}
   run: python ship.py
 ```
 
@@ -212,8 +229,87 @@ signtool verify /pa /v YourApp.exe
 
 ### Skipping signing
 
-Leave `pfx_path` and `certificate_password` / `certificate_password_env_var` unset (the defaults). pyship will build and
-package the executables without signing them.
+Leave `code_sign` as `False` (the default). pyship will build and package the executables without signing them.
+
+### Hardware Token Signing
+
+If your code-signing certificate lives on a USB hardware token (smart card), pyship can sign directly from the
+Windows Certificate Store instead of a PFX file. This is common for EV certificates and newer OV certificates
+from CAs like Sectigo, DigiCert, and SSL.com.
+
+When the token is plugged in and its middleware is installed, the certificate appears in the Windows Certificate
+Store. pyship performs a pre-flight check — it verifies the hardware is present (via Windows PnP device enumeration)
+and that the certificate is in the store before attempting to sign.
+
+#### Selecting the certificate
+
+Provide exactly one of these to identify which certificate to use:
+
+| Parameter               | signtool flag | Description                                      |
+|-------------------------|---------------|--------------------------------------------------|
+| `certificate_sha1`      | `/sha1`       | SHA1 thumbprint (40 hex chars) — most precise     |
+| `certificate_subject`   | `/n`          | Certificate subject name — matches by name        |
+| `certificate_auto_select` | `/a`        | Auto-select the best signing certificate          |
+
+**Finding the SHA1 thumbprint**
+
+```batch
+certutil -user -store My
+```
+
+Look for the `Cert Hash(sha1):` line of your code-signing certificate and copy the 40-character hex value.
+
+#### Basic hardware token usage
+
+```python
+from pathlib import Path
+from pyship import PyShip
+
+ps = PyShip(
+    project_dir=Path("path/to/your/app"),
+    code_sign=True,
+    certificate_sha1="AABBCCDD1122334455667788AABBCCDD11223344",
+)
+ps.ship()
+```
+
+The token's middleware will prompt for the PIN interactively via its own dialog.
+
+#### Providing the token PIN for automation
+
+For CI or unattended builds, set the `PYSHIP_SIGNING_CERTIFICATE_PIN` environment variable. pyship reads it
+automatically:
+
+```yaml
+# GitHub Actions example
+- name: Ship
+  env:
+    PYSHIP_SIGNING_CERTIFICATE_PIN: ${{ secrets.TOKEN_PIN }}
+  run: python ship.py
+```
+
+Or pass it directly (not recommended for CI):
+
+```python
+ps = PyShip(
+    code_sign=True,
+    certificate_sha1="AABBCCDD1122334455667788AABBCCDD11223344",
+    certificate_password="123456",  # PIN directly
+)
+```
+
+#### Advanced: CSP and key container
+
+Some tokens (e.g. SafeNet eToken) require specifying the Cryptographic Service Provider:
+
+```python
+ps = PyShip(
+    code_sign=True,
+    certificate_sha1="AABBCCDD1122334455667788AABBCCDD11223344",
+    certificate_csp="eToken Base Cryptographic Provider",
+    certificate_key_container="my-container",
+)
+```
 
 ## Microsoft Store Distribution (MSIX) (Optional)
 
@@ -239,8 +335,9 @@ from pyship import PyShip
 
 ps = PyShip(
     project_dir=Path("path/to/your/app"),
+    code_sign=True,
     pfx_path=Path("certificate.pfx"),
-    certificate_password_env_var="PFX_PASSWORD",
+    # password read from PYSHIP_SIGNING_CERTIFICATE_PIN env var
     msix=True,
     msix_publisher="CN=My Company, O=My Company LLC, C=US",  # must match cert subject exactly
 )
@@ -349,10 +446,11 @@ venv\Scripts\python.exe -m pytest test_pyship/ -v
 
 ### Environment Variables
 
-| Variable                 | Description                                                                                                                                                                                       | Default                                    |
-|--------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------|
-| `AWSIMPLE_USE_MOTO_MOCK` | Set to `0` to use real AWS instead of [moto](https://github.com/getmoto/moto) mock. Required for `test_f_update` which tests cross-process S3 updates. Requires valid AWS credentials configured. | `1` (use moto)                             |
-| `MAKE_NSIS_PATH`         | Path to the NSIS `makensis.exe` executable.                                                                                                                                                       | `C:\Program Files (x86)\NSIS\makensis.exe` |
+| Variable                          | Description                                                                                                                                                                                       | Default                                    |
+|-----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------|
+| `PYSHIP_SIGNING_CERTIFICATE_PIN`  | PFX password or hardware token PIN for code signing. Read automatically by `ship()` when `certificate_password` is not set.                                                                       | (not set)                                  |
+| `AWSIMPLE_USE_MOTO_MOCK`          | Set to `0` to use real AWS instead of [moto](https://github.com/getmoto/moto) mock. Required for `test_f_update` which tests cross-process S3 updates. Requires valid AWS credentials configured. | `1` (use moto)                             |
+| `MAKE_NSIS_PATH`                  | Path to the NSIS `makensis.exe` executable.                                                                                                                                                       | `C:\Program Files (x86)\NSIS\makensis.exe` |
 
 ### Test Modes
 

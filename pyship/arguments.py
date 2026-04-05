@@ -17,6 +17,14 @@ def get_arguments() -> Any:
     parser.add_argument("--noupload", default=False, action="store_true", help="do not upload files to the cloud (e.g. installer and clip files)")
     parser.add_argument("--public-readable", default=False, action="store_true", help="make uploaded S3 objects publicly readable")
 
+    # Code signing
+    parser.add_argument("--pfx-path", help="path to PFX certificate file")
+    parser.add_argument("--certificate-password", help="PFX password or hardware token PIN (prefer PYSHIP_SIGNING_CERTIFICATE_PIN env var)")
+    parser.add_argument("--certificate-sha1", help="SHA1 thumbprint of certificate in Windows Certificate Store (hardware token)")
+    parser.add_argument("--certificate-subject", help="certificate subject name for store lookup (hardware token)")
+    parser.add_argument("--certificate-auto-select", default=False, action="store_true", help="auto-select best signing certificate from store")
+    parser.add_argument("--code-sign", default=False, action="store_true", help="sign executables; abort ship() if signing fails")
+
     parser.add_argument("--version", action="store_true", help="display version")
     parser.add_argument("-v", f"--{verbose_arg_string}", action="store_true", help="increase output verbosity")
     parser.add_argument(f"--{delete_existing_arg_string}", action="store_true", help="delete log prior to running")
