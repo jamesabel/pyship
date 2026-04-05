@@ -56,7 +56,7 @@ public_readable = true
     monkeypatch.chdir(tmp_path)
 
     config = read_pyship_config()
-    assert config["profile"] == "myprofile"
+    assert config["cloud_profile"] == "myprofile"
     assert config["upload"] is False
     assert config["public_readable"] is True
 

@@ -34,3 +34,8 @@ class PyshipLicenseFileDoesNotExist(PyshipException):
 class PyshipInsufficientAppInfo(PyshipException):
     def __init__(self):
         super().__init__(self.__class__.__name__)
+
+
+class PyshipSigningUnavailable(PyshipException):
+    def __init__(self, message: str = ""):
+        super().__init__(self.__class__.__name__, message)
