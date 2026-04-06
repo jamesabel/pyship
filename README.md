@@ -67,6 +67,12 @@ You need signtool.exe from the Windows SDK for either mode.
 While Code Signing is fairly common, it does involve a few steps. The instructions below should help, and pyship 
 will try to help you through the process by flagging any issues it sees.
 
+***Warning***: Accessing a computer over RDP (Remote Desktop) usually **does not work** for entering in the 
+certificate "PIN". It will likely fail and the error messages will appear as if the PIN you entered is incorrect. 
+This is a major issue since most token devices allow only a small number of failed attempts (typically 3 to 5) 
+before the device is locked. If you have a token device that requires a PIN, ensure you are directly accessing 
+the computer via regular keyboard, mouse, and video.
+
 ### Getting a code-signing certificate
 
 An Authenticode certificate identifies you (or your organization) as the publisher of the software. Windows uses it to
