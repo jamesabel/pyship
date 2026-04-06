@@ -18,7 +18,7 @@ from .app_info import AppInfo, get_app_info, get_app_info_py_project
 from .get_icon import get_icon
 from .nsis import run_nsis
 from .download import file_download, extract, PyshipDownloadError
-from .signing import sign_if_configured, sign_file_token, is_token_present, is_certificate_in_store, check_signing_available
+from .signing import sign_if_configured, sign_file_token, is_token_present, is_certificate_in_store, is_rdp_session, check_signing_available
 from .msix import create_msix
 from .create_launcher import create_pyship_launcher
 from .clip import create_base_clip, install_target_app, create_clip, create_clip_file

@@ -13,6 +13,7 @@ from pyship.signing import (
     _validate_sha1,
     check_signing_available,
     is_certificate_in_store,
+    is_rdp_session,
     is_token_present,
     sign_file,
     sign_file_token,
@@ -304,27 +305,90 @@ def test_check_signing_available_pfx_missing(tmp_path):
 
 
 def test_check_signing_available_token_mode_both_checks_pass():
-    with patch("pyship.signing.is_token_present", return_value=True), patch("pyship.signing.is_certificate_in_store", return_value=True):
+    with patch("pyship.signing.is_rdp_session", return_value=False), patch("pyship.signing.is_token_present", return_value=True), patch("pyship.signing.is_certificate_in_store", return_value=True):
         assert check_signing_available(certificate_sha1=VALID_SHA1) is True
 
 
 def test_check_signing_available_token_not_present():
-    with patch("pyship.signing.is_token_present", return_value=False):
+    with patch("pyship.signing.is_rdp_session", return_value=False), patch("pyship.signing.is_token_present", return_value=False):
         assert check_signing_available(certificate_sha1=VALID_SHA1) is False
 
 
 def test_check_signing_available_token_present_cert_missing():
-    with patch("pyship.signing.is_token_present", return_value=True), patch("pyship.signing.is_certificate_in_store", return_value=False):
+    with patch("pyship.signing.is_rdp_session", return_value=False), patch("pyship.signing.is_token_present", return_value=True), patch("pyship.signing.is_certificate_in_store", return_value=False):
         assert check_signing_available(certificate_sha1=VALID_SHA1) is False
 
 
 def test_check_signing_available_auto_select_token_present():
-    with patch("pyship.signing.is_token_present", return_value=True):
+    with patch("pyship.signing.is_rdp_session", return_value=False), patch("pyship.signing.is_token_present", return_value=True):
         assert check_signing_available(certificate_auto_select=True) is True
 
 
 def test_check_signing_available_nothing_configured():
     assert check_signing_available() is False
+
+
+# ---------------------------------------------------------------------------
+# is_rdp_session
+# ---------------------------------------------------------------------------
+
+
+def test_is_rdp_session_true_via_get_system_metrics():
+    """GetSystemMetrics returning nonzero indicates RDP."""
+    with patch("pyship.signing.ctypes") as mock_ctypes:
+        mock_ctypes.windll.user32.GetSystemMetrics.return_value = 1
+        assert is_rdp_session() is True
+
+
+def test_is_rdp_session_false_via_get_system_metrics():
+    """GetSystemMetrics returning 0 indicates local console."""
+    with patch("pyship.signing.ctypes") as mock_ctypes:
+        mock_ctypes.windll.user32.GetSystemMetrics.return_value = 0
+        mock_result = MagicMock()
+        mock_result.stdout = ">console            User                 1  Active\n"
+        with patch("pyship.signing.subprocess.run", return_value=mock_result):
+            assert is_rdp_session() is False
+
+
+def test_is_rdp_session_fallback_to_query_session():
+    """When GetSystemMetrics fails, falls back to query session."""
+    with patch("pyship.signing.ctypes") as mock_ctypes:
+        mock_ctypes.windll.user32.GetSystemMetrics.side_effect = AttributeError("no windll")
+        mock_result = MagicMock()
+        mock_result.stdout = ">rdp-tcp#0          User                 1  Active\n"
+        with patch("pyship.signing.subprocess.run", return_value=mock_result):
+            assert is_rdp_session() is True
+
+
+def test_is_rdp_session_false_when_all_checks_fail():
+    """When both checks fail, returns False (fail-open)."""
+    with patch("pyship.signing.ctypes") as mock_ctypes:
+        mock_ctypes.windll.user32.GetSystemMetrics.side_effect = AttributeError("no windll")
+        with patch("pyship.signing.subprocess.run", side_effect=FileNotFoundError("not found")):
+            assert is_rdp_session() is False
+
+
+# ---------------------------------------------------------------------------
+# check_signing_available — RDP blocking (token mode only)
+# ---------------------------------------------------------------------------
+
+
+def test_check_signing_available_token_blocked_by_rdp():
+    """Token mode should be blocked when RDP session is detected."""
+    with patch("pyship.signing.is_rdp_session", return_value=True):
+        assert check_signing_available(certificate_sha1=VALID_SHA1) is False
+
+
+def test_check_signing_available_pfx_not_blocked_by_rdp(pfx_file):
+    """PFX mode should NOT be blocked by RDP — PFX signing works fine over RDP."""
+    with patch("pyship.signing.is_rdp_session", return_value=True):
+        assert check_signing_available(pfx_path=pfx_file) is True
+
+
+def test_check_signing_available_token_allowed_when_not_rdp():
+    """Token mode proceeds normally when not in RDP."""
+    with patch("pyship.signing.is_rdp_session", return_value=False), patch("pyship.signing.is_token_present", return_value=True), patch("pyship.signing.is_certificate_in_store", return_value=True):
+        assert check_signing_available(certificate_sha1=VALID_SHA1) is True
 
 
 # ---------------------------------------------------------------------------

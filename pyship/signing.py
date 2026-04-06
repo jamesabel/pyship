@@ -13,8 +13,12 @@ smart-card hardware, certificate store entry) is available before signing begins
 import hashlib
 import ssl
 import subprocess
+import sys
 from pathlib import Path
 from typing import Union
+
+if sys.platform == "win32":
+    import ctypes
 
 from typeguard import typechecked
 from balsa import get_logger
@@ -143,6 +147,46 @@ def is_token_present() -> bool:
 
 
 @typechecked
+def is_rdp_session() -> bool:
+    """
+    Detect if the current session is a Remote Desktop (RDP) session.
+
+    Hardware token PIN dialogs do not work over RDP, and failed attempts
+    count against the token lockout counter.
+
+    Uses ``GetSystemMetrics(SM_REMOTESESSION)`` as primary detection,
+    with ``query session`` command as fallback.
+
+    :return: True if the session appears to be an RDP/remote session
+    """
+    # Primary: Win32 API
+    try:
+        SM_REMOTESESSION = 0x1000
+        if ctypes.windll.user32.GetSystemMetrics(SM_REMOTESESSION) != 0:
+            log.debug("RDP session detected via GetSystemMetrics(SM_REMOTESESSION)")
+            return True
+    except (AttributeError, NameError, OSError) as exc:
+        log.debug(f"GetSystemMetrics check failed: {exc}")
+
+    # Fallback: parse 'query session' output
+    try:
+        result = subprocess.run(["query", "session"], capture_output=True, text=True, timeout=10)
+        if result.stdout:
+            for line in result.stdout.splitlines():
+                # Active session line starts with '>'
+                if line.strip().startswith(">"):
+                    session_name = line.strip().lstrip(">").split()[0].lower()
+                    if session_name.startswith("rdp-"):
+                        log.debug(f"RDP session detected via query session: {session_name}")
+                        return True
+    except Exception as exc:
+        log.debug(f"query session check failed: {exc}")
+
+    log.debug("no RDP session detected")
+    return False
+
+
+@typechecked
 def is_certificate_in_store(certificate_sha1: Union[str, None] = None, certificate_subject: Union[str, None] = None) -> bool:
     """
     Check if a signing certificate is present in the Windows Certificate Store (MY).
@@ -217,6 +261,14 @@ def check_signing_available(
 
     token_mode = certificate_sha1 is not None or certificate_subject is not None or certificate_auto_select
     if not token_mode:
+        return False
+
+    if is_rdp_session():
+        pyship_print(
+            "RDP session detected - hardware token signing is not supported over Remote Desktop. "
+            "Token PIN entry does not work over RDP, and failed attempts may lock your token. "
+            "Please sign from a local console session."
+        )
         return False
 
     if not is_token_present():
