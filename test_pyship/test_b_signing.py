@@ -305,7 +305,11 @@ def test_check_signing_available_pfx_missing(tmp_path):
 
 
 def test_check_signing_available_token_mode_both_checks_pass():
-    with patch("pyship.signing.is_rdp_session", return_value=False), patch("pyship.signing.is_token_present", return_value=True), patch("pyship.signing.is_certificate_in_store", return_value=True):
+    with (
+        patch("pyship.signing.is_rdp_session", return_value=False),
+        patch("pyship.signing.is_token_present", return_value=True),
+        patch("pyship.signing.is_certificate_in_store", return_value=True),
+    ):
         assert check_signing_available(certificate_sha1=VALID_SHA1) is True
 
 
@@ -315,7 +319,11 @@ def test_check_signing_available_token_not_present():
 
 
 def test_check_signing_available_token_present_cert_missing():
-    with patch("pyship.signing.is_rdp_session", return_value=False), patch("pyship.signing.is_token_present", return_value=True), patch("pyship.signing.is_certificate_in_store", return_value=False):
+    with (
+        patch("pyship.signing.is_rdp_session", return_value=False),
+        patch("pyship.signing.is_token_present", return_value=True),
+        patch("pyship.signing.is_certificate_in_store", return_value=False),
+    ):
         assert check_signing_available(certificate_sha1=VALID_SHA1) is False
 
 
@@ -387,7 +395,11 @@ def test_check_signing_available_pfx_not_blocked_by_rdp(pfx_file):
 
 def test_check_signing_available_token_allowed_when_not_rdp():
     """Token mode proceeds normally when not in RDP."""
-    with patch("pyship.signing.is_rdp_session", return_value=False), patch("pyship.signing.is_token_present", return_value=True), patch("pyship.signing.is_certificate_in_store", return_value=True):
+    with (
+        patch("pyship.signing.is_rdp_session", return_value=False),
+        patch("pyship.signing.is_token_present", return_value=True),
+        patch("pyship.signing.is_certificate_in_store", return_value=True),
+    ):
         assert check_signing_available(certificate_sha1=VALID_SHA1) is True
 
 
