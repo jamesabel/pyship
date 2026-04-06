@@ -18,7 +18,7 @@ from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
 from pyship import __version__ as pyship_version
 from pyship import run_nsis, create_clip, create_pyship_launcher, pyship_print, APP_DIR_NAME, create_clip_file, get_app_info, PyShipCloud
-from pyship.signing import sign_if_configured, check_signing_available
+from pyship.signing import sign_if_configured, check_signing_available, is_rdp_session
 from pyship.msix import create_msix
 from pyship import PyshipNoAppName
 from pyship.exceptions import PyshipSigningUnavailable
@@ -147,6 +147,14 @@ class PyShip:
 
         # Pre-flight signing check
         if self.code_sign:
+            token_mode = self.certificate_sha1 is not None or self.certificate_subject is not None or self.certificate_auto_select
+            if token_mode and is_rdp_session():
+                pyship_print(
+                    "RDP session detected - hardware token signing is not supported over Remote Desktop. "
+                    "Token PIN entry does not work over RDP, and failed attempts may lock your token. "
+                    "Please sign from a local console session."
+                )
+                return None
             available = check_signing_available(
                 pfx_path=self.pfx_path,
                 certificate_sha1=self.certificate_sha1,
