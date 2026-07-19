@@ -48,8 +48,8 @@ def subprocess_run(
         except KeyError:
             pass
 
-    for k, v in run_env.items():
-        log.debug(f"{k}={v}")
+    # log env var names only - values may contain secrets (signing PINs, AWS keys)
+    log.debug(f"run_env variables: {sorted(run_env.keys())}")
     log.info(f"{mute_output=}")
     log.info(f"{os.getcwd()=}")
     log.info(f"{cmd=}")
