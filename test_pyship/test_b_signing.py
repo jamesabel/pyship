@@ -7,6 +7,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from pyship.signing import (
+    SigningConfig,
     _find_signtool,
     _resolve_signtool,
     _run_signtool,
@@ -137,20 +138,43 @@ def test_validate_sha1_non_hex():
 
 
 # ---------------------------------------------------------------------------
+# SigningConfig mode properties
+# ---------------------------------------------------------------------------
+
+
+def test_signing_config_no_mode_by_default():
+    config = SigningConfig()
+    assert config.pfx_mode is False
+    assert config.token_mode is False
+
+
+def test_signing_config_pfx_mode(pfx_file):
+    config = SigningConfig(pfx_path=pfx_file)
+    assert config.pfx_mode is True
+    assert config.token_mode is False
+
+
+def test_signing_config_token_mode_each_selector():
+    assert SigningConfig(certificate_sha1=VALID_SHA1).token_mode is True
+    assert SigningConfig(certificate_subject="My Co").token_mode is True
+    assert SigningConfig(certificate_auto_select=True).token_mode is True
+
+
+# ---------------------------------------------------------------------------
 # sign_if_configured — PFX skip tests
 # ---------------------------------------------------------------------------
 
 
 def test_sign_if_configured_skips_when_file_path_none(pfx_file):
-    assert sign_if_configured(None, pfx_file, "password", TIMESTAMP_URL) is False
+    assert sign_if_configured(None, SigningConfig(pfx_path=pfx_file, certificate_password="password", timestamp_url=TIMESTAMP_URL)) is False
 
 
 def test_sign_if_configured_skips_when_pfx_path_none(target_exe):
-    assert sign_if_configured(target_exe, None, "password", TIMESTAMP_URL) is False
+    assert sign_if_configured(target_exe, SigningConfig(certificate_password="password", timestamp_url=TIMESTAMP_URL)) is False
 
 
 def test_sign_if_configured_skips_when_password_none(target_exe, pfx_file):
-    assert sign_if_configured(target_exe, pfx_file, None, TIMESTAMP_URL) is False
+    assert sign_if_configured(target_exe, SigningConfig(pfx_path=pfx_file, timestamp_url=TIMESTAMP_URL)) is False
 
 
 # ---------------------------------------------------------------------------
@@ -160,20 +184,28 @@ def test_sign_if_configured_skips_when_password_none(target_exe, pfx_file):
 
 def test_sign_file_returns_false_when_signtool_not_found(target_exe, pfx_file):
     with patch("pyship.signing._find_signtool", return_value=None):
-        assert sign_file(target_exe, pfx_file, "password", TIMESTAMP_URL) is False
+        assert sign_file(target_exe, SigningConfig(pfx_path=pfx_file, certificate_password="password", timestamp_url=TIMESTAMP_URL)) is False
 
 
 def test_sign_file_returns_false_when_file_missing(tmp_path, pfx_file, signtool_exe):
-    assert sign_file(tmp_path / "missing.exe", pfx_file, "password", TIMESTAMP_URL, signtool_path=signtool_exe) is False
+    config = SigningConfig(pfx_path=pfx_file, certificate_password="password", timestamp_url=TIMESTAMP_URL, signtool_path=signtool_exe)
+    assert sign_file(tmp_path / "missing.exe", config) is False
 
 
 def test_sign_file_returns_false_when_pfx_missing(target_exe, tmp_path, signtool_exe):
-    assert sign_file(target_exe, tmp_path / "missing.pfx", "password", TIMESTAMP_URL, signtool_path=signtool_exe) is False
+    config = SigningConfig(pfx_path=tmp_path / "missing.pfx", certificate_password="password", timestamp_url=TIMESTAMP_URL, signtool_path=signtool_exe)
+    assert sign_file(target_exe, config) is False
+
+
+def test_sign_file_returns_false_when_password_missing(target_exe, pfx_file, signtool_exe):
+    config = SigningConfig(pfx_path=pfx_file, timestamp_url=TIMESTAMP_URL, signtool_path=signtool_exe)
+    assert sign_file(target_exe, config) is False
 
 
 def test_sign_file_calls_subprocess_with_correct_args(target_exe, pfx_file, signtool_exe):
+    config = SigningConfig(pfx_path=pfx_file, certificate_password="secret", signtool_path=signtool_exe)
     with patch("pyship.signing.subprocess_run", return_value=(0, None, None)) as mock_run:
-        assert sign_file(target_exe, pfx_file, "secret", "http://timestamp.digicert.com", signtool_path=signtool_exe) is True
+        assert sign_file(target_exe, config) is True
 
     cmd = mock_run.call_args[0][0]
     assert "/f" in cmd
@@ -187,13 +219,15 @@ def test_sign_file_calls_subprocess_with_correct_args(target_exe, pfx_file, sign
 
 
 def test_sign_file_returns_false_on_nonzero_return_code(target_exe, pfx_file, signtool_exe):
+    config = SigningConfig(pfx_path=pfx_file, certificate_password="password", timestamp_url=TIMESTAMP_URL, signtool_path=signtool_exe)
     with patch("pyship.signing.subprocess_run", return_value=(1, None, None)):
-        assert sign_file(target_exe, pfx_file, "password", TIMESTAMP_URL, signtool_path=signtool_exe) is False
+        assert sign_file(target_exe, config) is False
 
 
 def test_sign_file_returns_true_on_success(target_exe, pfx_file, signtool_exe):
+    config = SigningConfig(pfx_path=pfx_file, certificate_password="password", timestamp_url=TIMESTAMP_URL, signtool_path=signtool_exe)
     with patch("pyship.signing.subprocess_run", return_value=(0, None, None)):
-        assert sign_file(target_exe, pfx_file, "password", TIMESTAMP_URL, signtool_path=signtool_exe) is True
+        assert sign_file(target_exe, config) is True
 
 
 # ---------------------------------------------------------------------------
@@ -297,11 +331,11 @@ def test_is_certificate_in_store_returns_false_on_exception():
 
 
 def test_check_signing_available_pfx_exists(pfx_file):
-    assert check_signing_available(pfx_path=pfx_file) is True
+    assert check_signing_available(SigningConfig(pfx_path=pfx_file)) is True
 
 
 def test_check_signing_available_pfx_missing(tmp_path):
-    assert check_signing_available(pfx_path=tmp_path / "missing.pfx") is False
+    assert check_signing_available(SigningConfig(pfx_path=tmp_path / "missing.pfx")) is False
 
 
 def test_check_signing_available_token_mode_both_checks_pass():
@@ -310,12 +344,12 @@ def test_check_signing_available_token_mode_both_checks_pass():
         patch("pyship.signing.is_token_present", return_value=True),
         patch("pyship.signing.is_certificate_in_store", return_value=True),
     ):
-        assert check_signing_available(certificate_sha1=VALID_SHA1) is True
+        assert check_signing_available(SigningConfig(certificate_sha1=VALID_SHA1)) is True
 
 
 def test_check_signing_available_token_not_present():
     with patch("pyship.signing.is_rdp_session", return_value=False), patch("pyship.signing.is_token_present", return_value=False):
-        assert check_signing_available(certificate_sha1=VALID_SHA1) is False
+        assert check_signing_available(SigningConfig(certificate_sha1=VALID_SHA1)) is False
 
 
 def test_check_signing_available_token_present_cert_missing():
@@ -324,16 +358,16 @@ def test_check_signing_available_token_present_cert_missing():
         patch("pyship.signing.is_token_present", return_value=True),
         patch("pyship.signing.is_certificate_in_store", return_value=False),
     ):
-        assert check_signing_available(certificate_sha1=VALID_SHA1) is False
+        assert check_signing_available(SigningConfig(certificate_sha1=VALID_SHA1)) is False
 
 
 def test_check_signing_available_auto_select_token_present():
     with patch("pyship.signing.is_rdp_session", return_value=False), patch("pyship.signing.is_token_present", return_value=True):
-        assert check_signing_available(certificate_auto_select=True) is True
+        assert check_signing_available(SigningConfig(certificate_auto_select=True)) is True
 
 
 def test_check_signing_available_nothing_configured():
-    assert check_signing_available() is False
+    assert check_signing_available(SigningConfig()) is False
 
 
 # ---------------------------------------------------------------------------
@@ -384,13 +418,13 @@ def test_is_rdp_session_false_when_all_checks_fail():
 def test_check_signing_available_token_blocked_by_rdp():
     """Token mode should be blocked when RDP session is detected."""
     with patch("pyship.signing.is_rdp_session", return_value=True):
-        assert check_signing_available(certificate_sha1=VALID_SHA1) is False
+        assert check_signing_available(SigningConfig(certificate_sha1=VALID_SHA1)) is False
 
 
 def test_check_signing_available_pfx_not_blocked_by_rdp(pfx_file):
     """PFX mode should NOT be blocked by RDP — PFX signing works fine over RDP."""
     with patch("pyship.signing.is_rdp_session", return_value=True):
-        assert check_signing_available(pfx_path=pfx_file) is True
+        assert check_signing_available(SigningConfig(pfx_path=pfx_file)) is True
 
 
 def test_check_signing_available_token_allowed_when_not_rdp():
@@ -400,7 +434,7 @@ def test_check_signing_available_token_allowed_when_not_rdp():
         patch("pyship.signing.is_token_present", return_value=True),
         patch("pyship.signing.is_certificate_in_store", return_value=True),
     ):
-        assert check_signing_available(certificate_sha1=VALID_SHA1) is True
+        assert check_signing_available(SigningConfig(certificate_sha1=VALID_SHA1)) is True
 
 
 # ---------------------------------------------------------------------------
@@ -410,17 +444,19 @@ def test_check_signing_available_token_allowed_when_not_rdp():
 
 def test_sign_file_token_returns_false_when_signtool_not_found(target_exe):
     with patch("pyship.signing._find_signtool", return_value=None):
-        assert sign_file_token(target_exe, TIMESTAMP_URL, certificate_sha1=VALID_SHA1) is False
+        assert sign_file_token(target_exe, SigningConfig(certificate_sha1=VALID_SHA1, timestamp_url=TIMESTAMP_URL)) is False
 
 
 def test_sign_file_token_returns_false_when_file_missing(tmp_path, signtool_exe):
-    assert sign_file_token(tmp_path / "missing.exe", TIMESTAMP_URL, certificate_sha1=VALID_SHA1, signtool_path=signtool_exe) is False
+    config = SigningConfig(certificate_sha1=VALID_SHA1, timestamp_url=TIMESTAMP_URL, signtool_path=signtool_exe)
+    assert sign_file_token(tmp_path / "missing.exe", config) is False
 
 
 def test_sign_file_token_sha1_builds_correct_command(target_exe, signtool_exe):
     thumbprint = "AABB" * 10
+    config = SigningConfig(certificate_sha1=thumbprint, signtool_path=signtool_exe)
     with patch("pyship.signing.subprocess_run", return_value=(0, None, None)) as mock_run:
-        assert sign_file_token(target_exe, "http://timestamp.digicert.com", certificate_sha1=thumbprint, signtool_path=signtool_exe) is True
+        assert sign_file_token(target_exe, config) is True
 
     cmd = mock_run.call_args[0][0]
     assert "/sha1" in cmd
@@ -432,8 +468,9 @@ def test_sign_file_token_sha1_builds_correct_command(target_exe, signtool_exe):
 
 
 def test_sign_file_token_subject_builds_correct_command(target_exe, signtool_exe):
+    config = SigningConfig(certificate_subject="My Company", signtool_path=signtool_exe)
     with patch("pyship.signing.subprocess_run", return_value=(0, None, None)) as mock_run:
-        assert sign_file_token(target_exe, "http://timestamp.digicert.com", certificate_subject="My Company", signtool_path=signtool_exe) is True
+        assert sign_file_token(target_exe, config) is True
 
     cmd = mock_run.call_args[0][0]
     assert "/n" in cmd
@@ -443,8 +480,9 @@ def test_sign_file_token_subject_builds_correct_command(target_exe, signtool_exe
 
 
 def test_sign_file_token_auto_select_builds_correct_command(target_exe, signtool_exe):
+    config = SigningConfig(certificate_auto_select=True, signtool_path=signtool_exe)
     with patch("pyship.signing.subprocess_run", return_value=(0, None, None)) as mock_run:
-        assert sign_file_token(target_exe, "http://timestamp.digicert.com", certificate_auto_select=True, signtool_path=signtool_exe) is True
+        assert sign_file_token(target_exe, config) is True
 
     cmd = mock_run.call_args[0][0]
     assert "/a" in cmd
@@ -454,8 +492,9 @@ def test_sign_file_token_auto_select_builds_correct_command(target_exe, signtool
 
 
 def test_sign_file_token_with_pin_includes_p_flag(target_exe, signtool_exe):
+    config = SigningConfig(certificate_sha1=VALID_SHA1, certificate_password="123456", signtool_path=signtool_exe)
     with patch("pyship.signing.subprocess_run", return_value=(0, None, None)) as mock_run:
-        sign_file_token(target_exe, "http://timestamp.digicert.com", certificate_sha1=VALID_SHA1, token_pin="123456", signtool_path=signtool_exe)
+        sign_file_token(target_exe, config)
 
     cmd = mock_run.call_args[0][0]
     assert "/p" in cmd
@@ -463,22 +502,22 @@ def test_sign_file_token_with_pin_includes_p_flag(target_exe, signtool_exe):
 
 
 def test_sign_file_token_without_pin_excludes_p_flag(target_exe, signtool_exe):
+    config = SigningConfig(certificate_sha1=VALID_SHA1, signtool_path=signtool_exe)
     with patch("pyship.signing.subprocess_run", return_value=(0, None, None)) as mock_run:
-        sign_file_token(target_exe, "http://timestamp.digicert.com", certificate_sha1=VALID_SHA1, signtool_path=signtool_exe)
+        sign_file_token(target_exe, config)
 
     assert "/p" not in mock_run.call_args[0][0]
 
 
 def test_sign_file_token_with_csp_and_kc(target_exe, signtool_exe):
+    config = SigningConfig(
+        certificate_sha1=VALID_SHA1,
+        certificate_csp="eToken Base Cryptographic Provider",
+        certificate_key_container="my-container",
+        signtool_path=signtool_exe,
+    )
     with patch("pyship.signing.subprocess_run", return_value=(0, None, None)) as mock_run:
-        sign_file_token(
-            target_exe,
-            "http://timestamp.digicert.com",
-            certificate_sha1=VALID_SHA1,
-            certificate_csp="eToken Base Cryptographic Provider",
-            certificate_key_container="my-container",
-            signtool_path=signtool_exe,
-        )
+        sign_file_token(target_exe, config)
 
     cmd = mock_run.call_args[0][0]
     assert "/csp" in cmd
@@ -488,29 +527,32 @@ def test_sign_file_token_with_csp_and_kc(target_exe, signtool_exe):
 
 
 def test_sign_file_token_invalid_sha1_returns_false(target_exe, signtool_exe):
-    assert sign_file_token(target_exe, TIMESTAMP_URL, certificate_sha1="not_hex", signtool_path=signtool_exe) is False
+    assert sign_file_token(target_exe, SigningConfig(certificate_sha1="not_hex", timestamp_url=TIMESTAMP_URL, signtool_path=signtool_exe)) is False
 
 
 def test_sign_file_token_short_sha1_returns_false(target_exe, signtool_exe):
-    assert sign_file_token(target_exe, TIMESTAMP_URL, certificate_sha1="aabb", signtool_path=signtool_exe) is False
+    assert sign_file_token(target_exe, SigningConfig(certificate_sha1="aabb", timestamp_url=TIMESTAMP_URL, signtool_path=signtool_exe)) is False
 
 
 def test_sign_file_token_multiple_selectors_returns_false(target_exe, signtool_exe):
-    assert sign_file_token(target_exe, TIMESTAMP_URL, certificate_sha1=VALID_SHA1, certificate_subject="My Co", signtool_path=signtool_exe) is False
+    config = SigningConfig(certificate_sha1=VALID_SHA1, certificate_subject="My Co", timestamp_url=TIMESTAMP_URL, signtool_path=signtool_exe)
+    assert sign_file_token(target_exe, config) is False
 
 
 def test_sign_file_token_no_selector_returns_false(target_exe, signtool_exe):
-    assert sign_file_token(target_exe, TIMESTAMP_URL, signtool_path=signtool_exe) is False
+    assert sign_file_token(target_exe, SigningConfig(timestamp_url=TIMESTAMP_URL, signtool_path=signtool_exe)) is False
 
 
 def test_sign_file_token_returns_true_on_success(target_exe, signtool_exe):
+    config = SigningConfig(certificate_sha1=VALID_SHA1, timestamp_url=TIMESTAMP_URL, signtool_path=signtool_exe)
     with patch("pyship.signing.subprocess_run", return_value=(0, None, None)):
-        assert sign_file_token(target_exe, TIMESTAMP_URL, certificate_sha1=VALID_SHA1, signtool_path=signtool_exe) is True
+        assert sign_file_token(target_exe, config) is True
 
 
 def test_sign_file_token_returns_false_on_nonzero_return_code(target_exe, signtool_exe):
+    config = SigningConfig(certificate_sha1=VALID_SHA1, timestamp_url=TIMESTAMP_URL, signtool_path=signtool_exe)
     with patch("pyship.signing.subprocess_run", return_value=(1, None, None)):
-        assert sign_file_token(target_exe, TIMESTAMP_URL, certificate_sha1=VALID_SHA1, signtool_path=signtool_exe) is False
+        assert sign_file_token(target_exe, config) is False
 
 
 # ---------------------------------------------------------------------------
@@ -519,41 +561,48 @@ def test_sign_file_token_returns_false_on_nonzero_return_code(target_exe, signto
 
 
 def test_sign_if_configured_dispatches_to_token_mode_sha1(target_exe):
+    config = SigningConfig(certificate_sha1=VALID_SHA1, certificate_password="pin123", timestamp_url=TIMESTAMP_URL)
     with patch("pyship.signing.sign_file_token", return_value=True) as mock_token:
-        assert sign_if_configured(target_exe, None, "pin123", TIMESTAMP_URL, certificate_sha1=VALID_SHA1) is True
+        assert sign_if_configured(target_exe, config) is True
 
     mock_token.assert_called_once()
-    assert mock_token.call_args.kwargs["certificate_sha1"] == VALID_SHA1
-    assert mock_token.call_args.kwargs["token_pin"] == "pin123"
+    passed_config = mock_token.call_args[0][1]
+    assert passed_config.certificate_sha1 == VALID_SHA1
+    assert passed_config.certificate_password == "pin123"
 
 
 def test_sign_if_configured_dispatches_to_token_mode_subject(target_exe):
+    config = SigningConfig(certificate_subject="My Company", timestamp_url=TIMESTAMP_URL)
     with patch("pyship.signing.sign_file_token", return_value=True) as mock_token:
-        assert sign_if_configured(target_exe, None, None, TIMESTAMP_URL, certificate_subject="My Company") is True
+        assert sign_if_configured(target_exe, config) is True
 
     mock_token.assert_called_once()
-    assert mock_token.call_args.kwargs["certificate_subject"] == "My Company"
-    assert mock_token.call_args.kwargs["token_pin"] is None
+    passed_config = mock_token.call_args[0][1]
+    assert passed_config.certificate_subject == "My Company"
+    assert passed_config.certificate_password is None
 
 
 def test_sign_if_configured_dispatches_to_token_mode_auto(target_exe):
+    config = SigningConfig(certificate_auto_select=True, timestamp_url=TIMESTAMP_URL)
     with patch("pyship.signing.sign_file_token", return_value=True) as mock_token:
-        assert sign_if_configured(target_exe, None, None, TIMESTAMP_URL, certificate_auto_select=True) is True
+        assert sign_if_configured(target_exe, config) is True
 
     mock_token.assert_called_once()
-    assert mock_token.call_args.kwargs["certificate_auto_select"] is True
+    assert mock_token.call_args[0][1].certificate_auto_select is True
 
 
 def test_sign_if_configured_returns_false_when_both_modes_configured(target_exe, pfx_file):
-    assert sign_if_configured(target_exe, pfx_file, "password", TIMESTAMP_URL, certificate_sha1=VALID_SHA1) is False
+    config = SigningConfig(pfx_path=pfx_file, certificate_password="password", certificate_sha1=VALID_SHA1, timestamp_url=TIMESTAMP_URL)
+    assert sign_if_configured(target_exe, config) is False
 
 
 def test_sign_if_configured_token_mode_without_pin(target_exe):
+    config = SigningConfig(certificate_sha1=VALID_SHA1, timestamp_url=TIMESTAMP_URL)
     with patch("pyship.signing.sign_file_token", return_value=True) as mock_token:
-        assert sign_if_configured(target_exe, None, None, TIMESTAMP_URL, certificate_sha1=VALID_SHA1) is True
+        assert sign_if_configured(target_exe, config) is True
 
-    assert mock_token.call_args.kwargs["token_pin"] is None
+    assert mock_token.call_args[0][1].certificate_password is None
 
 
 def test_sign_if_configured_no_signing_configured(target_exe):
-    assert sign_if_configured(target_exe, None, None, TIMESTAMP_URL) is False
+    assert sign_if_configured(target_exe, SigningConfig(timestamp_url=TIMESTAMP_URL)) is False
