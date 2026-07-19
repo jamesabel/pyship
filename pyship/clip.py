@@ -1,3 +1,11 @@
+"""
+CLIP (Complete Location Independent Python) environment creation.
+
+A CLIP is a standalone, relocatable directory holding a full Python
+environment (standalone Python from python-build-standalone via uv) plus the
+target application and all of its dependencies.
+"""
+
 import platform
 import shutil
 from pathlib import Path
@@ -33,9 +41,10 @@ def create_clip(target_app_info: AppInfo, app_dir: Path, target_app_package_dist
 
 def create_clip_file(clip_dir: Path) -> Path:
     """
-    create clip file (the zipped update for the target application) from clip dir
-    :param clip_dir:
-    :return: path to the clip file
+    Zip a CLIP directory into a ``.clip`` file (the update payload downloaded by pyshipupdate).
+
+    :param clip_dir: CLIP directory to archive
+    :return: path to the created .clip file (next to the CLIP directory)
     """
     clip_dir_string = str(clip_dir)
     archive_path = Path(shutil.make_archive(clip_dir_string, "zip", clip_dir_string))  # create a "zip" file of the clip dir

@@ -8,6 +8,8 @@ SUPPORTED_PYTHON_VERSIONS = ("3.11", "3.12", "3.13", "3.14")
 
 from .path import NullPath
 from .__version__ import __version__, __author__, __application_name__, __title__, __description__, __url__, __author_email__, __download_url__
+from .windows_sdk import find_sdk_tool, WINDOWS_SDK_BIN_DIR
+from .installer import INSTALLERS_DIR_NAME, installer_file_name, get_installers_dir
 from .logging import PyshipLog, log_process_output
 from .exceptions import PyshipException, PyshipNoProductDirectory, PyshipCouldNotGetVersion, PyshipLicenseFileDoesNotExist, PyshipInsufficientAppInfo, PyshipNoAppName
 from .exceptions import PyshipNoTargetAppInfo, PyshipSigningUnavailable
@@ -18,7 +20,7 @@ from .app_info import AppInfo, get_app_info, get_app_info_py_project
 from .get_icon import get_icon
 from .nsis import run_nsis
 from .download import file_download, extract, PyshipDownloadError
-from .signing import sign_if_configured, sign_file_token, is_token_present, is_certificate_in_store, is_rdp_session, check_signing_available
+from .signing import sign_if_configured, sign_file_token, is_token_present, is_certificate_in_store, is_rdp_session, check_signing_available, is_token_signing_configured
 from .msix import create_msix
 from .create_launcher import create_pyship_launcher
 from .clip import create_base_clip, install_target_app, create_clip, create_clip_file

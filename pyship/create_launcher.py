@@ -1,3 +1,11 @@
+"""
+Launcher creation.
+
+The launcher is what end users run: a compiled C# stub ``{app}.exe`` that finds
+the newest CLIP and runs the standalone Python launcher script, plus a
+diagnostic ``.bat`` (console output always visible) and the app icon.
+"""
+
 import shutil
 from pathlib import Path
 from typing import Union

@@ -1,3 +1,11 @@
+"""
+C# launcher stub: source template and csc.exe compilation.
+
+The stub is a small native .exe that locates the newest CLIP directory and
+starts the standalone Python launcher script with it, logging to the user's
+LocalAppData log directory.
+"""
+
 import subprocess
 import tempfile
 from pathlib import Path

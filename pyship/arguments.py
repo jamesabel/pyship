@@ -1,3 +1,7 @@
+"""
+Command-line argument definitions for the pyship CLI.
+"""
+
 import sys
 import argparse
 from typing import Any
@@ -8,6 +12,11 @@ from pyship import __name__, __version__
 
 
 def get_arguments() -> Any:
+    """
+    Parse pyship CLI arguments (cloud credentials, upload flags, code signing, logging).
+
+    :return: parsed argparse namespace (exits after printing version if --version given)
+    """
     parser = argparse.ArgumentParser(prog=__name__, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument("-p", "--profile", help="cloud profile")

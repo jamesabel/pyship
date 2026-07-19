@@ -1,3 +1,7 @@
+"""
+AWS S3 upload/download of shipped artifacts (installer and .clip files).
+"""
+
 from pathlib import Path
 
 from typeguard import typechecked
@@ -38,4 +42,8 @@ class PyShipCloud:
 
     @typechecked
     def download(self, file_path: Path):
+        """
+        download a file from S3 (cached), keyed by the file's name
+        :param file_path: destination path; its name is used as the S3 key
+        """
         self.s3_access.download_cached(file_path.name, file_path)

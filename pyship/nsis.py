@@ -1,3 +1,10 @@
+"""
+NSIS installer generation.
+
+Generates an NSIS script (.nsi) for the target application and runs
+makensis.exe to build the Windows installer executable.
+"""
+
 import datetime
 import os
 from pathlib import Path
@@ -12,6 +19,7 @@ from typing import Union
 from pyshipupdate import mkdirs, get_target_os
 from pyship import __application_name__, AppInfo, subprocess_run, pyship_print, get_icon, PyshipLicenseFileDoesNotExist
 from pyship.ci import is_ci
+from pyship.installer import INSTALLERS_DIR_NAME, installer_file_name
 
 log = get_logger(__application_name__)
 
@@ -33,11 +41,19 @@ def get_folder_size(folder_path: Path) -> int:
 @typechecked
 def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir: Path) -> Union[Path, None]:
     """
-    run nsis
+    Generate an NSIS script for the target application and run makensis.exe on it.
+
+    The generated installer is written to the project's ``installers/`` directory
+    (which is cleared first). The zipped CLIP update payload (``*.clip``) is
+    excluded from the installer contents. Requires a LICENSE file in the target
+    project; a CRLF-normalized copy is placed in the build tree for NSIS.
+
     :param target_app_info: target app info
     :param target_app_version: target app version
-    :param app_dir: application dir
-    :return: path to installer exe, or None if NSIS not available (e.g. in CI)
+    :param app_dir: application dir packed into the installer
+    :return: path to the installer exe, or None if NSIS is not available (e.g. in CI)
+    :raises PyshipLicenseFileDoesNotExist: if the target project has no LICENSE file
+    :raises FileNotFoundError: if makensis.exe is missing outside of CI
     """
 
     # basic format is from:
@@ -62,9 +78,9 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         pyship_print(f'building installer "{nsis_file_path}" ("{nsis_file_path.absolute()}")')
 
         exe_name = f"{target_app_info.name}.exe"
-        installers_folder = "installers"
-        mkdirs(Path(target_app_info.project_dir, installers_folder), remove_first=True)
-        installer_exe_path = Path(installers_folder, f"{target_app_info.name}_installer_{get_target_os()}.exe")
+        mkdirs(Path(target_app_info.project_dir, INSTALLERS_DIR_NAME), remove_first=True)
+        # relative path: the .nsi outFile is resolved from the project dir where makensis runs
+        installer_exe_path = Path(INSTALLERS_DIR_NAME, installer_file_name(target_app_info.name, "exe"))
 
         nsis_lines = []
         nsis_lines.append("")

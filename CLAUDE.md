@@ -22,6 +22,10 @@ pyship/              # Main package
   create_launcher.py # Compiles C# stub and copies standalone launcher script
   launcher_stub.py   # C# source template and csc.exe compilation
   nsis.py            # NSIS installer script generation
+  msix.py            # MSIX package creation (Microsoft Store / sideloading)
+  signing.py         # Code signing via signtool.exe (PFX and hardware token)
+  installer.py       # Shared installer naming ({app}_installer_{os}.{ext}, installers/ dir)
+  windows_sdk.py     # Windows SDK tool discovery (signtool.exe, makeappx.exe)
   cloud.py           # AWS S3 upload
   download.py        # File download with caching and safe extraction
 test_pyship/         # Tests (alphabetically ordered: test_a_, test_b_, etc.)

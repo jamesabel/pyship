@@ -55,7 +55,8 @@ file (typical for AWS CLI and boto3). These are not in `pyproject.toml` since it
 
 A `ship()` run produces:
 
-- `installers/{app_name}_installer_win.exe` — the NSIS installer for direct distribution.
+- `installers/{app_name}_installer_win64.exe` — the NSIS installer for direct distribution. The platform suffix
+  (`win64` on 64-bit Windows) identifies the target OS and architecture, and is the same for all installer types.
 - `{app_name}_{version}.clip` — the zipped CLIP that pyshipupdate downloads for background updates. It is only
   created when uploading to S3, and it is never packed into the NSIS installer (which would roughly double the
   installer's size).
@@ -368,8 +369,8 @@ ps.ship()
 
 This produces two files in `installers/`:
 
-- `{app_name}_installer_win.exe` — the NSIS installer (direct distribution, auto-updates via pyshipupdate)
-- `{app_name}_installer_win.msix` — the MSIX package (Store or sideloading, updates managed by the Store)
+- `{app_name}_installer_win64.exe` — the NSIS installer (direct distribution, auto-updates via pyshipupdate)
+- `{app_name}_installer_win64.msix` — the MSIX package (Store or sideloading, updates managed by the Store)
 
 Both are signed with the same certificate. The NSIS installer is built first; the MSIX is packed from the same app
 directory afterwards, so they do not interfere with each other.
@@ -425,7 +426,7 @@ ps = PyShip(
 Signed MSIX packages can be installed directly without going through the Store — double-click the `.msix` file or use:
 
 ```batch
-Add-AppxPackage -Path "{app_name}_installer_win.msix"
+Add-AppxPackage -Path "{app_name}_installer_win64.msix"
 ```
 
 This is useful for enterprise deployments and beta distribution.
