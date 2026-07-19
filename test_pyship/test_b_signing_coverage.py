@@ -7,7 +7,7 @@ from argparse import Namespace
 
 import pytest
 
-from pyship.signing import is_certificate_in_store, sign_if_configured
+from pyship.signing import SigningConfig, is_certificate_in_store, sign_if_configured
 from pyship.pyship import PyShip, SIGNING_PIN_ENV_VAR
 from pyship.exceptions import PyshipSigningUnavailable
 from pyship.main import read_pyship_config
@@ -56,7 +56,7 @@ def test_sign_if_configured_pfx_mode_calls_sign_file(tmp_path):
     pfx.touch()
 
     with patch("pyship.signing.sign_file", return_value=True) as mock_sign:
-        result = sign_if_configured(target, pfx, "secret", "http://ts.example.com")
+        result = sign_if_configured(target, SigningConfig(pfx_path=pfx, certificate_password="secret", timestamp_url="http://ts.example.com"))
 
     assert result is True
     mock_sign.assert_called_once()
@@ -100,7 +100,7 @@ def test_sign_or_raise_succeeds(tmp_path):
     ps = PyShip()
 
     with patch("pyship.pyship.sign_if_configured", return_value=True):
-        ps._sign_or_raise(target, "password")  # should not raise
+        ps._sign_or_raise(target, ps._signing_config())  # should not raise
 
 
 def test_sign_or_raise_raises_on_failure(tmp_path):
@@ -111,7 +111,33 @@ def test_sign_or_raise_raises_on_failure(tmp_path):
 
     with patch("pyship.pyship.sign_if_configured", return_value=False):
         with pytest.raises(PyshipSigningUnavailable):
-            ps._sign_or_raise(target, "password")
+            ps._sign_or_raise(target, ps._signing_config())
+
+
+# ---------------------------------------------------------------------------
+# pyship.py — _signing_config
+# ---------------------------------------------------------------------------
+
+
+def test_signing_config_collects_pyship_fields(monkeypatch):
+    """_signing_config should mirror the flat PyShip fields, with the password resolved."""
+    monkeypatch.delenv(SIGNING_PIN_ENV_VAR, raising=False)
+    ps = PyShip(pfx_path=Path("cert.pfx"), certificate_password="secret", certificate_csp="csp-name")
+    config = ps._signing_config()
+    assert config.pfx_path == Path("cert.pfx")
+    assert config.certificate_password == "secret"
+    assert config.certificate_csp == "csp-name"
+    assert config.pfx_mode is True
+    assert config.token_mode is False
+
+
+def test_signing_config_resolves_password_from_env(monkeypatch):
+    """_signing_config should fall back to the PIN environment variable."""
+    monkeypatch.setenv(SIGNING_PIN_ENV_VAR, "env_pin")
+    ps = PyShip(certificate_sha1="aa" * 20)
+    config = ps._signing_config()
+    assert config.certificate_password == "env_pin"
+    assert config.token_mode is True
 
 
 # ---------------------------------------------------------------------------

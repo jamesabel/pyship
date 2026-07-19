@@ -18,7 +18,7 @@ from pyship import __application_name__ as pyship_application_name
 from pyship import __author__ as pyship_author
 from pyship import __version__ as pyship_version
 from pyship import run_nsis, create_clip, create_pyship_launcher, pyship_print, APP_DIR_NAME, create_clip_file, get_app_info, PyShipCloud
-from pyship.signing import sign_if_configured, check_signing_available, is_rdp_session, is_token_signing_configured, RDP_SIGNING_BLOCKED_MESSAGE
+from pyship.signing import SigningConfig, sign_if_configured, check_signing_available, is_rdp_session, RDP_SIGNING_BLOCKED_MESSAGE, DEFAULT_TIMESTAMP_URL
 from pyship.msix import create_msix
 from pyship import PyshipNoAppName
 from pyship.exceptions import PyshipSigningUnavailable
@@ -60,7 +60,7 @@ class PyShip:
     # --- code signing (common) ---
     code_sign: bool = False  # master switch: True → sign executables; failure aborts ship()
     certificate_password: Union[str, None] = None  # PFX password or hardware token PIN
-    timestamp_url: str = "http://timestamp.digicert.com"  # RFC 3161 timestamp server
+    timestamp_url: str = DEFAULT_TIMESTAMP_URL  # RFC 3161 timestamp server
     signtool_path: Union[Path, None] = None  # explicit signtool.exe; auto-discovered if None
 
     # --- code signing (PFX mode) ---
@@ -93,7 +93,24 @@ class PyShip:
             return self.certificate_password
         return os.environ.get(SIGNING_PIN_ENV_VAR)
 
-    def _sign_or_raise(self, file_path: Union[Path, None], effective_password: Union[str, None]) -> None:
+    def _signing_config(self) -> SigningConfig:
+        """
+        Collect the flat signing fields into a :class:`SigningConfig`,
+        with the password/PIN resolved (explicit value or environment variable).
+        """
+        return SigningConfig(
+            pfx_path=self.pfx_path,
+            certificate_password=self._resolve_password(),
+            timestamp_url=self.timestamp_url,
+            signtool_path=self.signtool_path,
+            certificate_sha1=self.certificate_sha1,
+            certificate_subject=self.certificate_subject,
+            certificate_auto_select=self.certificate_auto_select,
+            certificate_csp=self.certificate_csp,
+            certificate_key_container=self.certificate_key_container,
+        )
+
+    def _sign_or_raise(self, file_path: Union[Path, None], signing_config: SigningConfig) -> None:
         """
         Sign *file_path* using the configured mode.  Raises
         :class:`PyshipSigningUnavailable` on failure.
@@ -101,21 +118,9 @@ class PyShip:
         Only called when ``self.code_sign`` is True.
 
         :param file_path: path to the executable to sign
-        :param effective_password: resolved PFX password or token PIN
+        :param signing_config: resolved signing configuration
         """
-        signed = sign_if_configured(
-            file_path,
-            self.pfx_path,
-            effective_password,
-            self.timestamp_url,
-            self.signtool_path,
-            certificate_sha1=self.certificate_sha1,
-            certificate_subject=self.certificate_subject,
-            certificate_auto_select=self.certificate_auto_select,
-            certificate_csp=self.certificate_csp,
-            certificate_key_container=self.certificate_key_container,
-        )
-        if not signed:
+        if not sign_if_configured(file_path, signing_config):
             raise PyshipSigningUnavailable(f"failed to sign {file_path}")
 
     # ------------------------------------------------------------------
@@ -143,23 +148,16 @@ class PyShip:
 
         cache_dir = Path(platformdirs.user_cache_dir(pyship_application_name, pyship_author))
 
-        effective_password = self._resolve_password()
+        signing_config = self._signing_config()
 
         # Pre-flight signing check
         if self.code_sign:
-            token_mode = is_token_signing_configured(self.certificate_sha1, self.certificate_subject, self.certificate_auto_select)
-            if token_mode and is_rdp_session():
+            if signing_config.token_mode and is_rdp_session():
                 # soft-fail (return None instead of raising) so build scripts see a missing
                 # installer rather than a traceback; check_signing_available would raise below
                 pyship_print(RDP_SIGNING_BLOCKED_MESSAGE)
                 return None
-            available = check_signing_available(
-                pfx_path=self.pfx_path,
-                certificate_sha1=self.certificate_sha1,
-                certificate_subject=self.certificate_subject,
-                certificate_auto_select=self.certificate_auto_select,
-            )
-            if not available:
+            if not check_signing_available(signing_config):
                 raise PyshipSigningUnavailable("code_sign is True but signing infrastructure is not available")
 
         target_app_info = get_app_info(self.project_dir, Path(self.project_dir, self.dist_dir), cache_dir)
@@ -173,14 +171,14 @@ class PyShip:
 
             launcher_exe_path = create_pyship_launcher(target_app_info, app_dir)
             if self.code_sign:
-                self._sign_or_raise(launcher_exe_path, effective_password)
+                self._sign_or_raise(launcher_exe_path, signing_config)
 
             clip_dir = create_clip(target_app_info, app_dir, Path(self.project_dir, self.dist_dir), cache_dir, python_version=self.python_version)
 
             assert isinstance(target_app_info.version, VersionInfo)
             installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)
             if installer_exe_path is not None and self.code_sign:
-                self._sign_or_raise(installer_exe_path, effective_password)
+                self._sign_or_raise(installer_exe_path, signing_config)
 
             if self.msix:
                 if self.msix_publisher is None:
@@ -188,7 +186,7 @@ class PyShip:
                 else:
                     msix_path = create_msix(target_app_info, app_dir, self.msix_publisher, self.store_assets_dir, self.makeappx_path)
                     if msix_path is not None and self.code_sign:
-                        self._sign_or_raise(msix_path, effective_password)
+                        self._sign_or_raise(msix_path, signing_config)
 
             if self.upload and installer_exe_path is not None:
                 if self.cloud_profile is None and self.cloud_id is None:

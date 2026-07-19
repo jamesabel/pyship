@@ -14,6 +14,7 @@ import hashlib
 import ssl
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Union
 
@@ -39,26 +40,49 @@ RDP_SIGNING_BLOCKED_MESSAGE = (
     "Please sign from a local console session."
 )
 
+#: Default RFC 3161 timestamp server.
+DEFAULT_TIMESTAMP_URL = "http://timestamp.digicert.com"
+
+
+@dataclass
+class SigningConfig:
+    """
+    Everything needed to sign an executable, in one place.
+
+    Two mutually exclusive modes:
+
+    - **PFX mode** (:attr:`pfx_mode`): active when :attr:`pfx_path` is set;
+      :attr:`certificate_password` is the PFX password (required to sign).
+    - **Token mode** (:attr:`token_mode`): active when any of
+      :attr:`certificate_sha1`, :attr:`certificate_subject`, or
+      :attr:`certificate_auto_select` is set; :attr:`certificate_password` is
+      the optional token PIN (the token middleware may prompt interactively).
+    """
+
+    pfx_path: Union[Path, None] = None  # PFX certificate file (PFX mode)
+    certificate_password: Union[str, None] = None  # PFX password or hardware token PIN
+    timestamp_url: str = DEFAULT_TIMESTAMP_URL  # RFC 3161 timestamp server URL
+    signtool_path: Union[Path, None] = None  # explicit signtool.exe; auto-discovered if None
+    certificate_sha1: Union[str, None] = None  # SHA1 thumbprint in Windows Certificate Store (token mode, /sha1)
+    certificate_subject: Union[str, None] = None  # certificate subject name (token mode, /n)
+    certificate_auto_select: bool = False  # auto-select best signing certificate (token mode, /a)
+    certificate_csp: Union[str, None] = None  # cryptographic service provider (token mode, /csp)
+    certificate_key_container: Union[str, None] = None  # key container name (token mode, /kc)
+
+    @property
+    def pfx_mode(self) -> bool:
+        """True when PFX-file signing is configured."""
+        return self.pfx_path is not None
+
+    @property
+    def token_mode(self) -> bool:
+        """True when any hardware-token certificate selector is configured."""
+        return self.certificate_sha1 is not None or self.certificate_subject is not None or self.certificate_auto_select
+
 
 # ---------------------------------------------------------------------------
 # Internal helpers (shared by PFX and token signing)
 # ---------------------------------------------------------------------------
-
-
-@typechecked
-def is_token_signing_configured(certificate_sha1: Union[str, None] = None, certificate_subject: Union[str, None] = None, certificate_auto_select: bool = False) -> bool:
-    """
-    Return True when any hardware-token certificate selector is configured.
-
-    Token mode is active when a SHA1 thumbprint, a certificate subject, or
-    auto-select is provided; PFX mode is configured separately via a PFX path.
-
-    :param certificate_sha1: SHA1 thumbprint of certificate in the Windows Certificate Store
-    :param certificate_subject: subject name of certificate in the Windows Certificate Store
-    :param certificate_auto_select: True to let signtool auto-select the certificate (``/a``)
-    :return: True if hardware-token signing is configured
-    """
-    return certificate_sha1 is not None or certificate_subject is not None or certificate_auto_select
 
 
 @typechecked
@@ -238,32 +262,25 @@ def is_certificate_in_store(certificate_sha1: Union[str, None] = None, certifica
 
 
 @typechecked
-def check_signing_available(
-    pfx_path: Union[Path, None] = None,
-    certificate_sha1: Union[str, None] = None,
-    certificate_subject: Union[str, None] = None,
-    certificate_auto_select: bool = False,
-) -> bool:
+def check_signing_available(config: SigningConfig) -> bool:
     """
     Pre-flight check: verify that signing infrastructure is available.
 
     For PFX mode, checks that the file exists.  For token mode, checks that
-    a smart-card device is present and (unless *certificate_auto_select* is
-    used alone) that the specific certificate is in the Windows store.
+    the session is not RDP, a smart-card device is present, and (unless
+    auto-select is used alone) that the specific certificate is in the
+    Windows store.
 
-    :param pfx_path: path to PFX certificate file (PFX mode)
-    :param certificate_sha1: SHA1 thumbprint for cert store lookup (token mode)
-    :param certificate_subject: subject name for cert store lookup (token mode)
-    :param certificate_auto_select: True to auto-select certificate (token mode)
+    :param config: signing configuration
     :return: True if signing infrastructure appears available
     """
-    if pfx_path is not None:
-        if pfx_path.exists():
+    if config.pfx_path is not None:
+        if config.pfx_path.exists():
             return True
-        log.warning(f"PFX certificate file does not exist: {pfx_path}")
+        log.warning(f"PFX certificate file does not exist: {config.pfx_path}")
         return False
 
-    if not is_token_signing_configured(certificate_sha1, certificate_subject, certificate_auto_select):
+    if not config.token_mode:
         return False
 
     if is_rdp_session():
@@ -275,10 +292,10 @@ def check_signing_available(
         return False
 
     # For auto-select we can't check a specific cert, just confirm hardware is present
-    if certificate_auto_select and certificate_sha1 is None and certificate_subject is None:
+    if config.certificate_auto_select and config.certificate_sha1 is None and config.certificate_subject is None:
         return True
 
-    if not is_certificate_in_store(certificate_sha1=certificate_sha1, certificate_subject=certificate_subject):
+    if not is_certificate_in_store(certificate_sha1=config.certificate_sha1, certificate_subject=config.certificate_subject):
         pyship_print("certificate not found in Windows Certificate Store")
         return False
 
@@ -291,62 +308,49 @@ def check_signing_available(
 
 
 @typechecked
-def sign_file(file_path: Path, pfx_path: Path, certificate_password: str, timestamp_url: str, signtool_path: Union[Path, None] = None) -> bool:
+def sign_file(file_path: Path, config: SigningConfig) -> bool:
     """
     Sign a file using signtool.exe with a PFX certificate.
 
+    Requires ``config.pfx_path`` and ``config.certificate_password`` to be set.
+
     :param file_path: path to the file to sign
-    :param pfx_path: path to the PFX certificate file
-    :param certificate_password: password for the PFX certificate
-    :param timestamp_url: RFC 3161 timestamp server URL
-    :param signtool_path: explicit path to signtool.exe; auto-discovered if None
+    :param config: signing configuration (PFX mode)
     :return: True if signing succeeded, False otherwise
     """
-    signtool_path = _resolve_signtool(signtool_path)
+    signtool_path = _resolve_signtool(config.signtool_path)
     if signtool_path is None:
         return False
 
     if not file_path.exists():
         log.error(f"file to sign does not exist: {file_path}")
         return False
-    if not pfx_path.exists():
-        log.error(f"PFX certificate file does not exist: {pfx_path}")
+    if config.pfx_path is None or not config.pfx_path.exists():
+        log.error(f"PFX certificate file does not exist: {config.pfx_path}")
+        return False
+    if config.certificate_password is None:
+        log.error("PFX mode requires certificate_password")
         return False
 
-    cmd = [str(signtool_path), "sign", "/f", str(pfx_path), "/p", certificate_password, "/tr", timestamp_url, "/td", "sha256", "/fd", "sha256", str(file_path)]
+    cmd = [str(signtool_path), "sign", "/f", str(config.pfx_path), "/p", config.certificate_password, "/tr", config.timestamp_url, "/td", "sha256", "/fd", "sha256", str(file_path)]
     return _run_signtool(cmd, file_path)
 
 
 @typechecked
-def sign_file_token(
-    file_path: Path,
-    timestamp_url: str,
-    certificate_sha1: Union[str, None] = None,
-    certificate_subject: Union[str, None] = None,
-    certificate_auto_select: bool = False,
-    token_pin: Union[str, None] = None,
-    certificate_csp: Union[str, None] = None,
-    certificate_key_container: Union[str, None] = None,
-    signtool_path: Union[Path, None] = None,
-) -> bool:
+def sign_file_token(file_path: Path, config: SigningConfig) -> bool:
     """
     Sign a file using signtool.exe with a certificate from the Windows Certificate Store.
 
     Exactly one certificate selector (``certificate_sha1``, ``certificate_subject``,
-    or ``certificate_auto_select``) must be provided.
+    or ``certificate_auto_select``) must be set in *config*.
+    ``config.certificate_password`` is used as the token PIN if provided;
+    otherwise the token middleware may prompt interactively.
 
     :param file_path: path to the file to sign
-    :param timestamp_url: RFC 3161 timestamp server URL
-    :param certificate_sha1: SHA1 thumbprint of certificate in the store
-    :param certificate_subject: subject name of certificate in the store
-    :param certificate_auto_select: use ``/a`` flag to auto-select best signing certificate
-    :param token_pin: hardware token PIN (optional; token middleware may prompt interactively)
-    :param certificate_csp: cryptographic service provider name (``/csp``)
-    :param certificate_key_container: key container name (``/kc``)
-    :param signtool_path: explicit path to signtool.exe; auto-discovered if None
+    :param config: signing configuration (token mode)
     :return: True if signing succeeded, False otherwise
     """
-    signtool_path = _resolve_signtool(signtool_path)
+    signtool_path = _resolve_signtool(config.signtool_path)
     if signtool_path is None:
         return False
 
@@ -355,7 +359,7 @@ def sign_file_token(
         return False
 
     # Validate exactly one certificate selector is provided
-    selectors = sum([certificate_sha1 is not None, certificate_subject is not None, certificate_auto_select])
+    selectors = sum([config.certificate_sha1 is not None, config.certificate_subject is not None, config.certificate_auto_select])
     if selectors == 0:
         log.error("no certificate selector provided (need certificate_sha1, certificate_subject, or certificate_auto_select)")
         return False
@@ -366,92 +370,59 @@ def sign_file_token(
     # Build signtool command
     cmd = [str(signtool_path), "sign"]
 
-    if certificate_sha1 is not None:
-        clean_sha1 = _validate_sha1(certificate_sha1)
+    if config.certificate_sha1 is not None:
+        clean_sha1 = _validate_sha1(config.certificate_sha1)
         if clean_sha1 is None:
             return False
         cmd.extend(["/sha1", clean_sha1])
-    elif certificate_subject is not None:
-        cmd.extend(["/n", certificate_subject])
-    elif certificate_auto_select:
+    elif config.certificate_subject is not None:
+        cmd.extend(["/n", config.certificate_subject])
+    elif config.certificate_auto_select:
         cmd.append("/a")
 
-    if certificate_csp is not None:
-        cmd.extend(["/csp", certificate_csp])
-    if certificate_key_container is not None:
-        cmd.extend(["/kc", certificate_key_container])
-    if token_pin is not None:
-        cmd.extend(["/p", token_pin])
+    if config.certificate_csp is not None:
+        cmd.extend(["/csp", config.certificate_csp])
+    if config.certificate_key_container is not None:
+        cmd.extend(["/kc", config.certificate_key_container])
+    if config.certificate_password is not None:
+        cmd.extend(["/p", config.certificate_password])
 
-    cmd.extend(["/tr", timestamp_url, "/td", "sha256", "/fd", "sha256", str(file_path)])
+    cmd.extend(["/tr", config.timestamp_url, "/td", "sha256", "/fd", "sha256", str(file_path)])
     return _run_signtool(cmd, file_path)
 
 
 @typechecked
-def sign_if_configured(
-    file_path: Union[Path, None],
-    pfx_path: Union[Path, None],
-    certificate_password: Union[str, None],
-    timestamp_url: str,
-    signtool_path: Union[Path, None] = None,
-    certificate_sha1: Union[str, None] = None,
-    certificate_subject: Union[str, None] = None,
-    certificate_auto_select: bool = False,
-    certificate_csp: Union[str, None] = None,
-    certificate_key_container: Union[str, None] = None,
-) -> bool:
+def sign_if_configured(file_path: Union[Path, None], config: SigningConfig) -> bool:
     """
-    Sign a file, dispatching to PFX or token mode based on which parameters are set.
+    Sign a file, dispatching to PFX or token mode based on the configuration.
 
-    - **PFX mode** is active when *pfx_path* is not None.
-    - **Token mode** is active when any of *certificate_sha1*, *certificate_subject*,
-      or *certificate_auto_select* is set.
-    - Setting both modes simultaneously is an error.
+    - **PFX mode** is active when ``config.pfx_path`` is set.
+    - **Token mode** is active when any hardware-token certificate selector is set.
+    - Configuring both modes simultaneously is an error.
     - If neither mode is configured, signing is skipped with a warning.
 
     :param file_path: path to the file to sign, or None to skip
-    :param pfx_path: path to the PFX certificate file, or None to skip
-    :param certificate_password: PFX password or hardware token PIN, or None
-    :param timestamp_url: RFC 3161 timestamp server URL
-    :param signtool_path: explicit path to signtool.exe; auto-discovered if None
-    :param certificate_sha1: SHA1 thumbprint of certificate in Windows Certificate Store
-    :param certificate_subject: subject name of certificate in Windows Certificate Store
-    :param certificate_auto_select: use ``/a`` flag to auto-select best signing certificate
-    :param certificate_csp: cryptographic service provider name (``/csp``)
-    :param certificate_key_container: key container name (``/kc``)
+    :param config: signing configuration
     :return: True if signing succeeded, False if skipped or failed
     """
     if file_path is None:
         log.debug("file_path is None; skipping signing")
         return False
 
-    token_mode = is_token_signing_configured(certificate_sha1, certificate_subject, certificate_auto_select)
-    pfx_mode = pfx_path is not None
-
-    if pfx_mode and token_mode:
+    if config.pfx_mode and config.token_mode:
         log.error("both PFX and hardware token signing configured; use only one mode")
         return False
 
-    if token_mode:
-        if certificate_password is None:
+    if config.token_mode:
+        if config.certificate_password is None:
             log.debug("token PIN not provided; hardware token may prompt for PIN interactively")
-        return sign_file_token(
-            file_path,
-            timestamp_url,
-            certificate_sha1=certificate_sha1,
-            certificate_subject=certificate_subject,
-            certificate_auto_select=certificate_auto_select,
-            token_pin=certificate_password,
-            certificate_csp=certificate_csp,
-            certificate_key_container=certificate_key_container,
-            signtool_path=signtool_path,
-        )
+        return sign_file_token(file_path, config)
 
-    if pfx_path is not None:
-        if certificate_password is None:
+    if config.pfx_mode:
+        if config.certificate_password is None:
             log.warning("pfx_path is set but certificate_password not configured; skipping signing")
             return False
-        return sign_file(file_path, pfx_path, certificate_password, timestamp_url, signtool_path)
+        return sign_file(file_path, config)
 
     log.warning("no signing configuration provided; skipping signing")
     return False
