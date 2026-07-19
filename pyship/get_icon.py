@@ -1,3 +1,8 @@
+"""
+Application icon discovery: prefer the target app's own .ico (searched in
+several conventional locations), falling back to the bundled pyship icon.
+"""
+
 from typing import Callable
 from pathlib import Path
 

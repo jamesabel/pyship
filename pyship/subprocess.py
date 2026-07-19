@@ -1,3 +1,10 @@
+"""
+Subprocess wrapper used throughout pyship.
+
+:func:`subprocess_run` strips ``PATH``/``PYTHONPATH`` from the child
+environment so tools run predictably regardless of the developer's shell setup.
+"""
+
 import subprocess
 from pathlib import Path
 from typing import Callable

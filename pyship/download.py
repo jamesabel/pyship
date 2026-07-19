@@ -1,3 +1,8 @@
+"""
+File download with caching, and safe archive extraction (guards against
+path-traversal entries in zip/tar archives).
+"""
+
 import shutil
 import sys
 import tarfile

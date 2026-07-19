@@ -1,3 +1,12 @@
+"""
+MSIX package creation for Microsoft Store distribution or sideloading.
+
+Writes an AppxManifest.xml and Store logo assets into the app directory, then
+packs it with makeappx.exe from the Windows SDK. Run after ``run_nsis()`` so
+that MSIX-specific files added to the app directory do not affect the NSIS
+installer.
+"""
+
 import re
 import shutil
 import struct
@@ -10,7 +19,8 @@ from typeguard import typechecked
 from balsa import get_logger
 
 from pyship import __application_name__, AppInfo, pyship_print, subprocess_run
-from pyship.signing import _SDK_BIN_DIR
+from pyship.installer import get_installers_dir, installer_file_name
+from pyship.windows_sdk import WINDOWS_SDK_BIN_DIR, find_sdk_tool
 
 log = get_logger(__application_name__)
 
@@ -54,31 +64,14 @@ _MANIFEST_TEMPLATE = """\
 
 
 @typechecked
-def _find_makeappx(_sdk_bin_dir: Path = _SDK_BIN_DIR) -> Union[Path, None]:
+def _find_makeappx(_sdk_bin_dir: Path = WINDOWS_SDK_BIN_DIR) -> Union[Path, None]:
     """
     Locate makeappx.exe from the Windows SDK bin directory.
+
     :param _sdk_bin_dir: Windows SDK bin directory to search
-    :return: path to makeappx.exe with the highest SDK version, or None if not found
+    :return: path to makeappx.exe from the highest SDK version, or None if not found
     """
-    if not _sdk_bin_dir.is_dir():
-        return None
-
-    candidates = []
-    for child in _sdk_bin_dir.iterdir():
-        if child.is_dir() and child.name.startswith("10."):
-            makeappx = Path(child, "x64", "makeappx.exe")
-            if makeappx.exists():
-                try:
-                    version_tuple = tuple(int(x) for x in child.name.split("."))
-                    candidates.append((version_tuple, makeappx))
-                except ValueError:
-                    pass
-
-    if not candidates:
-        return None
-
-    candidates.sort(key=lambda x: x[0], reverse=True)
-    return candidates[0][1]
+    return find_sdk_tool("makeappx.exe", _sdk_bin_dir)
 
 
 @typechecked
@@ -178,11 +171,9 @@ def create_msix(
         dest.write_bytes(placeholder)
 
     # Pack with makeappx
-    from pyshipupdate import get_target_os
-
-    installers_dir = Path(target_app_info.project_dir, "installers")
-    installers_dir.mkdir(parents=True, exist_ok=True)
-    msix_path = Path(installers_dir, f"{target_app_info.name}_installer_{get_target_os()}.msix")
+    installers_dir = get_installers_dir(target_app_info.project_dir)
+    installers_dir.mkdir(parents=True, exist_ok=True)  # run_nsis() already cleared it; do not clear again or the NSIS installer would be deleted
+    msix_path = Path(installers_dir, installer_file_name(target_app_info.name, "msix"))
 
     cmd = [str(makeappx_path), "pack", "/d", str(app_dir), "/p", str(msix_path), "/o"]
     pyship_print(f'building MSIX package "{msix_path}"')

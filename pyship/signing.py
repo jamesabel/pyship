@@ -26,10 +26,18 @@ from balsa import get_logger
 from pyship import __application_name__
 from pyship.custom_print import pyship_print
 from pyship.subprocess import subprocess_run
+from pyship.windows_sdk import WINDOWS_SDK_BIN_DIR, find_sdk_tool
 
 log = get_logger(__application_name__)
 
-_SDK_BIN_DIR = Path(r"C:\Program Files (x86)\Windows Kits\10\bin")
+_SDK_BIN_DIR = WINDOWS_SDK_BIN_DIR  # backwards-compatible alias
+
+#: User-facing message shown when hardware-token signing is blocked by an RDP session.
+RDP_SIGNING_BLOCKED_MESSAGE = (
+    "RDP session detected - hardware token signing is not supported over Remote Desktop. "
+    "Token PIN entry does not work over RDP, and failed attempts may lock your token. "
+    "Please sign from a local console session."
+)
 
 
 # ---------------------------------------------------------------------------
@@ -38,34 +46,30 @@ _SDK_BIN_DIR = Path(r"C:\Program Files (x86)\Windows Kits\10\bin")
 
 
 @typechecked
-def _find_signtool(_sdk_bin_dir: Path = _SDK_BIN_DIR) -> Union[Path, None]:
+def is_token_signing_configured(certificate_sha1: Union[str, None] = None, certificate_subject: Union[str, None] = None, certificate_auto_select: bool = False) -> bool:
+    """
+    Return True when any hardware-token certificate selector is configured.
+
+    Token mode is active when a SHA1 thumbprint, a certificate subject, or
+    auto-select is provided; PFX mode is configured separately via a PFX path.
+
+    :param certificate_sha1: SHA1 thumbprint of certificate in the Windows Certificate Store
+    :param certificate_subject: subject name of certificate in the Windows Certificate Store
+    :param certificate_auto_select: True to let signtool auto-select the certificate (``/a``)
+    :return: True if hardware-token signing is configured
+    """
+    return certificate_sha1 is not None or certificate_subject is not None or certificate_auto_select
+
+
+@typechecked
+def _find_signtool(_sdk_bin_dir: Path = WINDOWS_SDK_BIN_DIR) -> Union[Path, None]:
     """
     Locate signtool.exe from the Windows SDK bin directory.
-    Scans versioned subdirectories (e.g. ``10.0.22621.0``) and returns
-    the ``x64/signtool.exe`` from the highest version found.
 
     :param _sdk_bin_dir: Windows SDK bin directory to search
-    :return: path to signtool.exe, or None if not found
+    :return: path to signtool.exe from the highest SDK version, or None if not found
     """
-    if not _sdk_bin_dir.is_dir():
-        return None
-
-    candidates = []
-    for child in _sdk_bin_dir.iterdir():
-        if child.is_dir() and child.name.startswith("10."):
-            signtool = Path(child, "x64", "signtool.exe")
-            if signtool.exists():
-                try:
-                    version_tuple = tuple(int(x) for x in child.name.split("."))
-                    candidates.append((version_tuple, signtool))
-                except ValueError:
-                    pass
-
-    if not candidates:
-        return None
-
-    candidates.sort(key=lambda x: x[0], reverse=True)
-    return candidates[0][1]
+    return find_sdk_tool("signtool.exe", _sdk_bin_dir)
 
 
 @typechecked
@@ -259,16 +263,11 @@ def check_signing_available(
         log.warning(f"PFX certificate file does not exist: {pfx_path}")
         return False
 
-    token_mode = certificate_sha1 is not None or certificate_subject is not None or certificate_auto_select
-    if not token_mode:
+    if not is_token_signing_configured(certificate_sha1, certificate_subject, certificate_auto_select):
         return False
 
     if is_rdp_session():
-        pyship_print(
-            "RDP session detected - hardware token signing is not supported over Remote Desktop. "
-            "Token PIN entry does not work over RDP, and failed attempts may lock your token. "
-            "Please sign from a local console session."
-        )
+        pyship_print(RDP_SIGNING_BLOCKED_MESSAGE)
         return False
 
     if not is_token_present():
@@ -426,7 +425,7 @@ def sign_if_configured(
         log.debug("file_path is None; skipping signing")
         return False
 
-    token_mode = certificate_sha1 is not None or certificate_subject is not None or certificate_auto_select
+    token_mode = is_token_signing_configured(certificate_sha1, certificate_subject, certificate_auto_select)
     pfx_mode = pfx_path is not None
 
     if pfx_mode and token_mode:
@@ -448,7 +447,7 @@ def sign_if_configured(
             signtool_path=signtool_path,
         )
 
-    if pfx_mode:
+    if pfx_path is not None:
         if certificate_password is None:
             log.warning("pfx_path is set but certificate_password not configured; skipping signing")
             return False

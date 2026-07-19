@@ -1,3 +1,8 @@
+"""
+uv helpers: bootstrap the uv binary, install/copy standalone Python,
+install packages with ``uv pip``, and build wheels with ``uv build``.
+"""
+
 import platform
 import shutil
 import subprocess

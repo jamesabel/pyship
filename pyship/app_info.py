@@ -1,3 +1,11 @@
+"""
+Target application metadata.
+
+:class:`AppInfo` holds everything pyship needs to know about the target app.
+It is populated from the target's ``pyproject.toml`` (``[project]`` and
+``[tool.pyship]`` sections) and from the built wheel's metadata.
+"""
+
 import re
 from pathlib import Path
 from dataclasses import dataclass
@@ -40,6 +48,13 @@ def _pep440_to_semver(version_str: str) -> str:
 
 @dataclass
 class AppInfo:
+    """
+    Metadata describing the target application being shipped.
+
+    Fields are filled in progressively: first from ``pyproject.toml``, then from
+    the built wheel's metadata (see :func:`get_app_info`).
+    """
+
     name: Union[str, None] = None
     author: Union[str, None] = None
     version: Union[VersionInfo, None] = None
@@ -56,6 +71,11 @@ class AppInfo:
     icon_file_name: Union[str, None] = None
 
     def setup_paths(self, target_app_project_dir: Path):
+        """
+        Derive project-relative paths (venv python, installed pyship package dir) from the project dir.
+
+        :param target_app_project_dir: target application project directory
+        """
         self.project_dir = target_app_project_dir
         self.python_exe_path = Path(self.project_dir, "venv", "Scripts", "python.exe")
         self.pyship_installed_package_dir = Path(self.project_dir, "venv", "Lib", "site-packages", pyship_application_name)
@@ -63,7 +83,17 @@ class AppInfo:
 
 @typechecked
 def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path) -> AppInfo:
+    """
+    Fill in app info from the target project's ``pyproject.toml``.
 
+    Reads the ``[project]`` section (PEP 621, with flit legacy fallback for the
+    name) and the ``[tool.pyship]`` section (``ui``, ``run_on_startup``, and the
+    deprecated ``is_gui``). Returns a copy; the input is not mutated.
+
+    :param app_info: app info gathered so far
+    :param target_app_project_dir: directory containing pyproject.toml
+    :return: a new AppInfo with pyproject.toml values applied
+    """
     app_info = deepcopy(app_info)
     pyproject_toml_file_name = "pyproject.toml"
     pyproject_toml_file_path = Path(target_app_project_dir, pyproject_toml_file_name)
@@ -114,6 +144,13 @@ def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path) -> 
 
 @typechecked
 def get_app_info_wheel(app_info: AppInfo, dist_path: Path) -> AppInfo:
+    """
+    Fill in app info from a built wheel's metadata (name, version, author, description).
+
+    :param app_info: app info gathered so far (mutated and returned)
+    :param dist_path: path to the .whl file to inspect
+    :return: the AppInfo with wheel metadata applied
+    """
     if dist_path.exists():
         wheel_info = inspect_wheel(dist_path)
         metadata = wheel_info["dist_info"]["metadata"]

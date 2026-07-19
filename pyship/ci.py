@@ -1,3 +1,7 @@
+"""
+CI environment detection.
+"""
+
 import os
 
 

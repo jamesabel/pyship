@@ -1,3 +1,7 @@
+"""
+Logging: :class:`PyshipLog` (balsa-based logger setup) and process output logging.
+"""
+
 from typeguard import typechecked
 from typing import Callable
 
@@ -8,6 +12,8 @@ from pyship import __application_name__
 
 
 class PyshipLog(Balsa):
+    """pyship's balsa-based logger configuration."""
+
     pass
 
 
