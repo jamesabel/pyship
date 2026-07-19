@@ -5,11 +5,13 @@ Reads configuration from ``[tool.pyship]`` in the current directory's
 ``pyproject.toml``, applies CLI argument overrides, then runs :meth:`PyShip.ship`.
 """
 
+import sys
 from pathlib import Path
 
 import toml
 
 from pyship import PyShip, __application_name__, __author__, PyshipLog, get_arguments, pyship_print
+from pyship.ci import is_ci
 
 #: pyproject.toml keys (under ``[tool.pyship]``) that map directly to PyShip attributes.
 #: Keys whose PyShip attribute name differs use ``(toml_key, attr_name)`` tuples.
@@ -82,4 +84,8 @@ def main():
         pyship.certificate_auto_select = True
     if args.code_sign:
         pyship.code_sign = True
-    pyship.ship()
+    installer_path = pyship.ship()
+    if installer_path is None and not is_ci():
+        # No installer produced (e.g. RDP session blocked signing) - fail so build
+        # scripts notice. In CI, run_nsis legitimately returns None when NSIS is absent.
+        sys.exit(1)

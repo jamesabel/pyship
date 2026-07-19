@@ -50,6 +50,14 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
     license_file_name = "LICENSE"
 
     if Path(target_app_info.project_dir, license_file_name).exists():
+        # NSIS LicenseData requires DOS (\r\n) line endings for .txt content - an LF-only file
+        # renders as one long unbroken line. Normalize a copy into the build tree (app_dir's
+        # parent, outside the "File /r" payload) rather than requiring target repos to commit CRLF.
+        license_text = Path(target_app_info.project_dir, license_file_name).read_text()
+        normalized_license_path = Path(app_dir.parent, license_file_name).absolute()
+        with open(normalized_license_path, "w", newline="\r\n") as normalized_license_file:
+            normalized_license_file.write(license_text)
+
         nsis_file_path = Path(target_app_info.project_dir, f"{target_app_info.name}.nsi").absolute()
         pyship_print(f'building installer "{nsis_file_path}" ("{nsis_file_path.absolute()}")')
 
@@ -93,11 +101,11 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         nsis_lines.append("")
         nsis_lines.append(r'InstallDir "$PROGRAMFILES\${COMPANYNAME}\${APPNAME}"')
         nsis_lines.append("")
-        nsis_lines.append(r"# rtf or txt file - remember if it is txt, it must be in the DOS text format (\r\n)")
-        nsis_lines.append('LicenseData "LICENSE"')
+        nsis_lines.append(r"# rtf or txt file - txt must be in the DOS text format (\r\n); this is a normalized copy")
+        nsis_lines.append(f'LicenseData "{normalized_license_path}"')
         nsis_lines.append(r"# This will be in the installer/uninstaller's title bar")
         nsis_lines.append('Name "${COMPANYNAME} - ${APPNAME}"')
-        nsis_lines.append(f"Icon {icon_path}")
+        nsis_lines.append(f'Icon "{icon_path}"')
         nsis_lines.append(f'outFile "{installer_exe_path}"')
         nsis_lines.append("SetCompressor LZMA")
         nsis_lines.append("")
@@ -129,7 +137,8 @@ def run_nsis(target_app_info: AppInfo, target_app_version: VersionInfo, app_dir:
         nsis_lines.append("  # Files for the install directory - to build the installer, these should be in the same directory as the install script (this file)")
         nsis_lines.append("  setOutPath $INSTDIR")
         nsis_lines.append('  # Files added here should be removed by the uninstaller (see section "uninstall")')
-        nsis_lines.append(f"  File /r {app_dir}\\*")
+        # /x *.clip: the zipped CLIP update payload must never ship inside the installer
+        nsis_lines.append(f'  File /r /x "*.clip" "{app_dir}\\*"')
 
         nsis_lines.append("")
         nsis_lines.append('  # Uninstaller - See function un.onInit and section "uninstall" for configuration')

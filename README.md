@@ -51,6 +51,22 @@ file (typical for AWS CLI and boto3). These are not in `pyproject.toml` since it
 | `-i`, `--id`     | AWS Access Key ID     |
 | `-s`, `--secret` | AWS Secret Access Key |
 
+## Build Outputs
+
+A `ship()` run produces:
+
+- `installers/{app_name}_installer_win.exe` — the NSIS installer for direct distribution.
+- `{app_name}_{version}.clip` — the zipped CLIP that pyshipupdate downloads for background updates. It is only
+  created when uploading to S3, and it is never packed into the NSIS installer (which would roughly double the
+  installer's size).
+
+If your project has a `LICENSE` file, it is displayed on the installer's license page. pyship normalizes the file's
+line endings to CRLF in a build-tree copy automatically (NSIS requires DOS-format text files), so the file in your
+repository can stay LF-only.
+
+The `pyship` command exits with status 1 if no installer was produced (for example, when code signing is blocked
+because the build is running over an RDP session), so build scripts fail loudly instead of appearing to succeed.
+
 ## Microsoft Windows Code Signing (Optional)
 
 Signing your executables suppresses the Windows SmartScreen "Unknown Publisher" warning. pyship signs two files: the
