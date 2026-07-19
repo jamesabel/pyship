@@ -96,5 +96,5 @@ venv\Scripts\python.exe -m pytest test_pyship/ -v
 ## Important Notes
 
 - Windows-only currently. Paths and scripts assume Windows.
-- The `pyshipupdate` package is a sibling project (not on PyPI); its wheel is expected at `../pyshipupdate/dist/` for local development.
+- The `pyshipupdate` package is a sibling project, published on PyPI (0.2.3); for local development its wheel can also be installed from `../pyshipupdate/dist/`.
 - CLIP uses a standalone Python (from python-build-standalone via uv) so `python.exe` is at `<clip_dir>/python.exe`.

@@ -179,7 +179,6 @@ class PyShip:
 
             clip_dir = create_clip(target_app_info, app_dir, Path(self.project_dir, self.dist_dir), cache_dir, python_version=self.python_version)
 
-            clip_file_path = create_clip_file(clip_dir)
             assert isinstance(target_app_info.version, VersionInfo)
             installer_exe_path = run_nsis(target_app_info, target_app_info.version, app_dir)
             if installer_exe_path is not None and self.code_sign:
@@ -217,6 +216,10 @@ class PyShip:
                         installer_url = self.cloud_access.upload(installer_exe_path)
                         pyship_print(f'uploaded "{installer_exe_path}" to {installer_url}')
 
+                        # The .clip (zipped CLIP update payload) is only needed for upload, so it is
+                        # created here rather than unconditionally — it would otherwise sit inside
+                        # app_dir and get packed into the NSIS installer, doubling its size.
+                        clip_file_path = create_clip_file(clip_dir)
                         clip_url = self.cloud_access.upload(clip_file_path)
                         pyship_print(f'uploaded "{clip_file_path}" to {clip_url}')
 
