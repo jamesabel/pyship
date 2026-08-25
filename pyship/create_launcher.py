@@ -116,9 +116,7 @@ def create_pyship_launcher(target_app_info: AppInfo, app_path_output: Path) -> U
         assert isinstance(target_app_info.author, str)
         assert isinstance(target_app_info.ui, str)
         assert isinstance(target_app_info.version, VersionInfo)
-        metadata = calculate_metadata(
-            target_app_info.name, target_app_info.author, target_app_info.version, launcher_module_dir, icon_path, target_app_info.ui, target_app_info.update_url
-        )
+        metadata = calculate_metadata(target_app_info.name, target_app_info.author, target_app_info.version, launcher_module_dir, icon_path, target_app_info.ui, target_app_info.update_url)
         if not launcher_exe_path.exists() or metadata != load_metadata(app_path_output, metadata_filename):
             pyship_print(f'building launcher ("{launcher_exe_path}")')
 
