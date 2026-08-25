@@ -62,6 +62,11 @@ class AppInfo:
     url: Union[str, None] = None
     description: Union[str, None] = None
     run_on_startup: Union[bool, None] = None
+    # Base URL of an update feed the launcher polls for newer CLIPs, e.g.
+    # "https://www.abel.co/updates/bup" — it must serve GET <url>/versions
+    # (JSON: {"versions": [...], "latest": ...}) and GET <url>/<app>_<version>.clip.
+    # None disables self-update entirely.
+    update_url: Union[str, None] = None
 
     # these will be filled in
     project_dir: Path = NullPath()
@@ -139,6 +144,9 @@ def get_app_info_py_project(app_info: AppInfo, target_app_project_dir: Path) -> 
                         if app_info.ui is None:
                             app_info.ui = "gui" if legacy_is_gui else "cli"
                     app_info.run_on_startup = pyship_app_info.get("run_on_startup")
+                    update_url = pyship_app_info.get("update_url")
+                    if update_url is not None:
+                        app_info.update_url = str(update_url).rstrip("/")
     return app_info
 
 
