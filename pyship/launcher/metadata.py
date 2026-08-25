@@ -11,7 +11,9 @@ from typeguard import typechecked
 
 
 @typechecked
-def calculate_metadata(target_app_name: str, target_app_author: str, target_app_version: VersionInfo, launcher_source_dir: Path, icon_path: Path, ui: str) -> dict:
+def calculate_metadata(
+    target_app_name: str, target_app_author: str, target_app_version: VersionInfo, launcher_source_dir: Path, icon_path: Path, ui: str, update_url: Union[str, None] = None
+) -> dict:
     launcher_metadata = {
         "app": target_app_name,
         "version": str(target_app_version),
@@ -20,6 +22,9 @@ def calculate_metadata(target_app_name: str, target_app_author: str, target_app_
         "icon_sha256": get_file_sha256(icon_path),
         "ui": ui,
     }
+    if update_url:
+        # The launcher polls this for newer CLIPs (see launcher.py _check_for_update).
+        launcher_metadata["update_url"] = update_url
     # Hash launcher Python sources
     for p in launcher_source_dir.glob("*.py"):
         launcher_metadata[f"{p.name}_sha256"] = get_file_sha256(p)

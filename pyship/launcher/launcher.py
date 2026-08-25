@@ -16,6 +16,10 @@ import time
 import logging
 import subprocess
 import argparse
+import shutil
+import threading
+import urllib.request
+import zipfile
 from pathlib import Path
 
 # Return codes (matching pyshipupdate constants)
@@ -143,6 +147,7 @@ def launch(app_dir=None, additional_path=None):
     report_exceptions = True
     target_app_name = None
     target_app_author = "unknown"
+    update_url = None
 
     if app_dir is not None:
         app_dir = Path(app_dir).resolve()
@@ -156,6 +161,7 @@ def launch(app_dir=None, additional_path=None):
                     target_app_name = metadata.get("app")
                     target_app_author = metadata.get("author", target_app_author)
                     ui = metadata.get("ui", ui)
+                    update_url = metadata.get("update_url", update_url)
                     # Legacy metadata compatibility
                     if "ui" not in metadata and "is_gui" in metadata:
                         ui = "gui" if metadata["is_gui"] else "cli"
@@ -189,6 +195,7 @@ def launch(app_dir=None, additional_path=None):
     glob_string = f"{target_app_name}_*"
 
     restart_monitor = RestartMonitor()
+    update_thread = None
 
     while (return_code is None or return_code == RESTART_RETURN_CODE) and not restart_monitor.excessive():
         restart_monitor.add()
@@ -227,6 +234,21 @@ def launch(app_dir=None, additional_path=None):
         if len(versions) > 0:
             latest_version = sorted(versions.keys())[-1]
             log.info(f"latest_version={'.'.join(str(v) for v in latest_version)}")
+
+            # Self-update: once per launcher run, look for a newer CLIP on the update feed and
+            # stage it in the user data dir, where the next launch will find it. Runs alongside
+            # the app so startup is never delayed; daemon so an exit never waits on a download
+            # (a partial one is cleaned up next time).
+            if update_url is not None and update_thread is None:
+                user_data_dir = _user_data_dir(target_app_author, target_app_name)
+                if user_data_dir is not None:
+                    update_thread = threading.Thread(
+                        target=_check_for_update,
+                        args=(update_url, target_app_name, latest_version, user_data_dir, log),
+                        name=f"{target_app_name}_update",
+                        daemon=True,
+                    )
+                    update_thread.start()
 
             python_exe_path = Path(versions[latest_version], PYTHON_INTERPRETER_EXES[ui])
 
@@ -320,6 +342,103 @@ def launch(app_dir=None, additional_path=None):
     log.info(f"returning : return_code={return_code}")
 
     return return_code
+
+
+def _user_data_dir(target_app_author, target_app_name):
+    """
+    Per-user directory the launcher also searches for CLIPs (platformdirs.user_data_dir layout).
+    :return: Path, or None if %LOCALAPPDATA% is not set
+    """
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if not local_app_data:
+        return None
+    return Path(local_app_data, target_app_author, target_app_name)
+
+
+def _fetch_available_versions(update_url, timeout):
+    """
+    Ask the update feed which versions exist.
+    :return: list of (version_tuple, version_string), newest last
+    """
+    with urllib.request.urlopen(f"{update_url}/versions", timeout=timeout) as response:
+        feed = json.loads(response.read().decode("utf-8"))
+    available = []
+    for version_str in feed.get("versions", []):
+        version_tuple = _compare_versions(str(version_str))
+        if any(v > 0 for v in version_tuple):
+            available.append((version_tuple, str(version_str)))
+    available.sort()
+    return available
+
+
+def _install_clip(update_url, target_app_name, version_str, destination_dir, log, timeout):
+    """
+    Download <app>_<version>.clip from the feed and unpack it into destination_dir/<app>_<version>.
+    Atomic from the launcher's point of view: the CLIP is unpacked into a .tmp dir and renamed
+    into place only when complete, so a half-finished update is never mistaken for a version.
+    :return: True if the CLIP was installed
+    """
+    clip_name = f"{target_app_name}_{version_str}"
+    clip_path = Path(destination_dir, f"{clip_name}.clip.part")
+    extract_tmp = Path(destination_dir, f"{clip_name}.tmp")
+    extract_path = Path(destination_dir, clip_name)
+    destination_dir.mkdir(parents=True, exist_ok=True)
+    shutil.rmtree(extract_tmp, ignore_errors=True)
+    try:
+        # The feed answers with a redirect to a short-lived signed URL; urllib follows it.
+        with urllib.request.urlopen(f"{update_url}/{clip_name}.clip", timeout=timeout) as response, clip_path.open("wb") as clip_file:
+            shutil.copyfileobj(response, clip_file, length=1024 * 1024)
+        log.info(f"downloaded {clip_path} ({clip_path.stat().st_size} bytes)")
+        with zipfile.ZipFile(clip_path, "r") as zip_ref:
+            zip_ref.extractall(extract_tmp)
+        os.replace(extract_tmp, extract_path)
+        log.info(f"installed {extract_path}")
+        return True
+    except (OSError, ValueError, zipfile.BadZipFile) as e:
+        log.warning(f"update to {version_str} failed: {e}")
+        shutil.rmtree(extract_tmp, ignore_errors=True)
+        return False
+    finally:
+        try:
+            clip_path.unlink()
+        except OSError:
+            pass
+
+
+def _check_for_update(update_url, target_app_name, installed_version, user_data_dir, log, timeout=30.0):
+    """
+    If the update feed has a version newer than the newest installed one, stage it in
+    user_data_dir for the next launch. Never raises: an update is a nicety, launching is not.
+    :param update_url: base URL of the feed (metadata "update_url")
+    :param installed_version: newest installed version, as a tuple of ints
+    :return: True if a new version was installed
+    """
+    try:
+        # Leftovers from an interrupted download/unpack on a previous run.
+        for stale in list(user_data_dir.glob("*.clip.part")) + list(user_data_dir.glob("*.tmp")):
+            if stale.is_dir():
+                shutil.rmtree(stale, ignore_errors=True)
+            else:
+                stale.unlink(missing_ok=True)
+
+        available = _fetch_available_versions(update_url, timeout)
+        if not available:
+            log.info(f"update feed {update_url} lists no versions")
+            return False
+        newest_tuple, newest_str = available[-1]
+        installed_padded = installed_version + (0,) * (len(newest_tuple) - len(installed_version))
+        newest_padded = newest_tuple + (0,) * (len(installed_version) - len(newest_tuple))
+        if newest_padded <= installed_padded:
+            log.info(f"up to date (installed={installed_version}, feed newest={newest_str})")
+            return False
+        if Path(user_data_dir, f"{target_app_name}_{newest_str}").exists():
+            log.info(f"{newest_str} already staged")
+            return False
+        log.info(f"newer version available: {newest_str} (installed {installed_version}); downloading")
+        return _install_clip(update_url, target_app_name, newest_str, user_data_dir, log, timeout)
+    except (OSError, ValueError) as e:
+        log.warning(f"update check against {update_url} failed: {e}")
+        return False
 
 
 def _get_forwarded_args():
