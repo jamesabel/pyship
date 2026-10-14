@@ -51,7 +51,10 @@ jobs:
     continue-on-error: true  # Tests require NSIS and may fail in CI
     strategy:
       matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        # Version policy: test the minimum supported version (requires-python), the latest
+        # fully released version, and the upcoming pre-release. Update when a new Python is
+        # released or a pre-release appears. Keep in sync with [tool.tox] env_list in pyproject.toml.
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
         include:
           - python-version: "3.11"
             tox-env: py311
@@ -61,6 +64,8 @@ jobs:
             tox-env: py313
           - python-version: "3.14"
             tox-env: py314
+          - python-version: "3.15"
+            tox-env: py315
     steps:
       - uses: actions/checkout@v4
 
