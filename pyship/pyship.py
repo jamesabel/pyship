@@ -27,7 +27,7 @@ from pyshipupdate import __version__ as pyshipupdate_version
 
 log = get_logger(pyship_application_name)
 
-#: Environment variable pyship reads for the PFX password / hardware-token PIN.
+#: Environment variable pyship reads for the PFX password (PFX mode only; hardware tokens prompt for their PIN).
 SIGNING_PIN_ENV_VAR = "PYSHIP_SIGNING_CERTIFICATE_PIN"
 
 
@@ -59,7 +59,7 @@ class PyShip:
 
     # --- code signing (common) ---
     code_sign: bool = False  # master switch: True → sign executables; failure aborts ship()
-    certificate_password: Union[str, None] = None  # PFX password or hardware token PIN
+    certificate_password: Union[str, None] = None  # PFX password (PFX mode only; ignored in token mode)
     timestamp_url: str = DEFAULT_TIMESTAMP_URL  # RFC 3161 timestamp server
     signtool_path: Union[Path, None] = None  # explicit signtool.exe; auto-discovered if None
 
@@ -85,9 +85,10 @@ class PyShip:
 
     def _resolve_password(self) -> Union[str, None]:
         """
-        Resolve the signing password/PIN.
+        Resolve the PFX password.
         Explicit ``certificate_password`` takes priority; falls back to the
-        ``PYSHIP_SIGNING_CERTIFICATE_PIN`` environment variable.
+        ``PYSHIP_SIGNING_CERTIFICATE_PIN`` environment variable. Only used in
+        PFX mode; hardware tokens prompt for their PIN through their middleware.
         """
         if self.certificate_password is not None:
             return self.certificate_password
@@ -96,7 +97,7 @@ class PyShip:
     def _signing_config(self) -> SigningConfig:
         """
         Collect the flat signing fields into a :class:`SigningConfig`,
-        with the password/PIN resolved (explicit value or environment variable).
+        with the PFX password resolved (explicit value or environment variable).
         """
         return SigningConfig(
             pfx_path=self.pfx_path,

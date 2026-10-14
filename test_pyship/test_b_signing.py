@@ -491,16 +491,6 @@ def test_sign_file_token_auto_select_builds_correct_command(target_exe, signtool
     assert "/f" not in cmd
 
 
-def test_sign_file_token_with_pin_includes_p_flag(target_exe, signtool_exe):
-    config = SigningConfig(certificate_sha1=VALID_SHA1, certificate_password="123456", signtool_path=signtool_exe)
-    with patch("pyship.signing.subprocess_run", return_value=(0, None, None)) as mock_run:
-        sign_file_token(target_exe, config)
-
-    cmd = mock_run.call_args[0][0]
-    assert "/p" in cmd
-    assert "123456" in cmd
-
-
 def test_sign_file_token_without_pin_excludes_p_flag(target_exe, signtool_exe):
     config = SigningConfig(certificate_sha1=VALID_SHA1, signtool_path=signtool_exe)
     with patch("pyship.signing.subprocess_run", return_value=(0, None, None)) as mock_run:

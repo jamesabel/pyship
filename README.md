@@ -298,28 +298,15 @@ ps.ship()
 
 The token's middleware will prompt for the PIN interactively via its own dialog.
 
-#### Providing the token PIN for automation
+#### Token PIN and automation
 
-For CI or unattended builds, set the `PYSHIP_SIGNING_CERTIFICATE_PIN` environment variable. pyship reads it
-automatically:
+pyship never passes a PIN to signtool: signtool's `/p` option is the PFX password and is only valid together
+with `/f`, so there is no command-line PIN for a hardware token. `certificate_password` and the
+`PYSHIP_SIGNING_CERTIFICATE_PIN` environment variable are ignored in token mode (pyship logs a note when one
+is set). The token middleware prompts for the PIN through its own dialog.
 
-```yaml
-# GitHub Actions example
-- name: Ship
-  env:
-    PYSHIP_SIGNING_CERTIFICATE_PIN: ${{ secrets.TOKEN_PIN }}
-  run: python ship.py
-```
-
-Or pass it directly (not recommended for CI):
-
-```python
-ps = PyShip(
-    code_sign=True,
-    certificate_sha1="AABBCCDD1122334455667788AABBCCDD11223344",
-    certificate_password="123456",  # PIN directly
-)
-```
+For unattended builds, use the middleware's PIN caching (e.g. SafeNet Authentication Client's "enable single
+logon"), or, where the CSP supports it, supply the PIN inside the key container name (see below).
 
 #### Advanced: CSP and key container
 
@@ -333,6 +320,10 @@ ps = PyShip(
     certificate_key_container="my-container",
 )
 ```
+
+The eToken CSP also accepts the PIN inside the key container name, which is the only way to sign unattended
+with that token: `certificate_key_container="[{{123456}}]=my-container"`. Keep the PIN out of source code by
+building that string from a CI secret at run time.
 
 ## Microsoft Store Distribution (MSIX) (Optional)
 
@@ -471,7 +462,7 @@ venv\Scripts\python.exe -m pytest test_pyship/ -v
 
 | Variable                          | Description                                                                                                                                                                                       | Default                                    |
 |-----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------|
-| `PYSHIP_SIGNING_CERTIFICATE_PIN`  | PFX password or hardware token PIN for code signing. Read automatically by `ship()` when `certificate_password` is not set.                                                                       | (not set)                                  |
+| `PYSHIP_SIGNING_CERTIFICATE_PIN`  | PFX password for code signing (PFX mode). Read automatically by `ship()` when `certificate_password` is not set. Ignored in hardware-token mode, where the token middleware prompts for the PIN.   | (not set)                                  |
 | `AWSIMPLE_USE_MOTO_MOCK`          | Set to `0` to use real AWS instead of [moto](https://github.com/getmoto/moto) mock. Required for `test_f_update` which tests cross-process S3 updates. Requires valid AWS credentials configured. | `1` (use moto)                             |
 | `MAKE_NSIS_PATH`                  | Path to the NSIS `makensis.exe` executable.                                                                                                                                                       | `C:\Program Files (x86)\NSIS\makensis.exe` |
 
