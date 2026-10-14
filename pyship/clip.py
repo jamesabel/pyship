@@ -15,7 +15,7 @@ from typeguard import typechecked
 from balsa import get_logger
 
 from pyship import AppInfo, pyship_print, __application_name__, CLIP_EXT
-from pyship.uv_util import find_or_bootstrap_uv, copy_standalone_python, uv_pip_install
+from pyship.uv_util import find_or_bootstrap_uv, copy_standalone_python, uv_pip_install, finalize_clip_python
 
 log = get_logger(__application_name__)
 
@@ -36,6 +36,7 @@ def create_clip(target_app_info: AppInfo, app_dir: Path, target_app_package_dist
     clip_dir = create_base_clip(target_app_info, app_dir, cache_dir, python_version=python_version)
     assert isinstance(target_app_info.name, str)
     install_target_app(target_app_info.name, clip_dir, target_app_package_dist_dir, cache_dir)
+    finalize_clip_python(clip_dir)  # must follow the last install; see finalize_clip_python
     return clip_dir
 
 
@@ -73,7 +74,7 @@ def create_base_clip(target_app_info: AppInfo, app_dir: Path, cache_dir: Path, p
     pyship_print(f'building clip {clip_dir_name} ("{clip_dir}")')
 
     uv_path = find_or_bootstrap_uv(cache_dir)
-    copy_standalone_python(uv_path, python_version, clip_dir)
+    copy_standalone_python(uv_path, python_version, clip_dir, finalize=False)  # create_clip() finalizes after the install
 
     return clip_dir
 

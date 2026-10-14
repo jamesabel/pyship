@@ -14,6 +14,7 @@ from typeguard import typechecked
 from balsa import get_logger
 
 from pyship import __application_name__, pyship_print
+from pyship.subprocess import python_subprocess_env
 
 log = get_logger(__application_name__)
 
@@ -98,11 +99,11 @@ def uv_python_install(uv_path: Path, python_version: str) -> Path:
     :return: path to the installed Python interpreter
     """
     pyship_print(f"installing Python {python_version} via uv")
-    subprocess.run([str(uv_path), "python", "install", python_version], check=True, capture_output=True, text=True)
+    subprocess.run([str(uv_path), "python", "install", python_version], check=True, capture_output=True, text=True, env=python_subprocess_env())
 
     # Use uv python dir to find managed installations directly.
     # uv python find can return a venv Python when running inside a venv.
-    result = subprocess.run([str(uv_path), "python", "dir"], check=True, capture_output=True, text=True)
+    result = subprocess.run([str(uv_path), "python", "dir"], check=True, capture_output=True, text=True, env=python_subprocess_env())
     uv_python_dir = Path(result.stdout.strip())
     log.info(f"uv python dir -> {uv_python_dir}")
 
@@ -123,7 +124,48 @@ def uv_python_install(uv_path: Path, python_version: str) -> Path:
 
 
 @typechecked
-def copy_standalone_python(uv_path: Path, python_version: str, dest_dir: Path) -> Path:
+def finalize_clip_python(python_dir: Path) -> None:
+    """
+    Put a copied standalone Python into its relocatable runtime layout: write pyvenv.cfg and a
+    ``python3XY._pth`` file that selects isolated path mode.
+
+    This must be the *last* step of building a CLIP, after every ``uv pip install`` into it,
+    because both files change how interpreters derived from this one find their paths:
+
+    - Python applies a ._pth file found next to the DLL, so a virtual environment created from
+      the CLIP interpreter (uv's isolated PEP 517 build environment, for example) gets exactly
+      the paths listed in the ._pth and loses its own site-packages. Building a legacy setup.py
+      source distribution then fails with ``ModuleNotFoundError: No module named 'setuptools'``.
+    - With pyvenv.cfg next to python.exe and no ._pth, Python 3.13 and older treat the CLIP as a
+      venv whose prefix is the *parent* directory, so uv installs outside the CLIP.
+
+    The ._pth takes precedence over pyvenv.cfg during initialization, setting up sys.path directly
+    and skipping site.py (which would emit RuntimeWarnings about unexpected sys.prefix when
+    pyvenv.cfg is present). It also makes the interpreter ignore PYTHONHOME/PYTHONPATH, so the
+    shipped app is immune to the launching environment. pyvenv.cfg is kept because Python 3.14+
+    can otherwise fail with "failed to locate pyvenv.cfg" (exit 106).
+
+    :param python_dir: directory containing python.exe and python3XY.dll
+    """
+    pyvenv_cfg = Path(python_dir, "pyvenv.cfg")
+    if not pyvenv_cfg.exists():
+        abs_dir = str(python_dir.resolve())
+        pyvenv_cfg.write_text(f"home = {abs_dir}\ninclude-system-site-packages = false\n", encoding="utf-8")
+        log.info(f"created {pyvenv_cfg}")
+
+    existing_pth = list(python_dir.glob("python3*._pth"))
+    if existing_pth:
+        log.info(f"keeping existing {existing_pth[0]}")
+        return
+    python_dlls = [d for d in python_dir.glob("python3*.dll") if d.stem != "python3"]  # exclude the stable-ABI python3.dll
+    pth_name = python_dlls[0].stem + "._pth" if python_dlls else "python._pth"
+    pth_path = Path(python_dir, pth_name)
+    pth_path.write_text(".\nLib\nLib\\site-packages\nDLLs\n", encoding="utf-8")
+    log.info(f"created {pth_path}")
+
+
+@typechecked
+def copy_standalone_python(uv_path: Path, python_version: str, dest_dir: Path, finalize: bool = True) -> Path:
     """
     Copy a full standalone Python installation into dest_dir.
     Uses uv python install to ensure the Python is available, then copies the
@@ -131,6 +173,9 @@ def copy_standalone_python(uv_path: Path, python_version: str, dest_dir: Path) -
     :param uv_path: path to uv executable
     :param python_version: Python version string (e.g. "3.12")
     :param dest_dir: destination directory to copy the Python installation into
+    :param finalize: write the runtime layout (pyvenv.cfg + ._pth) now. Pass False when packages
+                     will be installed into the copy, then call :func:`finalize_clip_python`
+                     after the last install (see its docstring for why the order matters).
     :return: path to python.exe inside dest_dir
     """
     python_path = uv_python_install(uv_path, python_version)
@@ -151,33 +196,13 @@ def copy_standalone_python(uv_path: Path, python_version: str, dest_dir: Path) -
     if not dest_python.exists():
         raise FileNotFoundError(f"python.exe not found at {dest_python} after copying standalone Python")
 
-    # Create pyvenv.cfg so the interpreter can locate its environment.
-    # Python 3.14+ may fail with "failed to locate pyvenv.cfg" (exit 106) without this.
-    pyvenv_cfg = Path(dest_dir, "pyvenv.cfg")
-    if not pyvenv_cfg.exists():
-        abs_dest = str(dest_dir.resolve())
-        pyvenv_cfg.write_text(f"home = {abs_dest}\ninclude-system-site-packages = false\n", encoding="utf-8")
-        log.info(f"created {pyvenv_cfg}")
+    if finalize:
+        finalize_clip_python(dest_dir)
 
-    # Create a ._pth file so Python uses isolated path mode.
-    # This takes precedence over pyvenv.cfg during initialization, setting up
-    # sys.path directly and skipping site.py (which would emit RuntimeWarnings
-    # about unexpected sys.prefix when pyvenv.cfg is present).
-    pth_pattern = "python3*._pth"
-    existing_pth = list(dest_dir.glob(pth_pattern))
-    if not existing_pth:
-        python_dlls = list(dest_dir.glob("python3*.dll"))
-        python_dlls = [d for d in python_dlls if d.stem != "python3"]  # exclude python3.dll
-        if python_dlls:
-            pth_name = python_dlls[0].stem + "._pth"
-        else:
-            pth_name = "python._pth"
-        pth_path = Path(dest_dir, pth_name)
-        pth_path.write_text(".\nLib\nLib\\site-packages\nDLLs\n", encoding="utf-8")
-        log.info(f"created {pth_path}")
-
-    # Verify the copied Python interpreter actually works
-    verify_result = subprocess.run([str(dest_python), "-c", "import sys; print(sys.version)"], capture_output=True, text=True, timeout=30)
+    # Verify the copied Python interpreter actually works. The environment is scrubbed because a
+    # uv-created venv exports PYTHONHOME to its children, which would point this copy at the
+    # wrong standard library.
+    verify_result = subprocess.run([str(dest_python), "-c", "import sys; print(sys.version)"], capture_output=True, text=True, timeout=30, env=python_subprocess_env())
     if verify_result.returncode != 0:
         log.error(f'copied Python at "{dest_python}" failed verification (exit {verify_result.returncode}): {verify_result.stderr}')
         raise RuntimeError(f"copied Python interpreter at {dest_python} does not work (exit code {verify_result.returncode}): {verify_result.stderr}")
@@ -208,7 +233,7 @@ def uv_pip_install(uv_path: Path, target_python: Path, packages: list, dist_dir:
         cmd.extend(["-f", str(dist_dir)])
     log.info(f"uv pip install cmd: {cmd}")
     pyship_print(" ".join(cmd))
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, env=python_subprocess_env())
     if result.stdout:
         log.info(result.stdout)
     if result.stderr:
@@ -235,7 +260,7 @@ def uv_build(uv_path: Path, project_dir: Path, output_dir: Path) -> Path:
     log.info(f"uv build cmd: {cmd}")
     pyship_print(" ".join(cmd))
     try:
-        result = subprocess.run(cmd, cwd=str(project_dir), check=True, capture_output=True, text=True)
+        result = subprocess.run(cmd, cwd=str(project_dir), check=True, capture_output=True, text=True, env=python_subprocess_env())
     except subprocess.SubprocessError as e:
         s = f"uv build failed: {e}"
         pyship_print(s)
