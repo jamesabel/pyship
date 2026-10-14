@@ -236,13 +236,15 @@ def uv_pip_install(uv_path: Path, target_python: Path, packages: list, dist_dir:
     result = subprocess.run(cmd, capture_output=True, text=True, env=python_subprocess_env())
     if result.stdout:
         log.info(result.stdout)
-    if result.stderr:
-        log.warning(result.stderr)
     if result.returncode != 0:
         error_string = f"uv pip install failed (exit {result.returncode}): {result.stderr}"
         pyship_print(error_string)
         log.error(error_string)
         result.check_returncode()
+    if result.stderr:
+        # uv writes its normal progress and status ("Using Python ...", "Resolved N packages", ...) to stderr,
+        # so on success this is informational, not a warning
+        log.info(result.stderr)
 
 
 @typechecked
