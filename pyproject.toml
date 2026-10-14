@@ -79,7 +79,9 @@ timeout = 1800
 timeout_method = "thread"
 
 [tool.tox]
-env_list = ["py311", "py312", "py313", "py314", "lint", "typecheck"]
+# Version policy: minimum supported (requires-python), latest release, upcoming pre-release.
+# Keep in sync with the matrix in .github/workflows/ci.yml.
+env_list = ["py311", "py312", "py313", "py314", "py315", "lint", "typecheck"]
 
 [tool.tox.env_run_base]
 deps = [

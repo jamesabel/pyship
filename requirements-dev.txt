@@ -36,5 +36,8 @@ pytest
 pytest-cov
 pytest-timeout
 moto
+# responses>=0.23 (a moto dependency) requires pyyaml, which has no Python 3.15 wheel yet.
+# Hold responses back on 3.15 only; drop this line once pyyaml ships a cp315 wheel.
+responses<0.23; python_version >= "3.15"
 tox
 tox-uv
