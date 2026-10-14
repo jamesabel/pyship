@@ -55,12 +55,16 @@ class SigningConfig:
       :attr:`certificate_password` is the PFX password (required to sign).
     - **Token mode** (:attr:`token_mode`): active when any of
       :attr:`certificate_sha1`, :attr:`certificate_subject`, or
-      :attr:`certificate_auto_select` is set; :attr:`certificate_password` is
-      the optional token PIN (the token middleware may prompt interactively).
+      :attr:`certificate_auto_select` is set. :attr:`certificate_password` is
+      not used: signtool has no PIN option (``/p`` is the PFX password and is
+      only valid with ``/f``), so the token middleware prompts for the PIN
+      through its own dialog. For unattended signing use the middleware's PIN
+      caching, or a CSP that accepts the PIN in the key container name via
+      :attr:`certificate_key_container`.
     """
 
     pfx_path: Union[Path, None] = None  # PFX certificate file (PFX mode)
-    certificate_password: Union[str, None] = None  # PFX password or hardware token PIN
+    certificate_password: Union[str, None] = None  # PFX password (PFX mode only; ignored in token mode)
     timestamp_url: str = DEFAULT_TIMESTAMP_URL  # RFC 3161 timestamp server URL
     signtool_path: Union[Path, None] = None  # explicit signtool.exe; auto-discovered if None
     certificate_sha1: Union[str, None] = None  # SHA1 thumbprint in Windows Certificate Store (token mode, /sha1)
@@ -343,8 +347,9 @@ def sign_file_token(file_path: Path, config: SigningConfig) -> bool:
 
     Exactly one certificate selector (``certificate_sha1``, ``certificate_subject``,
     or ``certificate_auto_select``) must be set in *config*.
-    ``config.certificate_password`` is used as the token PIN if provided;
-    otherwise the token middleware may prompt interactively.
+    ``config.certificate_password`` is ignored: signtool's ``/p`` is the PFX
+    password and requires ``/f``, so it cannot carry a token PIN. The token
+    middleware prompts for the PIN through its own dialog.
 
     :param file_path: path to the file to sign
     :param config: signing configuration (token mode)
@@ -385,7 +390,9 @@ def sign_file_token(file_path: Path, config: SigningConfig) -> bool:
     if config.certificate_key_container is not None:
         cmd.extend(["/kc", config.certificate_key_container])
     if config.certificate_password is not None:
-        cmd.extend(["/p", config.certificate_password])
+        # signtool's /p is the PFX password and is only valid together with /f; passing it in
+        # token mode makes signtool fail with "The /p option requires the /f option".
+        log.info("certificate_password is ignored in token mode; the token middleware will prompt for the PIN")
 
     cmd.extend(["/tr", config.timestamp_url, "/td", "sha256", "/fd", "sha256", str(file_path)])
     return _run_signtool(cmd, file_path)
@@ -414,8 +421,7 @@ def sign_if_configured(file_path: Union[Path, None], config: SigningConfig) -> b
         return False
 
     if config.token_mode:
-        if config.certificate_password is None:
-            log.debug("token PIN not provided; hardware token may prompt for PIN interactively")
+        log.debug("token mode: the hardware token middleware prompts for the PIN if needed")
         return sign_file_token(file_path, config)
 
     if config.pfx_mode:

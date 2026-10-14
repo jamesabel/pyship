@@ -28,7 +28,10 @@ def get_arguments() -> Any:
 
     # Code signing
     parser.add_argument("--pfx-path", help="path to PFX certificate file")
-    parser.add_argument("--certificate-password", help="PFX password or hardware token PIN (prefer PYSHIP_SIGNING_CERTIFICATE_PIN env var)")
+    parser.add_argument(
+        "--certificate-password",
+        help="PFX password for PFX-file signing (prefer the PYSHIP_SIGNING_CERTIFICATE_PIN env var); not used with hardware tokens, which prompt for their PIN themselves",
+    )
     parser.add_argument("--certificate-sha1", help="SHA1 thumbprint of certificate in Windows Certificate Store (hardware token)")
     parser.add_argument("--certificate-subject", help="certificate subject name for store lookup (hardware token)")
     parser.add_argument("--certificate-auto-select", default=False, action="store_true", help="auto-select best signing certificate from store")
