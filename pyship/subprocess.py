@@ -1,8 +1,10 @@
 """
 Subprocess wrapper used throughout pyship.
 
-:func:`subprocess_run` strips ``PATH``/``PYTHONPATH`` from the child
+:func:`subprocess_run` strips ``PATH`` and the Python-steering variables from the child
 environment so tools run predictably regardless of the developer's shell setup.
+:func:`python_subprocess_env` strips only the Python-steering variables, for commands that
+still need ``PATH`` (uv, build backends).
 """
 
 import subprocess
@@ -11,7 +13,7 @@ from typing import Callable
 import sys
 import os
 from copy import deepcopy
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict
 
 from typeguard import typechecked
 from balsa import get_logger
@@ -20,6 +22,29 @@ from pyship import __application_name__, NullPath
 from pyshipupdate import ok_return_code, restart_return_code, error_return_code
 
 log = get_logger(__application_name__)
+
+#: Environment variables that redirect a child Python interpreter to another installation's paths.
+#: A venv created by uv runs its interpreter through a launcher that exports PYTHONHOME (and uv's
+#: own UV_INTERNAL__PYTHONHOME) for the base interpreter, and those leak to every child process.
+#: A CLIP interpreter spawned with them inherits the *base* interpreter's standard library, which is
+#: the wrong Python version whenever the CLIP targets a different one.
+PYTHON_STEERING_ENV_VARS = ("PYTHONHOME", "PYTHONPATH", "UV_INTERNAL__PYTHONHOME")
+
+
+@typechecked
+def python_subprocess_env() -> Dict[str, str]:
+    """
+    A copy of the current environment with the Python-steering variables removed.
+
+    Use it for every subprocess that runs a Python interpreter other than the current one
+    (uv, the CLIP interpreter, build backends).
+
+    :return: environment mapping for ``subprocess.run(..., env=...)``
+    """
+    env = dict(os.environ)
+    for env_var in PYTHON_STEERING_ENV_VARS:
+        env.pop(env_var, None)
+    return env
 
 
 @typechecked
@@ -40,13 +65,9 @@ def subprocess_run(
     std_out = None
     std_err = None
 
-    # remove PATHs that (if they exist) will interfere with running this command
-    run_env = deepcopy(os.environ)
-    for env_var in ["PATH", "PYTHONPATH"]:
-        try:
-            del run_env[env_var]
-        except KeyError:
-            pass
+    # remove PATH and the Python-steering variables that (if they exist) will interfere with running this command
+    run_env = python_subprocess_env()
+    run_env.pop("PATH", None)
 
     # log env var names only - values may contain secrets (signing PINs, AWS keys)
     log.debug(f"run_env variables: {sorted(run_env.keys())}")
