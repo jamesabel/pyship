@@ -1,0 +1,38 @@
+# Publishes to PyPI with Provenance (PEP 740 attestations) when a GitHub release is published, or when run manually.
+#
+# Uses PyPI "trusted publishing" (OIDC), so no API token secret is needed. The trusted publisher is registered at
+#   https://pypi.org/manage/project/pyship/settings/publishing/
+#   Owner: jamesabel   Repository: pyship   Workflow: publish.yml   Environment: pypi
+#
+# Release procedure:
+#   1. bump the version (via a PR)
+#   2. publish a GitHub release whose tag matches the version, e.g. v1.2.3
+#   3. this workflow builds and uploads the distributions
+# Never upload from a workstation: a local upload cannot produce Provenance.
+
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write # OIDC token for trusted publishing and for signing the attestations
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Build wheel
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m build --wheel
+          python -m twine check dist/*
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@release/v1
